@@ -1,0 +1,18 @@
+{
+  "name": "kiro-foo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "eval": "promptfoo eval",
+    "eval:view": "promptfoo view",
+    "eval:cache-clear": "promptfoo cache clear"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "promptfoo": "^0.107.2"
+  }
+}

@@ -1,0 +1,156 @@
+# Promptfoo configuration for evaluating AI skills/agents
+# Metrics: accuracy, cost, cost-accuracy ratio, scoring rubrics, completeness
+
+prompts:
+  - file://prompts/skill_eval.txt
+
+providers:
+  - id: 'exec: bash providers/claude_code.sh'
+    label: claude-code
+  - id: 'exec: bash providers/kiro_cli.sh'
+    label: kiro-cli
+
+# Custom scoring: cost-accuracy ratio as a derived metric
+defaultTest:
+  options:
+    provider: 'exec: bash providers/grader.sh'  # grading provider for model-graded assertions
+  assert:
+    # Latency gate — fail if a single call exceeds 30s
+    - type: latency
+      threshold: 30000
+      metric: cost
+      weight: 1
+
+    # Rubric: overall quality judged by LLM
+    - type: llm-rubric
+      value: |
+        The response must:
+        1. Directly answer the question asked
+        2. Be factually correct
+        3. Use clear, professional language
+        4. Not hallucinate information
+      metric: rubric_quality
+      weight: 2
+
+derivedMetrics:
+  # Cost-accuracy ratio: uses latency as a proxy for cost (no API key = no token cost)
+  # Lower is better (fast + high quality = best)
+  - name: cost_accuracy_ratio
+    value: '(1 - cost) / (rubric_quality + 0.0001)'
+
+tests:
+  # --- Test 1: Factual accuracy ---
+  - description: 'Factual question — capital of France'
+    vars:
+      task: 'What is the capital of France?'
+      context: 'geography'
+    assert:
+      - type: contains
+        value: 'Paris'
+        metric: accuracy
+        weight: 3
+      - type: model-graded-closedqa
+        value: 'The answer correctly states that Paris is the capital of France'
+        metric: accuracy_graded
+        weight: 2
+
+  # --- Test 2: Completeness ---
+  - description: 'Multi-part question — completeness check'
+    vars:
+      task: 'List the 3 branches of the US government and briefly describe each.'
+      context: 'civics'
+    assert:
+      - type: contains-all
+        value:
+          - 'legislative'
+          - 'executive'
+          - 'judicial'
+        metric: completeness
+        weight: 3
+      - type: llm-rubric
+        value: |
+          The response must cover ALL three branches (legislative, executive, judicial)
+          with a brief but accurate description of each branch's role.
+          Deduct points for missing branches or inaccurate descriptions.
+        metric: completeness_rubric
+        weight: 2
+
+  # --- Test 3: Rubric-scored reasoning ---
+  - description: 'Reasoning task — explain a concept'
+    vars:
+      task: 'Explain why the sky is blue in 2-3 sentences.'
+      context: 'science'
+    assert:
+      - type: llm-rubric
+        value: |
+          Score based on:
+          - Mentions Rayleigh scattering or light scattering (required)
+          - Explains that shorter wavelengths scatter more
+          - Is concise (2-3 sentences as requested)
+          - Is scientifically accurate
+        metric: rubric_reasoning
+        weight: 3
+      - type: javascript
+        value: |
+          const sentences = output.split(/[.!?]+/).filter(s => s.trim().length > 0);
+          if (sentences.length >= 2 && sentences.length <= 4) {
+            return { pass: true, score: 1, reason: `${sentences.length} sentences — within range` };
+          }
+          return { pass: false, score: 0.3, reason: `${sentences.length} sentences — outside 2-3 range` };
+        metric: completeness_format
+        weight: 1
+
+  # --- Test 4: Cost-sensitive task ---
+  - description: 'Simple task — should be cheap'
+    vars:
+      task: 'Say hello in French.'
+      context: 'translation'
+    assert:
+      - type: icontains
+        value: 'bonjour'
+        metric: accuracy
+        weight: 2
+      - type: latency
+        threshold: 5000
+        metric: cost_efficiency
+        weight: 2
+      - type: javascript
+        value: |
+          // Penalize overly verbose responses for simple tasks
+          const words = output.split(/\s+/).length;
+          const score = Math.max(0, 1 - (words - 5) / 50);
+          return { pass: words < 30, score, reason: `${words} words` };
+        metric: conciseness
+        weight: 1
+
+  # --- Test 5: Complex completeness + accuracy ---
+  - description: 'Structured output — JSON with required fields'
+    vars:
+      task: 'Return a JSON object with keys "name", "population", and "continent" for Tokyo.'
+      context: 'structured_output'
+    assert:
+      - type: is-json
+        metric: accuracy
+        weight: 2
+      - type: javascript
+        value: |
+          try {
+            const data = JSON.parse(output);
+            const hasName = 'name' in data;
+            const hasPop = 'population' in data;
+            const hasContinent = 'continent' in data;
+            const allPresent = hasName && hasPop && hasContinent;
+            const score = [hasName, hasPop, hasContinent].filter(Boolean).length / 3;
+            return { pass: allPresent, score, reason: `Fields present: ${score * 3}/3` };
+          } catch (e) {
+            return { pass: false, score: 0, reason: 'Invalid JSON' };
+          }
+        metric: completeness
+        weight: 3
+      - type: model-graded-closedqa
+        value: 'The output contains accurate information about Tokyo (population ~14M, continent Asia)'
+        metric: accuracy_graded
+        weight: 2
+
+# Assertion scoring override: custom function that factors in cost-accuracy ratio
+assertScoringFunction: file://scoring.js

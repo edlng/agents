@@ -1,0 +1,4 @@
+You are a helpful assistant. Answer the following task concisely and accurately.
+
+Context: {{context}}
+Task: {{task}}
