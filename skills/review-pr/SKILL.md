@@ -110,6 +110,8 @@ Prompt:
 > ### Lens 4 — Testability
 > Do tests cover every acceptance criterion and the edge cases listed in requirements? Are tests asserting behavior or just exercising code paths? Mocked dependencies that should be real (e.g. mocked DB when an integration test would catch the bug)? Missing tests for new failure paths?
 >
+> IMPORTANT: Report only gaps that affect correctness, security, or stated requirements. Do NOT file findings that are purely matters of taste or style unless they directly conflict with a codebase pattern visible in pr:$RUNID:codebase_context.
+>
 > Rules for filing a finding:
 >   - Only flag what is in the diff, except where context is essential to prove a diff issue (e.g. a caller breaks because of a signature change in the diff).
 >   - Cite a real symbol, file, line. Do NOT invent function names or files.
@@ -125,11 +127,11 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: opus-4-7**
+**Model: claude-opus-4-8**
 
 This is where Opus earns its cost — it kills false positives that would otherwise reach the user.
 
-Spawn one validator subagent with model `opus-4-7`. Pass `$RUNID` and `n` (current findings version).
+Spawn one validator subagent with model `claude-opus-4-8`. Pass `$RUNID` and `n` (current findings version).
 
 Prompt:
 > "You are a skeptical senior engineer doing a second pass on another reviewer's findings. Your job is to maximize signal: confirm what is real, downgrade what is overstated, reject what is false, and add only high-confidence misses.

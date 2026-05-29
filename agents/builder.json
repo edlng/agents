@@ -4,6 +4,6 @@
   "prompt": "file://./builder-prompt.md",
   "tools": ["read", "write", "shell"],
   "allowedTools": ["read", "write", "shell"],
-  "model": "claude-sonnet-4",
+  "model": "claude-sonnet-4-6",
   "welcomeMessage": "Builder ready. What task should I execute?"
 }

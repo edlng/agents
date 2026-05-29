@@ -103,6 +103,8 @@ Prompt:
 >   - Stubbed functions that return placeholder values
 >   - Missing imports / unused imports
 >
+> IMPORTANT: Report only gaps that affect correctness, security, or stated requirements. Do NOT file findings that are purely matters of taste or style unless they directly conflict with a codebase pattern visible in the codebase context.
+>
 > Severity rubric:
 >   - `must_fix`: real bug, security issue, broken acceptance criterion, debug code left in
 >   - `should_fix`: design issue, missing test, unfinished cleanup
@@ -114,7 +116,7 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: opus-4-7**
+**Model: claude-opus-4-8**
 
 Spawn one validator subagent.
 
