@@ -1,6 +1,6 @@
 {
   "name": "tester",
-  "description": "Verification. Runs tests/linters/scans, reports evidence.",
+  "description": "Test and verification agent. Runs tests, linters, and security scans. Reports commands, pass/fail status, and repro steps for failures. Writes new tests when coverage is missing. Recommends merge only when all quality gates pass.",
   "prompt": "file://./tester-prompt.md",
   "tools": ["read", "write", "shell", "@sequential-thinking"],
   "allowedTools": ["read", "write", "shell", "@sequential-thinking/sequentialthinking"],
@@ -13,5 +13,5 @@
       "autoAllowReadonly": true
     }
   },
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-4-6"
 }
