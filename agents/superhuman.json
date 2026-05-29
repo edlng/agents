@@ -40,5 +40,6 @@
     "@sequential-thinking/sequentialthinking"
   ],
   "prompt": "file://./superhuman-prompt.md",
+  "model": "claude-opus-4-8",
   "useLegacyMcpJson": false
 }

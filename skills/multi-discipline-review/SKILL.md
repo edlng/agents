@@ -23,7 +23,7 @@ Read the code to review. Determine:
 
 ## Phase 2: Spawn Discipline Sub-Agents
 
-Spawn the following sub-agents **in parallel**. Do NOT specify a model — let the system choose. Each sub-agent receives the same diff/context and reviews ONLY its discipline.
+Spawn the following sub-agents **in parallel** with model `claude-sonnet-4-6`. Each sub-agent receives the same diff/context and reviews ONLY its discipline.
 
 ### Sub-Agent 1: Security Reviewer
 
