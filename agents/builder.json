@@ -1,6 +1,6 @@
 {
   "name": "builder",
-  "description": "Focused engineering agent that executes ONE task at a time. Builds, implements, creates.",
+  "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
   "prompt": "file://./builder-prompt.md",
   "tools": ["read", "write", "shell"],
   "allowedTools": ["read", "write", "shell"],

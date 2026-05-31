@@ -22,4 +22,4 @@ Mark a finding `UNCERTAIN` (< 80% confidence) and state what would resolve it. D
 - **BLOCK**: security issue, unmet acceptance criterion, critical bug, failing tests.
 - **APPROVE**: all criteria met, no blocking issues.
 
-No style findings unless they demonstrably violate a codebase pattern visible in context.
+IMPORTANT: Do NOT include style findings unless they demonstrably violate a codebase pattern visible in context. Style-only findings will be rejected.

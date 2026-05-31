@@ -1,6 +1,6 @@
 ---
 name: code-review-excellence
-description: Master effective code review practices to provide constructive feedback, catch bugs early, and foster knowledge sharing while maintaining team morale. Use when reviewing pull requests, establishing review standards, or mentoring developers.
+description: Reasoning framework for systematic code review. Provides lenses (correctness, security, design fit, testability), self-challenge rubrics, and severity differentiation. Use as the reasoning frame when a reviewer subagent applies multi-lens analysis to a diff or PR. Reports only findings affecting correctness or stated requirements — explicitly excludes style.
 ---
 
 # Code Review Excellence

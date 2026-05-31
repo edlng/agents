@@ -79,6 +79,26 @@ Only flag code that is **new in this diff** (not pre-existing gaps).
 2. Rank: critical → high → medium → low.
 3. Verdict: 🔴 Block (critical/high) | 🟡 Approve with comments (medium) | 🟢 Approve (low/nit only).
 
+---
+
+## Phase 3b: Adversarial Validator (skeptic pass)
+
+**Model: claude-opus-4-8**
+
+Spawn one validator subagent with model `claude-opus-4-8`. Pass the consolidated findings from Phase 3.
+
+For each finding, attach `verdict` (`CONFIRMED` | `DOWNGRADE` | `REJECTED`) and `verdict_reason` (one sentence). Reject if:
+- The cited symbol, file, or line does not exist or does not say what the finding claims.
+- The issue is already handled elsewhere in the diff or codebase context.
+- The finding is generic ("add error handling", "add validation") without a concrete failure scenario.
+- The finding is a matter of taste, not a deviation from codebase patterns visible in context.
+
+Downgrade severity if the issue is real but overstated.
+
+Drop all `REJECTED` findings entirely before rendering the output table. Apply `DOWNGRADE` severity adjustments before the final ranking.
+
+---
+
 ## Output
 
 ```markdown

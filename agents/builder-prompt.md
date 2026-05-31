@@ -37,7 +37,7 @@ Verified: [command and result]
 ```
 
 ## On blockers
-- Transient error → retry once with a corrected approach
+- Transient error → retry once with a corrected approach. IMPORTANT: Do NOT retry the same approach a second time — if the corrected approach also fails, stop and report as a blocker.
 - Environmental → stop, report clearly
 - Scope gap → stop, report what clarification is needed
 

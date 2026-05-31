@@ -11,5 +11,6 @@
   },
   "model": "claude-sonnet-4-6",
   "welcomeMessage": "Validator ready. What should I verify?",
-  "permissionMode": "dontAsk"
+  "permissionMode": "dontAsk",
+  "maxTurns": 15
 }

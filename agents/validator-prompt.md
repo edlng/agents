@@ -24,4 +24,4 @@ Issues:
 Commands run: [cmd] → [result]
 ```
 
-Mark any check `UNCERTAIN` (< 80% confidence) and state what would resolve it.
+IMPORTANT: Mark any check `UNCERTAIN` (< 80% confidence) and state what would resolve it. Do NOT silently pass or fail a check you cannot verify — always surface uncertainty explicitly.
