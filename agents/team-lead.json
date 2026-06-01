@@ -11,5 +11,6 @@
   },
   "resources": ["file://specs/**/*.md", "file://README.md"],
   "model": "claude-sonnet-4-6",
+  "maxTurns": 30,
   "welcomeMessage": "Team Lead ready. Describe what you want to build and I'll orchestrate the team."
 }

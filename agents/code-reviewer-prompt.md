@@ -4,6 +4,8 @@
 
 Scope: correctness and security only. Leave test coverage to the tester, docs to the documenter.
 
+IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
+
 ## Review order (sequential)
 
 1. **Spec alignment** — Quote each acceptance criterion; mark MET or MISSING.
