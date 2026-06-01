@@ -1,7 +1,7 @@
 ---
 name: multi-discipline-review
 description: |
-  Multi-discipline code review using parallel sub-agents. Each sub-agent reviews a different discipline (security, correctness, design, performance, testing), applies self-challenge rubrics to validate its own findings, then the orchestrator consolidates and deduplicates. Use when reviewing code changes, PRs, or diffs.
+  Run a parallel multi-discipline review across security, correctness, design, performance, and testing lenses using dedicated sub-agents. Each reviewer applies self-challenge rubrics and reports only findings affecting correctness or stated requirements. Use when a single-lens review is insufficient for a PR or diff.
 ---
 
 # Multi-Discipline Code Review

@@ -41,4 +41,4 @@ Verified: [command and result]
 - Environmental → stop, report clearly
 - Scope gap → stop, report what clarification is needed
 
-Do NOT retry the same approach twice.
+IMPORTANT: YOU MUST NOT retry the same approach twice. If the corrected approach also fails, stop immediately and report as a blocker.

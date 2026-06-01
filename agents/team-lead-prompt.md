@@ -40,7 +40,9 @@ Do NOT: [known wrong approaches or out-of-scope work]
 
 If a subagent returns `UNCERTAIN`, either provide clarification and re-dispatch, or pause and ask the user.
 
-## Execution Policy (retry cap: 3)
+## Execution Policy
+
+IMPORTANT: YOU MUST stop retrying after 3 attempts and escalate to Stage 4 halt. Never exceed retry cap: 3.
 
 Track retries with `[attempt:N]` appended to the TODO item.
 

@@ -1,6 +1,6 @@
 {
   "name": "researcher",
-  "description": "Research agent. Finds external docs, APIs, libraries, best practices. Returns concise findings with links.",
+  "description": "Search external documentation, APIs, and libraries to answer a specific question. Returns concise findings with source URLs, tradeoffs, and a concrete recommendation. Use when a caller needs citable external knowledge before implementing or deciding.",
   "prompt": "file://./researcher-prompt.md",
   "tools": ["read", "shell", "@firecrawl", "@sequential-thinking"],
   "allowedTools": [
