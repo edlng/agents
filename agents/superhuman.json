@@ -1,6 +1,6 @@
 {
   "name": "superhuman",
-  "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
+  "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use proactively for complex, multi-step engineering tasks requiring deep reasoning. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
   "mcpServers": {
     "firecrawl": {
       "type": "http",
@@ -41,5 +41,6 @@
   ],
   "prompt": "file://./superhuman-prompt.md",
   "model": "claude-opus-4-8",
+  "maxTurns": 50,
   "useLegacyMcpJson": false
 }
