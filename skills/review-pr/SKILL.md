@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Perform a senior-grade PR review against the linked Jira ticket. Runs a merged-lens Sonnet reviewer followed by an Opus skeptic validator pass. Reports only findings affecting correctness or stated requirements — not style. Output is local-only: printed in chat and saved to Obsidian.
+description: Senior-grade PR review against the linked Jira ticket and existing codebase. Uses Valkey caching, a merged-lens reviewer (sonnet-4-6), and an Opus skeptic validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.
 ---
 
 # Review PR (senior-dev grade)
@@ -68,7 +68,8 @@ Capture:
 - Naming conventions, error-handling patterns, logging style, type annotation usage
 - Existing utilities/helpers the new code should call rather than re-implement
 - Test framework, fixture patterns, assertion style
-- If a key/value store is in use: `valkey-glide` is the standard — flag any introduction of `redis-py` or other clients
+- If a key/value store is in use: `valkey-glide` is the standard — flag any introduction of `redis-py`, `ioredis`, or other clients unless there's a documented reason
+- When using valkey-glide: prefer `Batch` (or `ClusterBatch`) for multi-command operations over external concurrency libs like `asyncio.gather`, `Promise.all` with individual commands, or pipeline wrappers — Batch is atomic, reduces round-trips, and is the idiomatic GLIDE pattern
 
 Write to `pr:$RUNID:codebase_context`.
 
@@ -110,8 +111,6 @@ Prompt:
 > ### Lens 4 — Testability
 > Do tests cover every acceptance criterion and the edge cases listed in requirements? Are tests asserting behavior or just exercising code paths? Mocked dependencies that should be real (e.g. mocked DB when an integration test would catch the bug)? Missing tests for new failure paths?
 >
-> IMPORTANT: Report only gaps that affect correctness, security, or stated requirements. Do NOT file findings that are purely matters of taste or style unless they directly conflict with a codebase pattern visible in pr:$RUNID:codebase_context.
->
 > Rules for filing a finding:
 >   - Only flag what is in the diff, except where context is essential to prove a diff issue (e.g. a caller breaks because of a signature change in the diff).
 >   - Cite a real symbol, file, line. Do NOT invent function names or files.
@@ -127,14 +126,16 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: claude-opus-4-8**
+**Model: opus-4-7**
 
 This is where Opus earns its cost — it kills false positives that would otherwise reach the user.
 
-Spawn one validator subagent with model `claude-opus-4-8`. Pass `$RUNID` and `n` (current findings version).
+Spawn one validator subagent with model `opus-4-7`. Pass `$RUNID` and `n` (current findings version).
 
 Prompt:
 > "You are a skeptical senior engineer doing a second pass on another reviewer's findings. Your job is to maximize signal: confirm what is real, downgrade what is overstated, reject what is false, and add only high-confidence misses.
+>
+> **Effort budget: 10-20 tool calls max. Read only the files needed to verify claims — do not re-review the entire diff.**
 >
 > Read from Valkey at `localhost:8888`:
 >   - `pr:$RUNID:findings_v$n`
@@ -144,7 +145,12 @@ Prompt:
 >
 > If you need to verify a claim against a file, use `mcp__github__get_file_contents` against the PR head ref. Do NOT trust the finding's evidence blindly — re-read the source if anything looks off.
 >
-> For each finding in v$n, attach `verdict` (`CONFIRMED` | `DOWNGRADE` | `REJECTED`), `verdict_reason` (one sentence), and if `DOWNGRADE` also a new `severity`. Reject the finding if any of:
+> For each finding, apply this self-challenge before deciding your verdict:
+> 1. Can I point to the exact line in the diff that proves this claim?
+> 2. Did I verify the issue isn't already handled elsewhere in the diff or codebase?
+> 3. Would a concrete input/scenario actually trigger this failure?
+>
+> Then attach `verdict` (`CONFIRMED` | `DOWNGRADE` | `REJECTED`), `verdict_reason` (one sentence), and if `DOWNGRADE` also a new `severity`. Reject the finding if any of:
 >   - The cited symbol/file/line does not exist or does not say what the finding claims (hallucinated evidence).
 >   - The 'bug' is already handled elsewhere in the diff or in the codebase context.
 >   - The finding is generic ('add error handling', 'add validation') without a concrete failure scenario.
