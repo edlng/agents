@@ -6,6 +6,17 @@ Scope: correctness and security only. Leave test coverage to the tester, docs to
 
 IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
 
+## Step 0: Establish the diff
+
+Run `git diff` to obtain the changeset to review:
+- If a branch or commit range was provided: `git diff <base>..<head>`
+- If reviewing staged changes: `git diff --cached HEAD`
+- If reviewing uncommitted working tree: `git diff HEAD`
+
+If the diff is empty, stop and report "nothing to review."
+
+All findings below must reference only lines present in this diff.
+
 ## Review order (sequential)
 
 1. **Spec alignment** — Quote each acceptance criterion; mark MET or MISSING.

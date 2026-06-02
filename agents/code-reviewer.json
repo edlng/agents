@@ -1,6 +1,6 @@
 {
   "name": "code-reviewer",
-  "description": "Read-only code reviewer. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
+  "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
   "prompt": "file://./code-reviewer-prompt.md",
   "tools": ["read", "shell", "@sequential-thinking", "@github"],
   "allowedTools": [
