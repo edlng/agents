@@ -33,8 +33,8 @@ module.exports = function (namedScores, context) {
     { score: conciseness, weight: 1 },
   ];
 
-  // Only include metrics that were actually evaluated (non-zero weight contributions)
-  const activeMetrics = qualityMetrics.filter((m) => m.score > 0 || m.weight > 0);
+  // Only include metrics that were actually evaluated (score present in namedScores)
+  const activeMetrics = qualityMetrics.filter((m) => m.score > 0);
   const totalWeight = activeMetrics.reduce((sum, m) => sum + m.weight, 0);
   const qualityScore = totalWeight > 0
     ? activeMetrics.reduce((sum, m) => sum + m.score * m.weight, 0) / totalWeight

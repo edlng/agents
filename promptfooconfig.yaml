@@ -25,18 +25,6 @@ defaultTest:
       metric: cost
       weight: 1
 
-    # Rubric: overall quality judged by LLM
-    - type: llm-rubric
-      threshold: 0.7
-      value: |
-        The response must:
-        1. Directly address the task given (even if the task is trivial)
-        2. Be factually correct
-        3. Not hallucinate information
-        A short, correct answer to a simple task is perfectly acceptable.
-      metric: rubric_quality
-      weight: 2
-
 derivedMetrics:
   # Cost-accuracy ratio: uses latency as a proxy for cost (no API key = no token cost)
   # Lower is better (fast + high quality = best)

@@ -5,7 +5,8 @@ set -euo pipefail
 echo "==> Clearing promptfoo cache..."
 rm -rf ~/.promptfoo
 
-echo "==> Running evaluations..."
-npx promptfoo eval --repeat 3
+REPEAT=${EVAL_REPEAT:-3}
+echo "==> Running evaluations (repeat=${REPEAT})..."
+npx promptfoo eval --repeat "$REPEAT"
 
 echo "==> Done. Run 'npm run eval:view' to see results in browser."

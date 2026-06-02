@@ -74,16 +74,7 @@
         "head",
         "tail",
         "find",
-        "grep",
-        "@firecrawl/firecrawl_scrape",
-        "@firecrawl/firecrawl_search",
-        "@firecrawl/firecrawl_map",
-        "@firecrawl/firecrawl_extract",
-        "@firecrawl/firecrawl_crawl",
-        "@firecrawl/firecrawl_check_crawl_status",
-        "@firecrawl/firecrawl_agent",
-        "@firecrawl/firecrawl_agent_status",
-        "@sequential-thinking/sequentialthinking"
+        "grep"
       ]
     }
   },

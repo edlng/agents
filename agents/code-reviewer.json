@@ -60,7 +60,6 @@
       ],
       "autoApprove": [
         "get_file_contents",
-        "get_file_contents",
         "pull_request_read",
         "search_pull_requests",
         "get_me",
