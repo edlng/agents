@@ -191,31 +191,34 @@ Prompt:
 > "Read `pr:$RUNID:findings_v<final>` from Valkey. Drop all `verdict: REJECTED` findings entirely. Group remaining findings by severity (use the post-downgrade severity if `DOWNGRADE`). Produce markdown:
 >
 > ```
-> # Review: $RUNID  (<PR title>)
+> # 🔎 PR Review: <PR title>
 >
-> Author: <author>  |  Files: <count>  |  +<additions> / -<deletions>
-> Linked Jira: <key or 'none'>
+> **Author:** <author> | **Files:** <count> | **+<additions> / -<deletions>** | **Jira:** <key or none>
 >
-> ## Blocking
+> ---
+>
+> ## 🚨 Blocking (<N>)
 > For each blocking finding:
-> - **<file>:<line_range>** — <claim>
->   - Evidence: <evidence>
->   - Fix: <suggested_fix>
+> - **`<file>:<line_range>`** — <claim>
+>   - `<evidence>`
+>   - → <suggested_fix>
 >
-> ## Recommended
+> ## 💡 Recommended (<N>)
 > <same format, severity=suggestion>
 >
-> ## Nits
-> <same format, severity=nit — keep these terse>
+> ## 📝 Nits (<N>)
+> <same format, severity=nit — one line per finding, omit evidence>
+>
+> ---
 >
 > ## Summary
 > <one paragraph — overall state of the PR>
 >
-> ## Suggested PR action
-> <one of: approve / request changes / comment only — based on findings>
+> ## 🎯 Action
+> <✅ Approve | ⛔ Request changes | 💬 Comment only>
 > ```
 >
-> Tone: this is for the user to decide whether to post. Be direct but not condescending. State facts, not judgments. Avoid 'simply', 'just', 'obviously'. No emojis."
+> Tone: this is for the user to decide whether to post. Be direct but not condescending. State facts, not judgments. Avoid 'simply', 'just', 'obviously'."
 
 Print the final markdown directly in chat.
 

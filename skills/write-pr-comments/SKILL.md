@@ -92,7 +92,46 @@ Apply humanizer to the combined `claim + evidence + fix` text of each approved f
 
 ---
 
-## Phase 6: Post Approved Comments
+## Phase 6: Resolve Patch Positions
+
+The GitHub Reviews API requires `position` (1-indexed line within the file's diff patch), **not** the absolute file line number. Using `"line"` returns HTTP 422 "Line could not be resolved" for new files and many changed files.
+
+**Build a position map before posting:**
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<number>/files \
+  --jq '.[] | {path: .filename, patch: .patch}' 
+```
+
+For each file that has queued comments, parse its patch:
+- Line 1 of the patch is the `@@` hunk header → position 1
+- Each subsequent line (added `+`, removed `-`, or context) increments position by 1
+- File line N maps to patch position N+1 (because the `@@` header occupies position 1)
+
+Quick shell helper to find the patch position for a given file line:
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<number>/files \
+  --jq '.[] | select(.filename == "<path>") | .patch' \
+  | cat -n \
+  | grep -n "<search_string_near_target_line>"
+# The cat -n line number IS the patch position
+```
+
+Use this to verify position for each comment before posting. The patch position for file line N in a new file is always `N + 1` (one-based, offset by the `@@` header line).
+
+---
+
+## Phase 7: Post Approved Comments
+
+Before posting, write a top-level review body that:
+- Opens warmly and positively — lead with what's great about the PR, what it accomplishes, what you genuinely liked
+- Frames any comments as small opportunities rather than problems — "one quick thing to sort out", "a couple of small notes"
+- Closes on an encouraging note — something that signals you're rooting for this to land
+- Tone: enthusiastic teammate who's excited the work exists, not a gatekeeper looking for problems
+
+Example:
+> Good stuff here — the three-tier progression from single-node to EKS is well-structured, and the architecture diagrams are clear and useful. Left one note about credential wiring in the Kubernetes manifest worth a look before merge, plus a couple of small nits. Nice work!
 
 Construct a single review via `gh api`:
 
@@ -101,11 +140,11 @@ cat <<'EOF' | gh api repos/<owner>/<repo>/pulls/<number>/reviews --method POST -
 {
   "commit_id": "<commit_sha>",
   "event": "COMMENT",
-  "body": "Review: <count> comments posted.",
+  "body": "<friendly review body written above>",
   "comments": [
     {
       "path": "<file>",
-      "line": <line>,
+      "position": <patch_position>,
       "body": "<formatted comment body>"
     }
   ]
@@ -132,6 +171,7 @@ After posting, print a confirmation with the review URL and the count of comment
 
 - Use `gh` CLI for all GitHub writes (posting review comments). This is the inverse of review-pr which is read-only.
 - Use `mcp__obsidian__*` tools for reading review notes.
+- NEVER use `"line"` in the reviews API payload — always use `"position"` (patch-relative). `"line"` returns HTTP 422 for new files.
 - NEVER modify the Obsidian note.
 - NEVER approve or request changes — always use `event: "COMMENT"`.
 - If `gh auth status` fails, stop and tell the user to authenticate.

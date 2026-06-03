@@ -1,0 +1,29 @@
+{
+  "name": "developer",
+  "description": "Developer Agent in a multi-agent system",
+  "tools": [
+    "*"
+  ],
+  "allowedTools": [
+    "@builtin",
+    "fs_*",
+    "execute_bash",
+    "@cao-mcp-server"
+  ],
+  "useLegacyMcpJson": false,
+  "resources": [
+    "file:///Users/liawedwa/.aws/cli-agent-orchestrator/agent-context/developer.md",
+    "skill:///Users/liawedwa/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
+  ],
+  "mcpServers": {
+    "cao-mcp-server": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/awslabs/cli-agent-orchestrator.git@main",
+        "cao-mcp-server"
+      ]
+    }
+  }
+}

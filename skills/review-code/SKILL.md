@@ -155,26 +155,26 @@ Prompt:
 > "Read `local:$RUNID:findings_v<final>`. Drop `verdict: REJECTED`. Group by severity (post-downgrade). Output markdown:
 >
 > ```
-> # Local Review: $RUNID
+> # 🔍 Local Review: $RUNID
 >
-> ## Must Fix (N)
+> ## 🔴 Must Fix (N)
 > For each must_fix:
-> - **<file>:<line>** — <claim>
->   - Evidence: <evidence>
->   - Fix: <suggested_fix>
->   - [auto-fixable] if true
+> - **`<file>:<line>`** — <claim>
+>   - `<evidence>`
+>   - → <suggested_fix>
+>   - ⚡ *auto-fixable* (if true)
 >
-> ## Should Fix (N)
+> ## 🟡 Should Fix (N)
 > <same format>
 >
-> ## Consider (N)
-> <same format, terse>
+> ## 💭 Consider (N)
+> <same format, one line per finding — omit evidence if claim is self-evident>
 >
-> ## Skipped lenses
-> <list any skipped, e.g. 'requirements (no Jira ticket found)'>
+> ## ℹ️ Skipped
+> <list any skipped lenses, e.g. 'requirements (no Jira ticket found)'>
 >
-> ## Bottom line
-> <one paragraph: ready to commit, ready with fixes, or needs more work>
+> ## Verdict
+> <✅ Ready to commit | ⚠️ Fix N items before committing | 🚫 Needs significant work>
 > ```"
 
 Print the report.

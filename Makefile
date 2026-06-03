@@ -22,11 +22,11 @@ push:
 pull:
 ifndef CONFIRM
 	@echo "--- DRY RUN (run 'make pull CONFIRM=1' to apply) ---"
-	rsync -avn $(KIRO_SKILLS)/ $(LOCAL_SKILLS)/
-	rsync -avn $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/
+	rsync -avnL $(KIRO_SKILLS)/ $(LOCAL_SKILLS)/
+	rsync -avnL $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/
 else
-	rsync -av $(KIRO_SKILLS)/ $(LOCAL_SKILLS)/
-	rsync -av $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/
+	rsync -avL $(KIRO_SKILLS)/ $(LOCAL_SKILLS)/
+	rsync -avL $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/
 endif
 
 # Show what's out of sync without changing anything

@@ -1,0 +1,13 @@
+{
+  "name": "team-leader",
+  "description": "Orchestrator. Delegates tasks, tracks TODO. Does NOT write code or run commands.",
+  "prompt": "file://./team-leader-prompt.md",
+  "tools": ["read", "subagent", "todo", "@sequential-thinking"],
+  "allowedTools": ["read", "subagent", "todo", "@sequential-thinking/sequentialthinking"],
+  "toolsSettings": {
+    "subagent": {
+      "trustedAgents": ["researcher", "developer", "tester", "code-reviewer"]
+    }
+  },
+  "model": "claude-sonnet-4.6"
+}
