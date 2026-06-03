@@ -37,7 +37,8 @@ Verified: [command and result]
 ```
 
 ## On blockers
-- Transient error → retry once with a corrected approach. IMPORTANT: Do NOT retry the same approach a second time — if the corrected approach also fails, stop and report as a blocker.
+- **Retryable errors** (rate limits, 5xx, timeouts, transient tool failures) → retry once with a corrected approach. IMPORTANT: Do NOT retry the same approach a second time — if the corrected approach also fails, stop and report as a blocker.
+- **Non-retryable errors** (400 bad request, 401/403 auth failures, context overflow, schema violations) → stop immediately and report as a blocker. Do not retry.
 - Environmental → stop, report clearly
 - Scope gap → stop, report what clarification is needed
 

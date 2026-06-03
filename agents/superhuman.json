@@ -1,6 +1,6 @@
 {
   "name": "superhuman",
-  "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use proactively for complex, multi-step engineering tasks requiring deep reasoning. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
+  "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use for complex, multi-step engineering tasks requiring deep reasoning, architectural decisions, security analysis, or long-horizon planning. Researches with firecrawl and cross-checks all solutions for correctness.",
   "mcpServers": {
     "firecrawl": {
       "type": "http",

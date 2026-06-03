@@ -76,7 +76,7 @@ Only flag code that is **new in this diff** (not pre-existing gaps).
 ## Phase 3: Consolidate
 
 1. Deduplicate cross-agent findings on the same line/issue (keep highest severity).
-2. Rank: critical → high → medium → low.
+2. Rank: critical → high → medium → low. Within the same severity tier, order by discipline: correctness → security → performance → test coverage.
 3. Verdict: 🔴 Block (critical/high) | 🟡 Approve with comments (medium) | 🟢 Approve (low/nit only).
 
 ---

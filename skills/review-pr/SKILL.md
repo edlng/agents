@@ -126,11 +126,11 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: opus-4-7**
+**Model: claude-opus-4-8**
 
 This is where Opus earns its cost — it kills false positives that would otherwise reach the user.
 
-Spawn one validator subagent with model `opus-4-7`. Pass `$RUNID` and `n` (current findings version).
+Spawn one validator subagent with model `claude-opus-4-8`. Pass `$RUNID` and `n` (current findings version).
 
 Prompt:
 > "You are a skeptical senior engineer doing a second pass on another reviewer's findings. Your job is to maximize signal: confirm what is real, downgrade what is overstated, reject what is false, and add only high-confidence misses.
