@@ -32,7 +32,7 @@ Cache keys (TTL 6h):
 
 ## Phase 1: Context Gathering
 
-**Model: sonnet-4-6** (single agent, no spawn)
+**Model: latest Sonnet** (single agent, no spawn)
 
 ### 1a. Determine the diff scope
 - If `$ARGUMENTS` is `branch`: `git merge-base HEAD origin/main` (or `master`), then `git diff <merge-base>...HEAD`.
@@ -61,7 +61,7 @@ Write to `local:$RUNID:codebase_context`.
 
 ## Phase 2: Self-Review (merged lenses)
 
-**Model: sonnet-4-6**
+**Model: latest Sonnet**
 
 Spawn ONE reviewer subagent. Apply lenses in a single pass. Use the `code-review-excellence` skill as the reasoning frame.
 
@@ -116,7 +116,7 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: claude-opus-4-8**
+**Model: latest Opus**
 
 Spawn one validator subagent.
 
@@ -147,9 +147,9 @@ If `reject_rate >= 0.30` OR `added_count >= 2`: re-run Phase 3. Cap at 2 validat
 
 ## Phase 4: Report + Auto-Fix Offer
 
-**Model: haiku-4-5** (for report aggregation)
+**Model: latest Haiku** (for report aggregation)
 
-Spawn a haiku-4-5 summary subagent.
+Spawn a summary subagent with the latest Haiku model.
 
 Prompt:
 > "Read `local:$RUNID:findings_v<final>`. Drop `verdict: REJECTED`. Group by severity (post-downgrade). Output markdown:

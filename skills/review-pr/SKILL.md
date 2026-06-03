@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Senior-grade PR review against the linked Jira ticket and existing codebase. Uses Valkey caching, a merged-lens reviewer (sonnet-4-6), and an Opus skeptic validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.
+description: Senior-grade PR review against the linked Jira ticket and existing codebase. Uses Valkey caching, a merged-lens reviewer (latest Sonnet), and a skeptic validator pass (Opus for large diffs). Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.
 ---
 
 # Review PR (senior-dev grade)
@@ -11,7 +11,7 @@ Review someone else's pull request against the linked Jira ticket and the existi
 
 **Output is local-only.** Print the review in chat. **DO NOT** post comments, reviews, approvals, or any write operation to GitHub. The user will copy and post manually after reviewing the output.
 
-This workflow uses Valkey at `localhost:8888` as a shared cache. **All GitHub interactions go through the GitHub MCP server (`mcp__github__*` tools) only.** Do not use the `gh` CLI for anything — not reads, not writes. If a needed operation is not available via MCP, stop and tell the user instead of falling back to `gh`.
+This workflow uses Valkey at `localhost:8888` as a shared cache. **GitHub reads use the `gh` CLI** (faster, fewer round-trips than MCP tool calls). Do not use `mcp__github__*` tools for reads — use `gh` directly. Do NOT use `gh` for writes (no `gh pr review`, `gh pr comment`, etc.). Output is read-only.
 
 ---
 
@@ -30,10 +30,12 @@ Cache keys for this run (TTL 6h):
 
 ## Phase 1: Context Gathering
 
-**Model: sonnet-4-6** (single agent — do not spawn for this phase)
+**Model: latest Sonnet** (single agent — do not spawn for this phase)
 
-### 1a. Fetch PR metadata via GitHub MCP
-Use `mcp__github__pull_request_read` with method `get` for the PR identified by `$ARGUMENTS`. Capture: title, body, head ref, base ref, author, additions, deletions, changed files.
+### 1a. Fetch PR metadata via gh CLI
+Run: `gh pr view <number> --repo <owner/repo> --json title,body,headRefName,baseRefName,author,additions,deletions,changedFiles,files`
+
+Capture: title, body, head ref, base ref, author, additions, deletions, changed files.
 
 If `additions + deletions > 1500`, warn the user that the review will be lossy and ask whether to proceed or scope it down.
 
@@ -43,9 +45,9 @@ Cache to `pr:$RUNID:metadata`.
 Extract the Jira issue key from the PR title, body, or branch name. If none is found, search `mcp__atlassian__searchJiraIssuesUsingJql` for tickets the PR likely references (use keywords from branch name and title). If no confident match, list top 3 candidates and ask the user. If the user says "no ticket", proceed with PR description as the only requirements source.
 
 ### 1c. Snapshot the diff
-Use `mcp__github__pull_request_read` with method `get_diff` (or the equivalent diff-fetching method exposed by the MCP) to retrieve the full unified diff for the PR.
+Run: `gh pr diff <number> --repo <owner/repo>`
 
-If the MCP server does not expose a diff method directly, use `mcp__github__pull_request_read` with `get_files` to get the per-file patches and concatenate them into a unified diff format.
+This returns the full unified diff in a single call.
 
 Write to `pr:$RUNID:diff`.
 
@@ -59,9 +61,9 @@ Use `mcp__atlassian__getJiraIssue` for the linked issue (if any). Combine with t
 Write to `pr:$RUNID:requirements`.
 
 ### 1e. Build Codebase Context
-For each touched file, fetch its current state from the PR's head ref using `mcp__github__get_file_contents` (specify the head ref so file contents reflect the PR's branch). Also fetch 1–2 callers/neighbors of the most non-trivial touched files.
+For each touched file, fetch its current state from the PR's head ref using `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d` or `gh pr checkout <number> --detach` if bulk reads are needed. Also fetch 1–2 callers/neighbors of the most non-trivial touched files.
 
-**Do NOT check out the PR locally. Do NOT modify the user's working tree.** Reads are GitHub MCP only.
+**Do NOT modify the user's working tree.** If using `gh pr checkout`, do so in a temp worktree or use the API approach above.
 
 Capture:
 - Language, runtime, package manager
@@ -77,9 +79,9 @@ Write to `pr:$RUNID:codebase_context`.
 
 ## Phase 2: Initial Review (merged lenses)
 
-**Model: sonnet-4-6**
+**Model: latest Sonnet**
 
-Spawn ONE reviewer subagent with model `sonnet-4-6`. The subagent applies all four lenses in one pass — diff loaded once, not four times. Use the `code-review-excellence` skill as the reasoning frame for lenses 2 and 3.
+Spawn ONE reviewer subagent with the latest Sonnet model. The subagent applies all four lenses in one pass — diff loaded once, not four times. Use the `code-review-excellence` skill as the reasoning frame for lenses 2 and 3.
 
 Prompt:
 > "You are a senior reviewer. Read these from Valkey at `localhost:8888`:
@@ -87,7 +89,7 @@ Prompt:
 >   - `pr:$RUNID:requirements`
 >   - `pr:$RUNID:codebase_context`
 >
-> If you need to inspect a file beyond what's in the codebase context cache, use `mcp__github__get_file_contents` against the PR head ref. Do not invent file contents.
+> If you need to inspect a file beyond what's in the codebase context cache, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do not invent file contents.
 >
 > Apply four lenses to the diff in a single pass. Output strict JSON: a flat array of findings. Each finding has these fields:
 >   - `id`: short slug, e.g. `auth-missing-rate-limit`
@@ -126,11 +128,14 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: opus-4-7**
+**Model selection by diff size:**
+- If `additions + deletions <= 300`: **skip Phase 3 entirely** — the Sonnet reviewer is sufficient for small diffs. Proceed directly to Phase 4 using `findings_v1`.
+- If `additions + deletions <= 800`: use **latest Sonnet** as the validator (cheaper, still catches hallucinations).
+- If `additions + deletions > 800`: use **latest Opus** (earns its cost on large/complex diffs).
 
-This is where Opus earns its cost — it kills false positives that would otherwise reach the user.
+This is where the validator earns its cost — it kills false positives that would otherwise reach the user.
 
-Spawn one validator subagent with model `opus-4-7`. Pass `$RUNID` and `n` (current findings version).
+Spawn one validator subagent with the model selected above. Pass `$RUNID` and `n` (current findings version).
 
 Prompt:
 > "You are a skeptical senior engineer doing a second pass on another reviewer's findings. Your job is to maximize signal: confirm what is real, downgrade what is overstated, reject what is false, and add only high-confidence misses.
@@ -143,7 +148,7 @@ Prompt:
 >   - `pr:$RUNID:requirements`
 >   - `pr:$RUNID:codebase_context`
 >
-> If you need to verify a claim against a file, use `mcp__github__get_file_contents` against the PR head ref. Do NOT trust the finding's evidence blindly — re-read the source if anything looks off.
+> If you need to verify a claim against a file, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do NOT trust the finding's evidence blindly — re-read the source if anything looks off.
 >
 > For each finding, apply this self-challenge before deciding your verdict:
 > 1. Can I point to the exact line in the diff that proves this claim?
@@ -178,9 +183,9 @@ Cap at **3 validator passes total**. In practice 1 pass is enough; 2 is the wors
 
 ## Phase 4: Final Report (local only)
 
-**Model: haiku-4-5**
+**Model: latest Haiku**
 
-Spawn a summary subagent with model `haiku-4-5`. Pass `$RUNID` and the final findings version.
+Spawn a summary subagent with the latest Haiku model. Pass `$RUNID` and the final findings version.
 
 Prompt:
 > "Read `pr:$RUNID:findings_v<final>` from Valkey. Drop all `verdict: REJECTED` findings entirely. Group remaining findings by severity (use the post-downgrade severity if `DOWNGRADE`). Produce markdown:
@@ -224,13 +229,12 @@ Confirm to the user that the note was saved, including the path used.
 
 ## STRICT: No GitHub writes
 
-This command is **read-only on GitHub** AND **MCP-only**. Do NOT:
-- Use the `gh` CLI for anything (no `gh pr view`, `gh pr diff`, `gh pr review`, `gh pr comment`, etc.). All GitHub access is via `mcp__github__*` tools.
-- Post a review (`mcp__github__pull_request_review_write`)
-- Add a comment (`mcp__github__add_issue_comment`, `mcp__github__add_comment_to_pending_review`)
+This command is **read-only on GitHub**. `gh` CLI is used for reads (view, diff, API GET). Do NOT:
+- Post a review (`gh pr review`, `mcp__github__pull_request_review_write`)
+- Add a comment (`gh pr comment`, `mcp__github__add_issue_comment`)
 - Approve or request changes
-- Update PR title/body (`mcp__github__update_pull_request`)
-- Push to any branch (`mcp__github__push_files`, `mcp__github__create_or_update_file`)
-- Any other write method (`*_write`, `create_*`, `update_*`, `merge_*`, `delete_*`)
+- Update PR title/body
+- Push to any branch
+- Any other write method
 
 The user will read the output in chat and post manually if desired.

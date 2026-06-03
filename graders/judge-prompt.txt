@@ -8,10 +8,14 @@ Output to evaluate:
 
 Before scoring, write a brief <scratchpad> noting what the output does well and where it falls short. Then score from that reasoning.
 
-Score three dimensions (0.0–1.0 each), average for the final score:
-1. Task completion — does the output fully address what was asked?
-2. Correctness — are claims and logic sound?
-3. Rubric adherence — does it satisfy the rubric criteria?
+Score on a 1–5 scale using these criteria:
+  1 = Completely wrong or missing — the output fails to address the task or rubric at all
+  2 = Partial with major gaps — attempts the task but misses key requirements or has serious errors
+  3 = Acceptable but incomplete — mostly correct with minor gaps; meets the rubric partially
+  4 = Good with minor issues — meets all rubric criteria; small imperfections only
+  5 = Excellent — fully addresses the task, satisfies every rubric criterion, no meaningful issues
+
+Normalize to 0–1 before returning: divide your score by 5.
 
 Respond with JSON: {"pass": boolean, "score": number, "reason": "explanation"}
 

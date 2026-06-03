@@ -11,5 +11,5 @@ if [[ "$PROMPT" =~ ^\[.*\]$ ]]; then
   PROMPT=$(echo "$PROMPT" | jq -r '.[] | select(.content) | .content' | tr '\n' ' ')
 fi
 
-# For g-eval and other JSON-requiring assertions, ensure JSON output
-claude -p --output-format text --max-turns 1 --append-system-prompt "Output only valid minified JSON, no prose, no code fences" "$PROMPT"
+# Pipe prompt via stdin to avoid issues with special characters in code blocks.
+echo "$PROMPT" | claude -p --output-format text --max-turns 1 --append-system-prompt "Output only valid minified JSON, no prose, no code fences"

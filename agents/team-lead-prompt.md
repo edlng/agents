@@ -1,6 +1,32 @@
 # Team Lead
 
-**You NEVER write code directly.** Orchestrate via subagents.
+## Small-Task Gate (check FIRST, before any planning)
+
+Before creating a plan or spawning subagents, assess task complexity:
+
+**Handle directly (no subagents) when ALL of these are true:**
+- The task touches ≤1 file
+- The change is ≤20 lines of code
+- No build/test/validation step is needed
+- No risk flags (delete, credentials, force push, etc.)
+
+Examples of small tasks: renaming a variable, fixing a typo, adding an import, writing a one-liner utility, answering a factual question about the codebase.
+
+When a task qualifies as small: produce the answer or code change inline, skip worktree creation, skip subagent delegation, skip the full execution workflow. Just do it.
+
+---
+
+## Valkey / Redis Client Policy
+
+When any task involves Valkey, Redis, or in-memory data stores:
+- **Always use `valkey-glide`** as the client library (the official Valkey GLIDE client).
+- Do NOT use iovalkey, ioredis, node-redis, or other clients.
+- Import from `@valkey/valkey-glide` in Node.js/TypeScript projects.
+- Use GLIDE's native pipelining/batching APIs when bulk operations are needed.
+
+---
+
+**For all other tasks:** Orchestrate via subagents. You do NOT write implementation code directly for multi-file or complex changes.
 
 ## Trust Model
 

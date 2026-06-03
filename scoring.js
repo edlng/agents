@@ -1,55 +1,38 @@
 /**
  * Custom assertion scoring function.
- * Factors cost into the final score — penalizes expensive responses
- * that don't proportionally improve quality.
+ * Splits metrics into quality vs cost, blends 80/20.
+ *
+ * Cost metric: "cost" (output length proxy — fewer tokens = higher score)
+ * Quality metrics: everything else (accuracy, completeness, rubric_quality, etc.)
  *
  * @param {Record<string, number>} namedScores - metric name → score (0-1)
- * @param {{ threshold?: number, tokensUsed?: { total: number, prompt: number, completion: number } }} context
+ * @param {{ threshold?: number }} context
  * @returns {{ pass: boolean, score: number, reason: string }}
  */
 module.exports = function (namedScores, context) {
-  const {
-    accuracy = 0,
-    accuracy_graded = 0,
-    completeness = 0,
-    completeness_rubric = 0,
-    completeness_format = 0,
-    rubric_quality = 0,
-    rubric_reasoning = 0,
-    cost = 1,
-    cost_efficiency = 1,
-    conciseness = 0,
-  } = namedScores;
+  const costMetricNames = ['cost', 'conciseness'];
 
-  // Aggregate quality score (weighted average of available quality metrics)
-  const qualityMetrics = [
-    { score: accuracy, weight: 3 },
-    { score: accuracy_graded, weight: 2 },
-    { score: completeness, weight: 3 },
-    { score: completeness_rubric, weight: 2 },
-    { score: completeness_format, weight: 1 },
-    { score: rubric_quality, weight: 2 },
-    { score: rubric_reasoning, weight: 2 },
-    { score: conciseness, weight: 1 },
-  ];
+  const quality = [];
+  const cost = [];
 
-  // Only include metrics that were actually evaluated (score present in namedScores)
-  const activeMetrics = qualityMetrics.filter((m) => m.score > 0);
-  const totalWeight = activeMetrics.reduce((sum, m) => sum + m.weight, 0);
-  const qualityScore = totalWeight > 0
-    ? activeMetrics.reduce((sum, m) => sum + m.score * m.weight, 0) / totalWeight
+  for (const [name, score] of Object.entries(namedScores)) {
+    if (costMetricNames.includes(name)) cost.push(score);
+    else quality.push(score);
+  }
+
+  const avgQuality = quality.length > 0
+    ? quality.reduce((a, b) => a + b, 0) / quality.length
     : 0;
+  const avgCost = cost.length > 0
+    ? cost.reduce((a, b) => a + b, 0) / cost.length
+    : 1; // no cost signal = assume no penalty
 
-  // Cost penalty: reduce score if cost assertions failed
-  const costPenalty = (cost + cost_efficiency) / 2;
-  const finalScore = qualityScore * 0.85 + costPenalty * 0.15;
-
-  const threshold = context.threshold || 0.5;
-  const pass = finalScore >= threshold;
+  const finalScore = avgQuality * 0.8 + avgCost * 0.2;
+  const pass = finalScore >= (context.threshold || 0.5);
 
   return {
     pass,
     score: finalScore,
-    reason: `Quality: ${(qualityScore * 100).toFixed(1)}%, Cost factor: ${(costPenalty * 100).toFixed(1)}%, Final: ${(finalScore * 100).toFixed(1)}%`,
+    reason: `Quality: ${(avgQuality * 100).toFixed(0)}% | Cost: ${(avgCost * 100).toFixed(0)}%`,
   };
 };

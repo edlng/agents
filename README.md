@@ -14,14 +14,15 @@ Ensure both CLIs are available:
 
 ```bash
 claude --version   # Claude Code CLI (used as provider + grader)
-kiro --version     # Kiro CLI
+kiro-cli --version     # Kiro CLI
 ```
 
 ## Run Evaluations
 
 ```bash
-./run-eval.sh          # Clear state + run all tests (recommended)
-npm run eval           # Run all test cases (may fail on stale DB)
+./run-eval.sh          # Run all tests, cache preserved between runs
+./run-eval.sh --reset  # Clear state + run (use when DB errors occur)
+npm run eval           # Run all test cases directly
 npm run eval:view      # Open results in browser UI
 npm run eval:reset     # Nuke promptfoo state (fixes DB errors)
 ```
@@ -97,6 +98,39 @@ providers:
     label: claude-code
   # - id: 'exec: bash providers/kiro_cli.sh'
   #   label: kiro-cli
+```
+
+## Cost Efficiency
+
+### Current cost per eval run
+
+| Component | Calls/run | Notes |
+|-----------|-----------|-------|
+| Provider calls | 44 (4 deterministic × 1 + 6 non-deterministic × 3, × 2 providers) | Down from 60 with flat repeat=3 |
+| LLM grading calls | 22 (5 tests with llm-rubric/g-eval × 2 providers, weighted by repeat) | Down from 54+ with redundant assertions |
+| **Total LLM invocations** | **~66** | **Down from ~114** — cache preserved between runs |
+
+### Design decisions
+
+1. **Cache preserved between runs** — `run-eval.sh` no longer clears `~/.promptfoo`. Cached results are reused when prompts/tests haven't changed. Use `--reset` flag only when encountering DB errors.
+
+2. **LLM grading only where JS can't cover** — Tests 1, 2, 6, 7 use deterministic `icontains`/`javascript` assertions that fully validate correctness. LLM grading is reserved for subjective quality (Tests 3, 5, 8, 9, 10) where keyword matching isn't sufficient.
+
+3. **Per-test repeat** — Only non-deterministic tests (code reviews, explanations) run 3 times. Factual Q&A and structured output tests run once since variance is near zero.
+
+4. **Full model for all grading** — `grader.sh` uses the same Claude model regardless of task complexity. This is the largest remaining inefficiency. If API-based grading is ever added, trivial checks (e.g., "does it mention Paris?") should use a cheaper model.
+
+### Reducing cost further
+
+```bash
+# Quick iteration: single pass, rely on cache
+npx promptfoo eval                          # uses default repeat=1
+
+# Override repeat for specific investigation
+EVAL_REPEAT=5 ./run-eval.sh                 # higher repeat for statistical analysis
+
+# Reset only when needed
+./run-eval.sh --reset                       # clear state + run
 ```
 
 ## Interpreting Results

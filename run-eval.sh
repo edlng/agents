@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Run evaluations with automatic recovery from DB errors.
+# Run evaluations. Cache is preserved between runs for efficiency.
+# Use --reset flag or npm run eval:reset to clear state when needed.
 set -euo pipefail
 
-echo "==> Clearing promptfoo cache..."
-rm -rf ~/.promptfoo
+if [[ "${1:-}" == "--reset" ]]; then
+  echo "==> Clearing promptfoo state..."
+  rm -rf ~/.promptfoo
+fi
 
-REPEAT=${EVAL_REPEAT:-3}
+REPEAT=${EVAL_REPEAT:-1}
 echo "==> Running evaluations (repeat=${REPEAT})..."
 npx promptfoo eval --repeat "$REPEAT"
 
