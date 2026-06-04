@@ -2,8 +2,8 @@
   "name": "validator",
   "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only — inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
   "prompt": "file://./validator-prompt.md",
-  "tools": ["read", "shell"],
-  "allowedTools": ["read", "shell"],
+  "tools": ["read", "write", "shell"],
+  "allowedTools": ["read", "write", "shell"],
   "toolsSettings": {
     "shell": {
       "autoAllowReadonly": true
