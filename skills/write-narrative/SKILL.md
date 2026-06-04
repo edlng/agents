@@ -27,9 +27,7 @@ Extract:
 
 ## Phase 2: Research
 
-**Model: sonnet-4-6** (spawn `voltagent-research:research-analyst` subagent)
-
-Spawn a `voltagent-research:research-analyst` subagent to research the topic described in the Jira issue.
+Spawn a `researcher` subagent to research the topic described in the Jira issue.
 
 Brief: "**Effort budget: 10-20 tool calls. Prioritize official docs and GitHub repos over general web searches.** Research the following topic to support writing a technical narrative about Valkey compatibility and integration. The goal is to understand: (1) what the framework/library/tool does and how it uses Redis or caching (if it has it), (2) whether it currently supports Valkey, (3) what specific incompatibilities or gaps exist between its Redis usage and Valkey, (4) what the recommended integration path would be. Topic: [paste Jira summary and description]. Use the project's GitHub repo, official docs, and any available DeepWiki or community resources. Return a structured report in under 800 words covering: framework overview, Redis/cache usage patterns, known Valkey compatibility status, specific technical gaps, and recommended approach. Be specific — include exact method names, error messages, or source file locations where known. No padding."
 
@@ -41,9 +39,7 @@ Wait for the research agent to complete before proceeding.
 
 ## Phase 3: Draft Narrative
 
-**Model: opus-4-7** (spawn subagent — highest quality for technical synthesis and narrative prose)
-
-Spawn a `claude` subagent with model `opus-4-7`. Pass the full Jira issue details and the research report from Phase 2.
+Spawn a `superhuman` subagent. Pass the full Jira issue details and the research report from Phase 2.
 
 The subagent must draft AND humanize the narrative in a single pass (no separate editing step). Use the /humanizer skill while writing and also with these rules: no promotional language ("robust", "streamlines", "empowers"), no significance inflation ("crucial", "pivotal", "transformative"), no forced rule-of-three lists, no em dashes, plain direct technical prose.
 

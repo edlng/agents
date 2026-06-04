@@ -79,9 +79,7 @@ Write to `pr:$RUNID:codebase_context`.
 
 ## Phase 2: Initial Review (merged lenses)
 
-**Model: latest Sonnet**
-
-Spawn ONE reviewer subagent with the latest Sonnet model. The subagent applies all four lenses in one pass — diff loaded once, not four times. Use the `code-review-excellence` skill as the reasoning frame for lenses 2 and 3.
+Spawn ONE `code-reviewer` subagent. The subagent applies all four lenses in one pass — diff loaded once, not four times. Use the `code-review-excellence` skill as the reasoning frame for lenses 2 and 3.
 
 Prompt:
 > "You are a senior reviewer. Read these from Valkey at `localhost:8888`:
@@ -129,13 +127,13 @@ Prompt:
 ## Phase 3: Validator (skeptic pass)
 
 **Model selection by diff size:**
-- If `additions + deletions <= 300`: **skip Phase 3 entirely** — the Sonnet reviewer is sufficient for small diffs. Proceed directly to Phase 4 using `findings_v1`.
-- If `additions + deletions <= 800`: use **latest Sonnet** as the validator (cheaper, still catches hallucinations).
-- If `additions + deletions > 800`: use **latest Opus** (earns its cost on large/complex diffs).
+- If `additions + deletions <= 300`: **skip Phase 3 entirely** — the code-reviewer is sufficient for small diffs. Proceed directly to Phase 4 using `findings_v1`.
+- If `additions + deletions <= 800`: spawn a `code-reviewer` subagent as the validator (cheaper, still catches hallucinations).
+- If `additions + deletions > 800`: spawn a `validator` subagent (earns its cost on large/complex diffs).
 
 This is where the validator earns its cost — it kills false positives that would otherwise reach the user.
 
-Spawn one validator subagent with the model selected above. Pass `$RUNID` and `n` (current findings version).
+Spawn one subagent with the role selected above. Pass `$RUNID` and `n` (current findings version).
 
 Prompt:
 > "You are a skeptical senior engineer doing a second pass on another reviewer's findings. Your job is to maximize signal: confirm what is real, downgrade what is overstated, reject what is false, and add only high-confidence misses.
@@ -183,9 +181,7 @@ Cap at **3 validator passes total**. In practice 1 pass is enough; 2 is the wors
 
 ## Phase 4: Final Report (local only)
 
-**Model: latest Haiku**
-
-Spawn a summary subagent with the latest Haiku model. Pass `$RUNID` and the final findings version.
+Spawn a `documenter` subagent. Pass `$RUNID` and the final findings version.
 
 Prompt:
 > "Read `pr:$RUNID:findings_v<final>` from Valkey. Drop all `verdict: REJECTED` findings entirely. Group remaining findings by severity (use the post-downgrade severity if `DOWNGRADE`). Produce markdown:

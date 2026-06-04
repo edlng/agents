@@ -1,0 +1,252 @@
+{
+  "skill_name": "glide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Python function using valkey-glide (sync) that creates an HNSW vector search index with 384 dimensions, cosine distance, and custom HNSW params (M=32, EF_CONSTRUCTION=400). Show the imports.",
+      "expected_output": "Should import VectorFieldAttributesHnsw from glide_sync (top-level) or glide_shared deep path. Should use VectorAlgorithm.HNSW with VectorFieldAttributesHnsw(dimensions=384, distance_metric=DistanceMetricType.COSINE, type=VectorType.FLOAT32, number_of_edges=32, vectors_examined_on_construction=400). Should NOT say VectorFieldAttributesHnsw doesn't exist.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I'm using valkey-glide for Python. Can I import FtCreateOptions, VectorField, and TagField directly from glide_sync, or do I need the deep import path from glide_shared.commands.server_modules.ft_options.ft_create_options?",
+      "expected_output": "Should confirm that top-level imports from glide_sync (or glide for async) work in v2.3+. Should show: from glide_sync import FtCreateOptions, VectorField, TagField. May mention deep path as alternative but should NOT say top-level imports are wrong.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Is ft.search(client, 'my_idx', '*') valid in valkey-glide Python, or do I need to use keyword arguments like ft.search(client=client, index_name='my_idx', query='*')?",
+      "expected_output": "Should confirm both positional and keyword arguments work. Should NOT flag positional args as wrong or an anti-pattern. May recommend keyword for readability but must acknowledge positional is valid.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Can I use ft.FtCreateOptions(...) in valkey-glide Python to create index options?",
+      "expected_output": "Should explain that while ft.FtCreateOptions technically resolves at runtime (because ft.py imports it internally), it is not the intended public API. The correct pattern is to import FtCreateOptions directly: from glide_sync import FtCreateOptions. Should NOT say it raises AttributeError — it works but is undocumented/unintended.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Write a complete Python example using valkey-glide sync that creates a vector index with HNSW, stores a document, and searches for nearest neighbors. Use top-level imports.",
+      "expected_output": "Should use from glide_sync import ft, GlideClient, FtCreateOptions, VectorField, VectorFieldAttributesHnsw, VectorAlgorithm, DistanceMetricType, VectorType, DataType, TextField, FtSearchOptions. Should show VectorFieldAttributesHnsw with proper params. Should use ft.create(), ft.search() with positional or keyword args. Should NOT use deep imports as the primary path.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Python function using GLIDE that creates a vector search index for product embeddings and then searches for similar products. The index should have a 768-dim embedding field and a text field for product name.",
+      "expected_output": "MUST use module-level ft functions: ft.create(client, ...) and ft.search(client, ...). MUST NOT use client.ft_create(), client.ft_search(), client.ft().create(), or any method-on-client pattern. Should import ft from glide or glide_sync. This eval specifically tests for the redis-py hallucination pattern documented in GitHub issue #3.",
+      "assertions": [
+        {
+          "id": "no-client-ft-method",
+          "text": "Code does NOT contain client.ft_create, client.ft_search, client.ft(), or client.ft_ patterns",
+          "type": "negative_match",
+          "pattern": "client\\.ft[_(]"
+        },
+        {
+          "id": "uses-module-ft-create",
+          "text": "Code uses ft.create(...) as module-level function",
+          "type": "positive_match",
+          "pattern": "\\bft\\.create\\("
+        },
+        {
+          "id": "uses-module-ft-search",
+          "text": "Code uses ft.search(...) as module-level function",
+          "type": "positive_match",
+          "pattern": "\\bft\\.search\\("
+        },
+        {
+          "id": "imports-ft-module",
+          "text": "Code imports ft from glide or glide_sync (multiline import OK)",
+          "type": "positive_match",
+          "pattern": "from glide(_sync)? import"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "I have a valkey-glide Python app (async). I need to run an FT.AGGREGATE query that groups products by category and counts them. Show me how.",
+      "expected_output": "MUST use ft.aggregate(client, ...) as module-level function. MUST NOT use client.ft_aggregate() or client.ft().aggregate(). Should import ft from glide. Should show proper aggregate syntax with GROUPBY and REDUCE COUNT.",
+      "assertions": [
+        {
+          "id": "no-client-ft-method",
+          "text": "Code does NOT contain client.ft_aggregate, client.ft(), or client.ft_ patterns",
+          "type": "negative_match",
+          "pattern": "client\\.ft[_(]"
+        },
+        {
+          "id": "uses-module-ft-aggregate",
+          "text": "Code uses ft.aggregate(...) or ft.custom_command or custom_command with FT.AGGREGATE as module-level call",
+          "type": "positive_match",
+          "pattern": "\\bft\\.(aggregate|custom_command)\\(|custom_command.*FT\\.AGGREGATE"
+        },
+        {
+          "id": "imports-ft-module",
+          "text": "Code imports ft from glide",
+          "type": "positive_match",
+          "pattern": "from glide import"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Using valkey-glide Python, write a function that drops an index if it exists, creates a new one with TAG and NUMERIC fields, then does a search with filters. Use the sync client.",
+      "expected_output": "MUST use ft.dropindex(client, ...), ft.create(client, ...), ft.search(client, ...) as module-level functions. MUST NOT use client.ft_* methods. Should use ft.list() to check existence before dropping. Should import ft from glide_sync.",
+      "assertions": [
+        {
+          "id": "no-client-ft-method",
+          "text": "Code does NOT contain client.ft_ or client.ft() patterns",
+          "type": "negative_match",
+          "pattern": "client\\.ft[_(]"
+        },
+        {
+          "id": "uses-module-ft-dropindex",
+          "text": "Code uses ft.dropindex(...) as module-level function",
+          "type": "positive_match",
+          "pattern": "\\bft\\.dropindex\\("
+        },
+        {
+          "id": "uses-module-ft-create",
+          "text": "Code uses ft.create(...) as module-level function",
+          "type": "positive_match",
+          "pattern": "\\bft\\.create\\("
+        },
+        {
+          "id": "uses-module-ft-search",
+          "text": "Code uses ft.search(...) as module-level function",
+          "type": "positive_match",
+          "pattern": "\\bft\\.search\\("
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Review this Python code for correctness:\n```python\nfrom glide import GlideClusterClient\n\nasync def search(client: GlideClusterClient, query: str):\n    return await client.ft_search('my_idx', query)\n```",
+      "expected_output": "MUST identify client.ft_search as incorrect. MUST recommend ft.search(client, 'my_idx', query) instead. Should mention importing ft from glide. Should explain that GLIDE uses module-level functions, not client methods.",
+      "assertions": [
+        {
+          "id": "identifies-error",
+          "text": "Response identifies client.ft_search as wrong/incorrect/invalid",
+          "type": "positive_match",
+          "pattern": "(incorrect|wrong|invalid|doesn't exist|does not exist|not.*(method|attribute|valid))"
+        },
+        {
+          "id": "suggests-ft-search",
+          "text": "Response suggests ft.search(client, ...) as the fix",
+          "type": "positive_match",
+          "pattern": "ft\\.search\\(client"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Review this Python code for correctness:\n```python\nfrom glide_sync import GlideClient\n\ndef create_index(client: GlideClient):\n    client.ft().create('products', {\n        'name': {'type': 'TEXT'},\n        'price': {'type': 'NUMERIC'},\n    })\n```",
+      "expected_output": "MUST identify client.ft().create() as incorrect — this is the redis-py pattern. MUST recommend ft.create(client, ...) with proper schema objects (TextField, NumericField). Should mention importing ft from glide_sync.",
+      "assertions": [
+        {
+          "id": "identifies-error",
+          "text": "Response identifies client.ft().create() as wrong/incorrect/invalid",
+          "type": "positive_match",
+          "pattern": "(incorrect|wrong|invalid|doesn't exist|does not exist|not.*(method|attribute|valid|correct)|redis.py|redis-py)"
+        },
+        {
+          "id": "suggests-ft-create",
+          "text": "Response suggests ft.create(client, ...) as the fix",
+          "type": "positive_match",
+          "pattern": "ft\\.create\\(client"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Is this valkey-glide Python code correct?\n```python\nfrom glide import GlideClusterClient, ft\n\nasync def drop_and_recreate(client: GlideClusterClient):\n    await client.ft_dropindex('old_idx')\n    await ft.create(client, 'new_idx', schema=[...])\n```",
+      "expected_output": "MUST identify client.ft_dropindex as incorrect while acknowledging ft.create(client, ...) is correct. Should recommend ft.dropindex(client, 'old_idx') as the fix. Must NOT flag the ft.create line as wrong.",
+      "assertions": [
+        {
+          "id": "identifies-dropindex-error",
+          "text": "Response identifies client.ft_dropindex as wrong",
+          "type": "positive_match",
+          "pattern": "(ft_dropindex.*(incorrect|wrong|invalid|doesn't exist|does not exist|not)|incorrect.*ft_dropindex|wrong.*ft_dropindex)"
+        },
+        {
+          "id": "suggests-ft-dropindex",
+          "text": "Response suggests ft.dropindex(client, ...) as the fix",
+          "type": "positive_match",
+          "pattern": "ft\\.dropindex\\(client"
+        },
+        {
+          "id": "acknowledges-ft-create-correct",
+          "text": "Response does NOT flag ft.create(client, ...) as wrong",
+          "type": "negative_match",
+          "pattern": "ft\\.create.*(incorrect|wrong|invalid)"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "Review this Go code using valkey-glide. Is there a bug here?\n```go\nfunc flushUserCache(ctx context.Context, client *glide.Client, userIDs []string) error {\n    batch := pipeline.NewStandaloneBatch(false)\n    for _, id := range userIDs {\n        batch.Del(\"user:\" + id)\n    }\n    _, err := client.Exec(ctx, *batch, true)\n    return err\n}\n```",
+      "expected_output": "Should say this is CORRECT / not a bug. Discarding []any is fine because raiseOnError=true means the first error is raised via the error return value. The _ discard is safe. Should NOT claim 'silent partial failures' or 'errors are lost'.",
+      "assertions": [
+        {
+          "id": "no-silent-failure-claim",
+          "text": "Response does NOT claim silent failures, lost errors, or that discarding results hides errors",
+          "type": "negative_match",
+          "pattern": "(silent.*(fail|error|loss)|errors?.*(lost|hidden|swallow|discard|miss)|discard.*(error|fail)|miss.*(error|fail))"
+        },
+        {
+          "id": "acknowledges-correct",
+          "text": "Response acknowledges the code is correct or that raiseOnError=true surfaces errors via err return",
+          "type": "positive_match",
+          "pattern": "(correct|valid|fine|no bug|not a bug|raiseOnError.*true.*(raise|return|surface|report)|err.*(capture|contain|receive|get|have).*error)"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "What happens if I accidentally use pipeline.NewStandaloneBatch with a ClusterClient in valkey-glide Go? Will it panic at runtime?",
+      "expected_output": "Should say it WON'T COMPILE — Go's type system prevents this at compile time. Client.Exec takes StandaloneBatch, ClusterClient.Exec takes ClusterBatch. Should NOT say 'runtime error', 'panic', or 'will fail at runtime'.",
+      "assertions": [
+        {
+          "id": "says-compile-time",
+          "text": "Response mentions compile-time error, type mismatch, or won't compile",
+          "type": "positive_match",
+          "pattern": "(compile.*(time|error)|won't compile|will not compile|type.*(mismatch|error|system)|does not compile|compilation.*(error|fail))"
+        },
+        {
+          "id": "no-runtime-panic-claim",
+          "text": "Response does NOT affirmatively claim it will panic or fail at runtime (negations OK)",
+          "type": "negative_match",
+          "pattern": "will (likely )?result in a runtime error",
+          "note": "Grading uses context-aware negation check; simple regex may false-positive on 'will not panic at runtime'"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "Write a Go function using valkey-glide that executes a batch of SET commands and logs which specific commands failed without stopping on the first error.",
+      "expected_output": "Should use raiseOnError=false and iterate []any checking for *RequestError at each position. Should NOT use raiseOnError=true for this use case.",
+      "assertions": [
+        {
+          "id": "uses-raise-on-error-false",
+          "text": "Code passes false for raiseOnError parameter in Exec call",
+          "type": "positive_match",
+          "pattern": "Exec(WithOptions)?\\(ctx,.*false"
+        },
+        {
+          "id": "checks-request-error",
+          "text": "Code checks for RequestError in results (type assertion or errors.As)",
+          "type": "positive_match",
+          "pattern": "(RequestError|requestError|request_error)"
+        }
+      ],
+      "files": []
+    }
+  ]
+}

@@ -61,9 +61,7 @@ Write to `local:$RUNID:codebase_context`.
 
 ## Phase 2: Self-Review (merged lenses)
 
-**Model: latest Sonnet**
-
-Spawn ONE reviewer subagent. Apply lenses in a single pass. Use the `code-review-excellence` skill as the reasoning frame.
+Spawn ONE `code-reviewer` subagent. Apply lenses in a single pass. Use the `code-review-excellence` skill as the reasoning frame.
 
 Prompt:
 > "You are reviewing the author's own uncommitted work. The author wants to catch mistakes before pushing — be direct, no diplomatic softening. Read from Valkey at `localhost:8888`:
@@ -116,9 +114,7 @@ Prompt:
 
 ## Phase 3: Validator (skeptic pass)
 
-**Model: latest Opus**
-
-Spawn one validator subagent.
+Spawn one `validator` subagent.
 
 Prompt:
 > "Skeptical second pass. Read from Valkey at `localhost:8888`:
@@ -147,9 +143,7 @@ If `reject_rate >= 0.30` OR `added_count >= 2`: re-run Phase 3. Cap at 2 validat
 
 ## Phase 4: Report + Auto-Fix Offer
 
-**Model: latest Haiku** (for report aggregation)
-
-Spawn a summary subagent with the latest Haiku model.
+Spawn a `documenter` subagent for report aggregation.
 
 Prompt:
 > "Read `local:$RUNID:findings_v<final>`. Drop `verdict: REJECTED`. Group by severity (post-downgrade). Output markdown:

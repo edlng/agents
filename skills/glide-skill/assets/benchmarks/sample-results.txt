@@ -1,0 +1,50 @@
+GLIDE Performance Skill — Ride-Sharing Benchmark
+Date: 2026-02-27T22:23:55.961Z
+Iterations per operation: 50
+
+
+────────────────────────────────────────────────────────────────────────
+  valkey-baseline (without skill)
+  Iterations per operation: 50
+────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+  valkey-skill (with skill)
+  Iterations per operation: 50
+────────────────────────────────────────────────────────────────────────
+
+============================================================================
+  RESULTS COMPARISON
+============================================================================
+
+  Operation                           Baseline (mean) Skill (mean)      Speedup
+  ─────────────────────────────────────────────────────────────────────────────
+  setDriverProfile                    0.12ms          0.08ms            1.5x
+  getDriverProfile                    0.11ms          0.08ms            1.4x
+  updateDriverField                   0.09ms          0.07ms            1.3x
+  getMultipleDriverSummaries (20)     2.97ms          0.13ms            22.8x
+  getTrips (20)                       1.35ms          0.08ms            16.9x
+  setTrips (20)                       1.34ms          0.09ms            14.9x
+  archiveTripsBatch (500)             32.41ms         0.97ms            33.4x
+  saveRiderSession                    0.16ms          0.09ms            1.8x
+  getRiderSession                     0.07ms          0.07ms            1.0x
+  updateRiderLocation                 0.20ms          0.08ms            2.5x
+  recordRideRequest                   0.14ms          0.08ms            1.8x
+  getZoneStats (12)                   1.56ms          0.10ms            15.6x
+  submitEarnings (20)                 1.32ms          0.11ms            12.0x
+  getTopEarners (10)                  0.08ms          0.08ms            1.0x
+  enqueueRideRequests (10)            0.66ms          0.07ms            9.4x
+  setZoneAvailability (30)            1.92ms          0.11ms            17.5x
+  getZoneAvailability (30)            1.95ms          0.11ms            17.7x
+  claimVehicle                        0.14ms          0.13ms            1.1x
+  setFeatureFlag                      0.13ms          0.07ms            1.9x
+  resolveFeatureFlags (10)            0.65ms          0.07ms            9.3x
+  updateEtaField                      0.07ms          0.07ms            1.0x
+  getEta                              0.07ms          0.08ms            0.9x
+  clearEtaField                       0.07ms          0.07ms            1.0x
+  incrementRateLimit                  0.07ms          0.07ms            1.0x
+  addDriversToZone (10)               0.65ms          0.07ms            9.3x
+  checkDriversInZone (10)             0.65ms          0.09ms            7.2x
+  getOperationsDashboard              0.37ms          0.10ms            3.7x
+  ─────────────────────────────────────────────────────────────────────────────
+  TOTAL (sum of means)                49.32ms         3.22ms            15.3x

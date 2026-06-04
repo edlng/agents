@@ -64,9 +64,7 @@ Produce a short **Codebase Context** note. Write to Valkey: `valkey-cli -p 8888 
 
 ## Phase 3: Planning
 
-**Model: opus-4-7**
-
-Spawn a single subagent with model `opus-4-7`. Pass the cache keys (subagent fetches Requirements + Codebase Context from Valkey).
+Spawn a single `superhuman` subagent. Pass the cache keys (subagent fetches Requirements + Codebase Context from Valkey).
 
 Prompt: "You are the planner. **Effort budget: 5-10 tool calls to read context, then produce the plan.** Read `jira:$ARGUMENTS:requirements` and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888. Decompose the work into an ordered subtask list. For each subtask, output:
 - `id`: short identifier
@@ -83,15 +81,13 @@ Write the resulting plan to `jira:$ARGUMENTS:plan` in Valkey."
 
 ## Phase 4: Implementation
 
-**Model: sonnet-4-6** (with inline haiku-4-5 delegation)
-
-Spawn one Implementor subagent with model `sonnet-4-6`.
+Spawn one `builder` subagent as the Implementor.
 
 Prompt: "You are the implementor. **Effort budget: 30-60 tool calls total across all subtasks.** Read `jira:$ARGUMENTS:plan`, `jira:$ARGUMENTS:requirements`, and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888.
 
 For each subtask in the plan, in dependency order:
 - If `complexity == medium`: implement it yourself.
-- If `complexity == low` AND its `files` do not overlap any other subtask currently in flight: spawn a `haiku-4-5` subagent via the Agent tool to handle it. Pass only the subtask description, the relevant files list, and the Codebase Context.
+- If `complexity == low` AND its `files` do not overlap any other subtask currently in flight: spawn another `builder` subagent to handle it. Pass only the subtask description, the relevant files list, and the Codebase Context.
 - Otherwise: handle it yourself.
 
 You MUST match the existing codebase exactly: same language, same code style, same naming conventions, same error-handling patterns, same logging approach. Reuse existing utilities and helpers — do not re-implement what already exists. If a cache or key/value client is needed, use `valkey-glide`. When `valkey-glide` has a native command implemented, you MUST use that over `custom_command` unless there is a clearly justified reason. Write minimal code; do not add abstractions beyond what the requirements ask for."
@@ -100,9 +96,7 @@ You MUST match the existing codebase exactly: same language, same code style, sa
 
 ## Phase 5: Tests
 
-**Model: sonnet-4-6**
-
-Spawn a Tests subagent with model `sonnet-4-6`. Pass cache keys.
+Spawn a `tester` subagent. Pass cache keys.
 
 Prompt: "Read `jira:$ARGUMENTS:requirements` and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888.
 
@@ -173,11 +167,9 @@ A test that passes only because an assertion was removed, an exception was swall
 
 ## Phase 6: Code Review (merged)
 
-**Model: sonnet-4-6**
-
 Run `git diff` (or list all created/modified files with full contents if not a git repo) to produce a **Changes** snapshot.
 
-Spawn ONE reviewer subagent with model `sonnet-4-6`. The single subagent applies all three review lenses in one pass — this loads the diff once instead of three times.
+Spawn ONE `code-reviewer` subagent. The single subagent applies all three review lenses in one pass — this loads the diff once instead of three times.
 
 Prompt: "Read `jira:$ARGUMENTS:requirements` from Valkey at localhost:8888. Review the following Changes through three lenses, in order. Output strict JSON with three top-level keys: `requirements_alignment`, `code_review_excellence`, `optimization_and_dead_code`. Each value is a list of findings; each finding has `file`, `line_range`, `severity` (`blocking` or `suggestion`), and `description`.
 
@@ -201,9 +193,7 @@ Changes:
 
 ## Phase 7: Summary + Decision
 
-**Model: haiku-4-5**
-
-Spawn a Summary subagent with model `haiku-4-5`. Pass the reviewer JSON output.
+Spawn a `documenter` subagent. Pass the reviewer JSON output.
 
 Prompt: "Aggregate the three-lens review JSON into a **Review Summary** with two sections.
 

@@ -6,6 +6,10 @@ Scope: correctness and security only. Leave test coverage to the tester, docs to
 
 IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
 
+## GLIDE Subagent Delegation
+
+Always delegate to the `glide-code-reviewer` subagent for Valkey GLIDE review. It will verify whether the project uses GLIDE and self-gate if not applicable. Incorporate its findings into the final verdict.
+
 ## Step 0: Establish the diff
 
 Run `git diff` to obtain the changeset to review:

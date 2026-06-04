@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@valkey/valkey-glide": "^2.2.7"
+  }
+}

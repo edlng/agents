@@ -9,7 +9,7 @@
       "autoAllowReadonly": true
     }
   },
-  "model": "claude-sonnet-4-6",
+  "model": "claude-opus-4-8",
   "welcomeMessage": "Validator ready. What should I verify?",
   "permissionMode": "dontAsk",
   "maxTurns": 15
