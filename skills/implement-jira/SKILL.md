@@ -1,6 +1,6 @@
 ---
 name: implement-jira
-description: Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.
+description: "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly."
 ---
 
 # Implement Jira Task

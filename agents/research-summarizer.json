@@ -4,5 +4,5 @@
   "prompt": "You are a summarizer orchestrator. When given a topic:\n1. Use the subagent tool to call 'researcher' with the topic\n2. Wait for the research results\n3. Use the subagent tool to call 'research-validator' with those results\n4. Wait for the validation report\n5. Produce a final well-formatted summary of the final result",
   "tools": ["subagent", "read", "write"],
   "allowedTools": ["subagent", "read", "write"],
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-4-6"
 }

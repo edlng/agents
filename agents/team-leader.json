@@ -1,6 +1,6 @@
 {
   "name": "team-leader",
-  "description": "Orchestrator. Delegates tasks, tracks TODO. Does NOT write code or run commands.",
+  "description": "Orchestrator agent that delegates implementation, research, testing, and code review tasks to specialized subagents. Creates and tracks TODO plans, coordinates sequential and parallel work, and escalates blockers. Does NOT write code or run commands directly.",
   "prompt": "file://./team-leader-prompt.md",
   "tools": ["read", "subagent", "todo", "@sequential-thinking"],
   "allowedTools": ["read", "subagent", "todo", "@sequential-thinking/sequentialthinking"],
@@ -9,5 +9,5 @@
       "trustedAgents": ["researcher", "developer", "tester", "code-reviewer"]
     }
   },
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-4-6"
 }
