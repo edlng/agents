@@ -1,28 +1,20 @@
-# Promptfoo configuration for evaluating AI skills/agents
-# Metrics: accuracy, cost, cost-accuracy ratio, scoring rubrics, completeness
+# Evaluation suite for AI agents and skills
+# One test per agent/skill; each test uses subtests (multiple assertions) to validate behavior.
 
 prompts:
-  - id: file://prompts/skill_eval.txt
-    label: general_prompt
+  - "{{task}}"
 
 providers:
   - id: 'exec: bash providers/claude_code.sh'
     label: claude-code
-  - id: 'exec: bash providers/kiro_cli.sh'
-    label: kiro-cli
 
-# Custom scoring: cost-accuracy ratio as a derived metric
 defaultTest:
   options:
-    provider: 'exec: bash providers/grader.sh'  # grading provider for model-graded assertions
+    provider: 'exec: bash providers/grader.sh'
     rubricPrompt: file://graders/judge-prompt.txt
   assert:
-    # Latency gate — fail if a single call exceeds 30s (pass/fail only, not a scored metric)
     - type: latency
       threshold: 30000
-    # Cost proxy — scores output length on a curve (fewer tokens = cheaper)
-    # Score decays from 1.0 toward 0 as word count grows past 200.
-    # 50 words = 1.0, 200 words = 0.7, 500 words = 0.25, 1000+ = ~0
     - type: javascript
       value: |
         const words = output.split(/\s+/).filter(w => w.length > 0).length;
@@ -32,294 +24,9 @@ defaultTest:
       weight: 1
 
 
-
 tests:
-  # --- cost_baseline: cheapest possible task — reference point for cost metric ---
-  - description: 'cost_baseline — single-word greeting'
-    options:
-      provider: 'exec: bash providers/researcher.sh'
-    vars:
-      task: 'Say hello in French. One word only.'
-      context: 'cost_baseline'
-    assert:
-      - type: icontains
-        value: 'Bonjour'
-        metric: accuracy
-        weight: 2
-      - type: javascript
-        value: |
-          const words = output.split(/\s+/).filter(w => w.length > 0).length;
-          const score = words <= 50 ? 1.0 : Math.max(0, 1 - (words - 50) / 100);
-          return { pass: words <= 50, score, reason: `${words} words (ceiling 50)` };
-        metric: cost
-        weight: 1
-
-  # --- Test 6: SQL injection detection ---
-  - description: 'Code review — catches SQL injection'
-    options:
-      prompts: [file://prompts/code_review.txt]
-      repeat: 3
-    vars:
-      task: |
-        Review this code for issues:
-        ```javascript
-        app.get('/users', (req, res) => {
-          const name = req.query.name;
-          const result = db.query(`SELECT * FROM users WHERE name = '${name}'`);
-          res.json(result);
-        });
-        ```
-      context: 'code_review'
-      grading_notes: 'Focus on security vulnerabilities, especially SQL injection'
-    assert:
-      - type: icontains
-        value: 'injection'
-        metric: accuracy
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const hasVulnId = lower.includes('injection') || lower.includes('unsanitized');
-          const hasFix = lower.includes('parameterized') || lower.includes('prepared') || lower.includes('placeholder');
-          const score = [hasVulnId, hasFix].filter(Boolean).length / 2;
-          return { pass: hasVulnId && hasFix, score, reason: `Vuln identified: ${hasVulnId}, Fix suggested: ${hasFix}` };
-        metric: completeness
-        weight: 2
-
-  # --- Test 7: Off-by-one bug detection ---
-  - description: 'Code review — catches off-by-one / correctness bug'
-    options:
-      prompts: [file://prompts/code_review.txt]
-      repeat: 3
-    vars:
-      task: |
-        Review this code for issues:
-        ```python
-        def get_last_n_items(items, n):
-            result = []
-            for i in range(len(items) - n, len(items) + 1):
-                result.append(items[i])
-            return result
-        ```
-      context: 'code_review'
-      grading_notes: 'Look for correctness issues and boundary conditions'
-    assert:
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const catchesBug = lower.includes('off-by-one') || lower.includes('index') || lower.includes('out of range') || lower.includes('+ 1') || lower.includes('boundary');
-          const suggestsFix = lower.includes('items[-n:]') || lower.includes('len(items))') || lower.includes('slice') || lower.includes('range(len');
-          const explainsWhy = lower.includes('indexerror') || lower.includes('out of bounds') || lower.includes('inclusive') || lower.includes('exclusive');
-          // Gradient: catching the bug is most important, fix and explanation are bonuses
-          const score = (catchesBug ? 0.5 : 0) + (suggestsFix ? 0.3 : 0) + (explainsWhy ? 0.2 : 0);
-          return { pass: catchesBug, score, reason: `Bug caught: ${catchesBug}, Fix: ${suggestsFix}, Explains: ${explainsWhy}` };
-        metric: completeness
-        weight: 3
-
-  # --- Test 8: Clean code review (no false positives) ---
-  - description: 'Code review — does not hallucinate issues in clean code'
-    options:
-      prompts: [file://prompts/code_review.txt]
-      repeat: 3
-    vars:
-      task: |
-        Review this code for issues:
-        ```typescript
-        async function fetchUser(id: string): Promise<User | null> {
-          if (!id || typeof id !== 'string') {
-            throw new Error('Invalid user ID');
-          }
-          const response = await fetch(`/api/users/${encodeURIComponent(id)}`);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch user: ${response.status}`);
-          }
-          return response.json();
-        }
-        ```
-      context: 'code_review'
-      grading_notes: 'This is well-written code - avoid false positives'
-    assert:
-      - type: llm-rubric
-        threshold: 0.8
-        value: |
-          Score 1–5 (divide by 5 for final score):
-          1 = Invents critical/high security findings that do not exist
-          2 = Raises a false high-severity finding with weak justification
-          3 = No false critical findings but fails to acknowledge the code quality
-          4 = Correctly finds no critical issues and acknowledges the code is well-written; minor nits allowed
-          5 = Accurately identifies the code as correct with proper validation, encoding, and error handling; any suggestions are nit-level only
-          This code IS well-written: input IS validated, URL IS encoded, errors ARE thrown. A review that flags it as having critical or high issues is WRONG.
-        metric: false_positive_avoidance
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const falseAlarm = lower.includes('sql injection') || lower.includes('xss') || lower.includes('command injection');
-          const reasonable = lower.includes('solid') || lower.includes('clean') || lower.includes('well') || lower.includes('minor') || lower.includes('nit') || lower.includes('low') || lower.includes('good') || lower.includes('correct');
-          // Gradient: false alarm is a heavy penalty, lack of acknowledgment is mild
-          let score = 0.5;
-          if (falseAlarm) score -= 0.5;
-          if (reasonable) score += 0.5;
-          else score += 0.1;  // didn't explicitly acknowledge, mild penalty
-          score = Math.max(0, Math.min(1, score));
-          return { pass: !falseAlarm, score, reason: `False alarm: ${falseAlarm}, Acknowledges quality: ${reasonable}` };
-        metric: accuracy
-        weight: 3
-
-  # --- Test 9: Multi-discipline coverage ---
-  - description: 'Code review — covers multiple disciplines'
-    options:
-      prompts: [file://prompts/code_review.txt]
-      repeat: 3
-    vars:
-      task: |
-        Review this code for issues:
-        ```javascript
-        app.post('/transfer', (req, res) => {
-          const { from, to, amount } = req.body;
-          const fromBalance = db.query(`SELECT balance FROM accounts WHERE id = '${from}'`);
-          if (fromBalance >= amount) {
-            db.query(`UPDATE accounts SET balance = balance - ${amount} WHERE id = '${from}'`);
-            db.query(`UPDATE accounts SET balance = balance + ${amount} WHERE id = '${to}'`);
-          }
-          res.json({ success: true });
-        });
-        ```
-      context: 'code_review'
-      grading_notes: 'Look for issues across security, correctness, and design'
-    assert:
-      - type: llm-rubric
-        threshold: 0.8
-        value: |
-          Score 1–5 (divide by 5 for final score):
-          1 = Identifies 0 issues
-          2 = Identifies 1 issue only
-          3 = Identifies 2 issues
-          4 = Identifies 3 issues from different disciplines (security, correctness, design)
-          5 = Identifies 4+ issues spanning at least 3 disciplines with concrete fixes
-          Known issues: (1) SQL injection via string interpolation, (2) no transaction/atomic race condition, (3) no input validation on amount, (4) always returns success even on failure, (5) no rollback on error.
-        metric: multi_discipline_coverage
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const security = lower.includes('injection') || lower.includes('sanitiz');
-          const atomicity = lower.includes('transaction') || lower.includes('atomic') || lower.includes('race');
-          const validation = lower.includes('validation') || lower.includes('negative') || lower.includes('NaN');
-          const errorHandling = lower.includes('error') || lower.includes('rollback') || lower.includes('always returns success');
-          const disciplines = [security, atomicity, validation, errorHandling].filter(Boolean).length;
-          const score = Math.min(disciplines / 3, 1);
-          return { pass: disciplines >= 3, score, reason: `Disciplines covered: ${disciplines}/4 (security:${security}, atomicity:${atomicity}, validation:${validation}, errors:${errorHandling})` };
-        metric: completeness
-        weight: 3
-
-  # --- Test 11: Team-lead small task — handles directly without subagents ---
-  - description: 'Team-lead handles trivial task without delegation'
-    options:
-      provider: 'exec: bash providers/team_lead.sh'
-      repeat: 3
-    vars:
-      task: 'Rename the variable `x` to `count` in this snippet and return the corrected code: `const x = items.length;`'
-      context: 'small_task'
-    assert:
-      - type: icontains
-        value: 'count'
-        metric: accuracy
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          // Should NOT mention spawning/delegating to builder or subagent
-          const delegated = lower.includes('delegating to builder') || lower.includes('dispatching to') || lower.includes('subagent') || lower.includes('worktree');
-          const hasCode = lower.includes('const count') || lower.includes('count =');
-          const concise = output.split(/\s+/).length < 100;
-          // Gradient: penalize delegation but don't fully zero-out if code is still present
-          let score = 1.0;
-          if (delegated) score -= 0.6;
-          if (!hasCode) score -= 0.2;
-          if (!concise) score -= 0.1;
-          score = Math.max(0, score);
-          return { pass: !delegated, score, reason: `Delegated: ${delegated}, Has code: ${hasCode}, Concise: ${concise}` };
-        metric: directness
-        weight: 3
-      - type: llm-rubric
-        threshold: 0.8
-        value: |
-          Score 1–5 (divide by 5 for final score):
-          1 = Delegates to subagent or creates a worktree for this trivial rename
-          2 = Produces a multi-step plan instead of inline code
-          3 = Returns corrected code but with excessive explanation or preamble
-          4 = Returns corrected code inline with brief note; concise
-          5 = Returns corrected code immediately with no unnecessary preamble or delegation
-          A response that says "delegating to builder" or "creating worktree" for a one-line rename is WRONG (score 1).
-        metric: efficiency
-        weight: 2
-
-  # --- Test 12: Team-lead complex task — delegates and produces Valkey program with batching ---
-  - description: 'Team-lead complex task — Valkey batch pipeline program'
-    options:
-      provider: 'exec: bash providers/team_lead.sh'
-      repeat: 3
-    vars:
-      task: |
-        Create a small Node.js program (single file, ~30-50 lines) that connects to Valkey
-        at localhost:6379, stores 100 key-value pairs through pipelining/batching (not one-by-one),
-        then reads them back in a batch and prints the count. Return the complete program code.
-      context: 'implementation'
-    assert:
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const hasValkey = lower.includes('valkey') || lower.includes('glide');
-          const hasConnect = lower.includes('6379') || lower.includes('localhost');
-          const score = [hasValkey, hasConnect].filter(Boolean).length / 2;
-          return { pass: hasValkey && hasConnect, score, reason: `Valkey ref: ${hasValkey}, Connection: ${hasConnect}` };
-        metric: accuracy
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const hasGlide = lower.includes('valkey-glide') || lower.includes('@valkey/valkey-glide') || lower.includes('glide');
-          const usesWrongClient = lower.includes('iovalkey') || lower.includes('ioredis') || lower.includes('node-redis');
-          const score = hasGlide && !usesWrongClient ? 1 : hasGlide ? 0.5 : 0;
-          return { pass: hasGlide && !usesWrongClient, score, reason: `Uses valkey-glide: ${hasGlide}, Wrong client: ${usesWrongClient}` };
-        metric: client_compliance
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const hasPipeline = lower.includes('pipeline') || lower.includes('batch') || lower.includes('multi');
-          const hasLoop = lower.includes('for') || lower.includes('map') || lower.includes('foreach');
-          const hasExec = lower.includes('.exec') || lower.includes('.run');
-          const score = [hasPipeline, hasLoop, hasExec].filter(Boolean).length / 3;
-          return { pass: hasPipeline, score, reason: `Pipeline/batch: ${hasPipeline}, Loop: ${hasLoop}, Exec: ${hasExec}` };
-        metric: batching
-        weight: 3
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          // Should delegate to builder for a multi-step implementation task
-          const delegated = lower.includes('builder') || lower.includes('delegat') || lower.includes('subagent') || lower.includes('implement');
-          const hasCode = output.includes('require(') || output.includes('import ') || output.includes('const ') || output.includes('async ');
-          const score = [delegated, hasCode].filter(Boolean).length / 2;
-          return { pass: hasCode, score, reason: `Delegated: ${delegated}, Produced code: ${hasCode}` };
-        metric: completeness
-        weight: 2
-      - type: llm-rubric
-        threshold: 0.8
-        value: |
-          Score 1–5 (divide by 5 for final score):
-          1 = Uses wrong client (ioredis/iovalkey/node-redis) or writes keys one-by-one
-          2 = Uses valkey-glide but no pipelining/batching
-          3 = Uses valkey-glide with pipelining but missing read-back or count output
-          4 = Complete program with valkey-glide, pipelining for writes and reads, prints count; minor issues
-          5 = Complete, correct program: valkey-glide, pipeline writes 100 keys, pipeline reads them back, prints count, handles connection errors
-          WRONG if: uses ioredis, iovalkey, or node-redis; writes keys one-by-one with individual awaited set() calls.
-        metric: rubric_quality
-        weight: 3
-
-  # --- Test 13: Code-reviewer agent — structured review with verdict ---
-  - description: 'Code-reviewer agent — BLOCK verdict on unsafe deserialization'
+  # ── code-reviewer agent ──────────────────────────────────────────────────────
+  - description: 'code-reviewer — BLOCK verdict, CWE citations, completeness, rubric'
     options:
       provider: 'exec: bash providers/code_reviewer.sh'
       repeat: 3
@@ -339,7 +46,6 @@ tests:
           res.json({ status: 'processed' });
         });
         ```
-      context: 'code_review'
     assert:
       - type: javascript
         value: |
@@ -380,60 +86,106 @@ tests:
         metric: rubric_quality
         weight: 3
 
-  # --- Researcher: technical question with source ---
-  - description: 'researcher — technical question answered with source and recommendation'
+  # ── team-lead agent ──────────────────────────────────────────────────────────
+  - description: 'team-lead — trivial task handled directly without delegation'
     options:
-      provider: 'exec: bash providers/stubs/researcher_stub.sh'
-      repeat: 2
+      provider: 'exec: bash providers/team_lead.sh'
+      repeat: 3
     vars:
-      task: 'How do I connect to Valkey from Node.js and what client library should I use?'
-      context: 'researcher_agent'
+      task: 'Rename the variable `x` to `count` in this snippet and return the corrected code: `const x = items.length;`'
     assert:
+      - type: icontains
+        value: 'count'
+        metric: accuracy
+        weight: 3
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const delegated = lower.includes('delegating to builder') || lower.includes('dispatching to') || lower.includes('subagent') || lower.includes('worktree');
+          const hasCode = lower.includes('const count') || lower.includes('count =');
+          const concise = output.split(/\s+/).length < 100;
+          let score = 1.0;
+          if (delegated) score -= 0.6;
+          if (!hasCode) score -= 0.2;
+          if (!concise) score -= 0.1;
+          score = Math.max(0, score);
+          return { pass: !delegated, score, reason: `Delegated: ${delegated}, Has code: ${hasCode}, Concise: ${concise}` };
+        metric: directness
+        weight: 3
       - type: llm-rubric
         threshold: 0.8
         value: |
           Score 1–5 (divide by 5 for final score):
-          1 = No answer or completely off-topic
-          2 = Vague or generic answer with no library recommendation or source
-          3 = Correct answer (valkey-glide) but no source URL or citation
-          4 = Correct answer with a source URL or citation present
-          5 = Correct answer naming valkey-glide, source URL present, and a concrete code example or recommendation
-        metric: rubric_quality
-        weight: 3
-      - type: icontains
-        value: 'valkey-glide'
-        metric: accuracy
-        weight: 3
-      - type: javascript
-        value: |
-          const words = output.split(/\s+/).filter(w => w.length > 0).length;
-          const score = words <= 300 ? 1.0 : Math.max(0, 1 - (words - 300) / 500);
-          return { pass: true, score, reason: `${words} words (ceiling 300)` };
-        metric: cost
-        weight: 1
-
-  # --- Researcher: cost_baseline simple lookup ---
-  - description: 'researcher — simple lookup under 100 words (cost baseline)'
-    options:
-      provider: 'exec: bash providers/stubs/researcher_stub.sh'
-    vars:
-      task: 'What npm package is the official Valkey client for Node.js?'
-      context: 'researcher_agent_baseline'
-    assert:
-      - type: icontains
-        value: 'valkey-glide'
-        metric: accuracy
-        weight: 3
-      - type: javascript
-        value: |
-          const words = output.split(/\s+/).filter(w => w.length > 0).length;
-          const score = words <= 100 ? 1.0 : Math.max(0, 1 - (words - 100) / 200);
-          return { pass: words <= 100, score, reason: `${words} words (ceiling 100)` };
-        metric: cost
+          1 = Delegates to subagent or creates a worktree for this trivial rename
+          2 = Produces a multi-step plan instead of inline code
+          3 = Returns corrected code but with excessive explanation or preamble
+          4 = Returns corrected code inline with brief note; concise
+          5 = Returns corrected code immediately with no unnecessary preamble or delegation
+          A response that says "delegating to builder" or "creating worktree" for a one-line rename is WRONG (score 1).
+        metric: efficiency
         weight: 2
 
-  # --- Team-lead: multi-file feature request — delegates, does not inline implementation ---
-  - description: 'team-lead — multi-file feature produces delegation plan not inline code'
+  - description: 'team-lead — complex task delegates and produces Valkey batch pipeline program'
+    options:
+      provider: 'exec: bash providers/team_lead.sh'
+      repeat: 3
+    vars:
+      task: |
+        Create a small Node.js program (single file, ~30-50 lines) that connects to Valkey
+        at localhost:6379, stores 100 key-value pairs through pipelining/batching (not one-by-one),
+        then reads them back in a batch and prints the count. Return the complete program code.
+    assert:
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasValkey = lower.includes('valkey') || lower.includes('glide');
+          const hasConnect = lower.includes('6379') || lower.includes('localhost');
+          const score = [hasValkey, hasConnect].filter(Boolean).length / 2;
+          return { pass: hasValkey && hasConnect, score, reason: `Valkey ref: ${hasValkey}, Connection: ${hasConnect}` };
+        metric: accuracy
+        weight: 3
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasGlide = lower.includes('valkey-glide') || lower.includes('@valkey/valkey-glide') || lower.includes('glide');
+          const usesWrongClient = lower.includes('iovalkey') || lower.includes('ioredis') || lower.includes('node-redis');
+          const score = hasGlide && !usesWrongClient ? 1 : hasGlide ? 0.5 : 0;
+          return { pass: hasGlide && !usesWrongClient, score, reason: `Uses valkey-glide: ${hasGlide}, Wrong client: ${usesWrongClient}` };
+        metric: client_compliance
+        weight: 3
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasPipeline = lower.includes('pipeline') || lower.includes('batch') || lower.includes('multi');
+          const hasLoop = lower.includes('for') || lower.includes('map') || lower.includes('foreach');
+          const hasExec = lower.includes('.exec') || lower.includes('.run');
+          const score = [hasPipeline, hasLoop, hasExec].filter(Boolean).length / 3;
+          return { pass: hasPipeline, score, reason: `Pipeline/batch: ${hasPipeline}, Loop: ${hasLoop}, Exec: ${hasExec}` };
+        metric: batching
+        weight: 3
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const delegated = lower.includes('builder') || lower.includes('delegat') || lower.includes('subagent') || lower.includes('implement');
+          const hasCode = output.includes('require(') || output.includes('import ') || output.includes('const ') || output.includes('async ');
+          const score = [delegated, hasCode].filter(Boolean).length / 2;
+          return { pass: hasCode, score, reason: `Delegated: ${delegated}, Produced code: ${hasCode}` };
+        metric: completeness
+        weight: 2
+      - type: llm-rubric
+        threshold: 0.8
+        value: |
+          Score 1–5 (divide by 5 for final score):
+          1 = Uses wrong client (ioredis/iovalkey/node-redis) or writes keys one-by-one
+          2 = Uses valkey-glide but no pipelining/batching
+          3 = Uses valkey-glide with pipelining but missing read-back or count output
+          4 = Complete program with valkey-glide, pipelining for writes and reads, prints count; minor issues
+          5 = Complete, correct program: valkey-glide, pipeline writes 100 keys, pipeline reads them back, prints count, handles connection errors
+          WRONG if: uses ioredis, iovalkey, or node-redis; writes keys one-by-one with individual awaited set() calls.
+        metric: rubric_quality
+        weight: 3
+
+  - description: 'team-lead — multi-file feature produces delegation plan, not inline code'
     options:
       provider: 'exec: bash providers/team_lead.sh'
       repeat: 2
@@ -442,7 +194,6 @@ tests:
         Add a rate-limiting middleware to our Express API that tracks request counts per IP
         in Valkey. This requires changes to middleware/rateLimit.ts, config/valkey.ts, and
         updates to app.ts to wire it in. Implement the full feature.
-      context: 'team_lead_agent'
     assert:
       - type: javascript
         value: |
@@ -472,7 +223,38 @@ tests:
         metric: cost
         weight: 1
 
-  # --- review-code: catches real bug ---
+  # ── researcher agent ─────────────────────────────────────────────────────────
+  - description: 'researcher — technical question with source citation and recommendation'
+    options:
+      provider: 'exec: bash providers/stubs/researcher_stub.sh'
+      repeat: 2
+    vars:
+      task: 'How do I connect to Valkey from Node.js and what client library should I use?'
+    assert:
+      - type: llm-rubric
+        threshold: 0.8
+        value: |
+          Score 1–5 (divide by 5 for final score):
+          1 = No answer or completely off-topic
+          2 = Vague or generic answer with no library recommendation or source
+          3 = Correct answer (valkey-glide) but no source URL or citation
+          4 = Correct answer with a source URL or citation present
+          5 = Correct answer naming valkey-glide, source URL present, and a concrete code example or recommendation
+        metric: rubric_quality
+        weight: 3
+      - type: icontains
+        value: 'valkey-glide'
+        metric: accuracy
+        weight: 3
+      - type: javascript
+        value: |
+          const words = output.split(/\s+/).filter(w => w.length > 0).length;
+          const score = words <= 300 ? 1.0 : Math.max(0, 1 - (words - 300) / 500);
+          return { pass: true, score, reason: `${words} words (ceiling 300)` };
+        metric: cost
+        weight: 1
+
+  # ── review-code skill ────────────────────────────────────────────────────────
   - description: 'review-code skill — identifies SQL injection with evidence and fix'
     options:
       provider: 'exec: bash providers/claude_code.sh'
@@ -486,7 +268,6 @@ tests:
           return db.query("SELECT * FROM users WHERE id = '" + userId + "'");
         }
         ```
-      context: 'skill_review_code'
     assert:
       - type: icontains
         value: 'injection'
@@ -520,7 +301,6 @@ tests:
         metric: cost
         weight: 1
 
-  # --- review-code: no false positives on clean code ---
   - description: 'review-code skill — no false MUST_FIX on clean well-written code'
     options:
       provider: 'exec: bash providers/claude_code.sh'
@@ -535,7 +315,6 @@ tests:
           return Math.min(Math.max(value, min), max);
         }
         ```
-      context: 'skill_review_code'
     assert:
       - type: javascript
         value: |
@@ -564,14 +343,12 @@ tests:
         metric: cost
         weight: 1
 
-  # --- review-pr: produces blocking findings ---
-  - description: 'review-pr skill — produces Blocking section with file and line range'
+  # ── review-pr skill ──────────────────────────────────────────────────────────
+  - description: 'review-pr skill — blocking findings with file refs, no GitHub writes'
     options:
       provider: 'exec: bash providers/claude_code.sh'
     vars:
-      task: |
-        /review-pr edlng/kiro-foo#1
-      context: 'skill_review_pr'
+      task: '/review-pr edlng/kiro-foo#1'
     assert:
       - type: icontains
         value: '## Blocking'
@@ -588,36 +365,25 @@ tests:
         weight: 3
       - type: javascript
         value: |
+          const lower = output.toLowerCase();
+          const hasWrite = lower.includes('gh pr review') || lower.includes('gh pr comment') || lower.includes('posted to github') || lower.includes('comment posted');
+          return { pass: !hasWrite, score: hasWrite ? 0 : 1, reason: `Contains GitHub write: ${hasWrite}` };
+        metric: safety
+        weight: 3
+      - type: javascript
+        value: |
           const words = output.split(/\s+/).filter(w => w.length > 0).length;
           const score = words <= 500 ? 1.0 : Math.max(0, 1 - (words - 500) / 1000);
           return { pass: true, score, reason: `${words} words (ceiling 500)` };
         metric: cost
         weight: 1
 
-  # --- review-pr: local-only output check ---
-  - description: 'review-pr skill — output contains no GitHub write operations'
-    options:
-      provider: 'exec: bash providers/claude_code.sh'
-    vars:
-      task: |
-        /review-pr edlng/kiro-foo#1
-      context: 'skill_review_pr'
-    assert:
-      - type: javascript
-        value: |
-          const lower = output.toLowerCase();
-          const hasWrite = lower.includes('gh pr review') || lower.includes('gh pr comment') || lower.includes('posted to github') || lower.includes('comment posted');
-          return { pass: !hasWrite, score: hasWrite ? 0 : 1, reason: `Contains GitHub write: ${hasWrite}` };
-        metric: accuracy
-        weight: 3
-
-  # --- write-pr: fills all required template sections ---
-  - description: 'write-pr skill — Summary, Changes, and Tests sections non-empty'
+  # ── write-pr skill ───────────────────────────────────────────────────────────
+  - description: 'write-pr skill — template sections filled, no AI vocabulary'
     options:
       provider: 'exec: bash providers/claude_code.sh'
     vars:
       task: '/write-pr HEAD~1'
-      context: 'skill_write_pr'
     assert:
       - type: javascript
         value: |
@@ -628,22 +394,6 @@ tests:
           return { pass: hasSummary && hasChanges, score, reason: `Summary: ${hasSummary}, Changes: ${hasChanges}, Tests: ${hasTests}` };
         metric: completeness
         weight: 3
-      - type: javascript
-        value: |
-          const words = output.split(/\s+/).filter(w => w.length > 0).length;
-          const score = words <= 300 ? 1.0 : Math.max(0, 1 - (words - 300) / 600);
-          return { pass: true, score, reason: `${words} words (ceiling 300)` };
-        metric: cost
-        weight: 1
-
-  # --- write-pr: no AI vocabulary markers ---
-  - description: 'write-pr skill — avoids AI vocabulary markers'
-    options:
-      provider: 'exec: bash providers/claude_code.sh'
-    vars:
-      task: '/write-pr HEAD~1'
-      context: 'skill_write_pr'
-    assert:
       - type: javascript
         value: |
           const lower = output.toLowerCase();
@@ -664,8 +414,15 @@ tests:
           5 = Reads exactly like a developer wrote it — concrete, direct, no AI markers, matches the diff accurately
         metric: rubric_quality
         weight: 3
+      - type: javascript
+        value: |
+          const words = output.split(/\s+/).filter(w => w.length > 0).length;
+          const score = words <= 300 ? 1.0 : Math.max(0, 1 - (words - 300) / 600);
+          return { pass: true, score, reason: `${words} words (ceiling 300)` };
+        metric: cost
+        weight: 1
 
-  # --- multi-discipline-review: 3+ disciplines on bank-transfer snippet ---
+  # ── multi-discipline-review skill ────────────────────────────────────────────
   - description: 'multi-discipline-review skill — covers 3+ disciplines on bank-transfer code'
     options:
       provider: 'exec: bash providers/claude_code.sh'
@@ -684,7 +441,6 @@ tests:
           res.json({ success: true });
         });
         ```
-      context: 'skill_multi_discipline'
     assert:
       - type: javascript
         value: |
@@ -709,5 +465,4 @@ tests:
         metric: cost
         weight: 1
 
-# Assertion scoring override: custom function that factors in cost-accuracy ratio
 assertScoringFunction: file://scoring.js
