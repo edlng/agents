@@ -109,6 +109,16 @@ Adapt the template to the specific narrative — not all sections apply to every
 
 ---
 
+## Phase 3.5: Generate GLIDE Code Snippets
+
+Spawn a `valkey-glide-implementor` subagent to produce accurate code examples for the narrative's "How Customers Will Use" section.
+
+Brief: "Generate Valkey GLIDE code snippets for the following context. Language: {primary language identified in research}. Framework: {framework from research, if any}. Context: {summarize the integration scenario from the Jira issue - what the customer is building with Valkey}. Generate snippets showing: (1) client setup, (2) the primary Valkey operation relevant to this narrative (vector search, caching, session storage, etc.). Keep snippets concise and production-ready."
+
+Wait for the subagent to return. Integrate the generated snippets into the narrative draft's "How Customers Will Use" section, replacing any placeholder code examples the superhuman may have generated. If the narrative omits that section, append the snippets under a "## Code Examples" heading.
+
+---
+
 ## Phase 4: Save and Send
 
 Create a markdown file in ~/Documents/work/narratives/ with the file name being <PROJECTNAME>_narrative.md. Also, send it in the chat for me to see.

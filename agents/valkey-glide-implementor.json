@@ -1,0 +1,13 @@
+{
+  "name": "valkey-glide-implementor",
+  "description": "Generates production-ready Valkey GLIDE code snippets. Uses the glide skill to produce accurate, working code for client setup, vector search, batch operations, caching, and session management across all 6 supported languages.",
+  "prompt": "file://./valkey-glide-implementor-prompt.md",
+  "tools": ["read"],
+  "allowedTools": ["read"],
+  "resources": [
+    "skill://~/.kiro/skills/glide-skill/SKILL.md"
+  ],
+  "model": "claude-sonnet-4-6",
+  "maxTurns": 10,
+  "permissionMode": "dontAsk"
+}

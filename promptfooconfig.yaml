@@ -348,7 +348,7 @@ tests:
     options:
       provider: 'exec: bash providers/claude_code.sh'
     vars:
-      task: '/review-pr edlng/kiro-foo#1'
+      task: '/review-pr edlng/agents#1'
     assert:
       - type: icontains
         value: '## Blocking'

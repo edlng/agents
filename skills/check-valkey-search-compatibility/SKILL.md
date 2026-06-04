@@ -146,7 +146,15 @@ Regardless of implementation path, analyze these use cases specific to **this co
 
 For each use case, mark as **Applicable**, **Potentially applicable**, or **Not applicable** based on codebase evidence, with one sentence of justification.
 
-### 2.4 — PR Acceptance Feasibility
+### 2.4 — Generate GLIDE Code Snippets
+
+Spawn a `valkey-glide-implementor` subagent to produce ready-to-use code examples for the recommended implementation path.
+
+Brief: "Generate Valkey GLIDE code snippets for the following context. Language: {language from Phase 1}. Framework: {framework from Phase 1}. Context: {implementation path from 2.2 - describe what needs to be built}. Generate snippets for: (1) client setup with proper lifecycle management, (2) index creation with vector field for the detected embedding dimension, (3) document ingestion (add_texts/add_documents equivalent), (4) similarity search with optional hybrid filtering. Match the project's detected patterns."
+
+Wait for the subagent to return. Include the generated snippets in the report under a new "## 7. GLIDE Implementation Snippets" section.
+
+### 2.5 — PR Acceptance Feasibility
 
 Research whether the target repository would realistically accept a Valkey Search PR:
 
@@ -157,7 +165,7 @@ Research whether the target repository would realistically accept a Valkey Searc
 
 Synthesize into a confidence level (HIGH / MEDIUM / LOW) with evidence.
 
-### 2.5 — Produce Final Report
+### 2.6 — Produce Final Report
 
 Output the following report in full. Do not truncate.
 
@@ -277,4 +285,12 @@ translations, examples, CI checks, etc.)>
 
 <Honest assessment of what could get the PR rejected or stalled. Include
 technical concerns maintainers are likely to raise and how to preempt them.>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## 7. GLIDE Implementation Snippets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<Insert the code snippets returned by the valkey-glide-implementor subagent.
+Include all snippets in order: client setup, index creation, document ingestion,
+similarity search. Preserve the language-specific formatting and inline comments.>
 ```
