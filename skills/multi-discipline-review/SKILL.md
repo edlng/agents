@@ -89,17 +89,9 @@ Only flag code that is **new in this diff** (not pre-existing gaps).
 
 ## Phase 3b: Adversarial Validator (skeptic pass)
 
-Spawn one `validator` subagent. Pass the consolidated findings from Phase 3.
+Run the validator per `_shared/validator-skeptic-pass.md` with one `validator` subagent. Pass the consolidated findings from Phase 3 (this skill feeds an already-consolidated list rather than versioned cache keys, so hand the findings to the subagent directly).
 
-For each finding, attach `verdict` (`CONFIRMED` | `DOWNGRADE` | `REJECTED`) and `verdict_reason` (one sentence). Reject if:
-- The cited symbol, file, or line does not exist or does not say what the finding claims.
-- The issue is already handled elsewhere in the diff or codebase context.
-- The finding is generic ("add error handling", "add validation") without a concrete failure scenario.
-- The finding is a matter of taste, not a deviation from codebase patterns visible in context.
-
-Downgrade severity if the issue is real but overstated.
-
-Drop all `REJECTED` findings entirely before rendering the output table. Apply `DOWNGRADE` severity adjustments before the final ranking.
+Apply the shared self-challenge and verdict rules (`CONFIRMED` | `DOWNGRADE` | `REJECTED`). Drop all `REJECTED` findings entirely before rendering the output table, and apply `DOWNGRADE` severity adjustments before the final ranking.
 
 ---
 

@@ -90,13 +90,7 @@ If anything is inaccurate or missing, fix it before proceeding.
 
 ## Phase 4: Humanize
 
-Apply the `humanizer` skill to the PR description. The goal is to make it read like a real developer wrote it, not an AI. In particular:
-- No promotional language ("streamlines", "enhances", "robust")
-- No significance inflation ("crucial", "pivotal", "key")
-- No rule-of-three lists forced for symmetry
-- No em dash overuse
-- Straightforward, natural tone
-- Vary sentence structure
+Apply the `humanizer` skill to the PR description. The goal is to make it read like a real developer wrote it, not an AI. The humanizer skill contains the comprehensive rule set — do not re-specify individual patterns here.
 
 ---
 

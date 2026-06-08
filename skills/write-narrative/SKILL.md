@@ -41,7 +41,7 @@ Wait for the research agent to complete before proceeding.
 
 Spawn a `superhuman` subagent. Pass the full Jira issue details and the research report from Phase 2.
 
-The subagent must draft AND humanize the narrative in a single pass (no separate editing step). Use the /humanizer skill while writing and also with these rules: no promotional language ("robust", "streamlines", "empowers"), no significance inflation ("crucial", "pivotal", "transformative"), no forced rule-of-three lists, no em dashes, plain direct technical prose.
+The subagent must draft AND humanize the narrative in a single pass (no separate editing step). Apply the `humanizer` skill while writing — it contains the comprehensive rule set for removing AI patterns. No em dashes, plain direct technical prose.
 
 Using the Jira issue details and research findings, write the narrative following the standard template below. If the given narrative task includes more fields to cover, include that too.
 

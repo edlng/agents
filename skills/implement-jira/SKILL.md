@@ -13,7 +13,7 @@ This workflow assigns specific models to each subagent for cost efficiency, and 
 
 ## Cache setup (run once at start)
 
-The Valkey server is expected at `localhost:8888`. Use `valkey-glide` if available in the workspace; otherwise fall back to `valkey-cli -p 8888`.
+Caching follows `_shared/valkey-cache-conventions.md` (Valkey at `localhost:8888`, `valkey-glide` preferred with `valkey-cli -p 8888` fallback, prompt-cache inlined values).
 
 Cache keys for this run:
 - `jira:$ARGUMENTS:requirements` — full Requirements Document (TTL 24h)
@@ -50,13 +50,7 @@ Write the result to Valkey: `valkey-cli -p 8888 SET jira:$ARGUMENTS:requirements
 
 **Model: sonnet-4-6** (same agent as Phase 1 — no spawn needed)
 
-Read the existing codebase to understand:
-- **Language and runtime**: check `pyproject.toml`, `setup.py`, `package.json`, `pom.xml`, `build.gradle`, etc.
-- **Code style**: indentation, naming conventions (snake_case vs camelCase), docstring format, type annotation usage, import ordering
-- **Patterns in use**: how existing modules are structured, how errors are raised and handled, how logging is done, common base classes or decorators used
-- **Existing utilities**: functions, helpers, or abstractions already present that the new code should call rather than re-implement
-- **Dependencies**: what packages are already imported and used. If the task requires a key/value store or cache client, **use `valkey-glide`** — do not introduce `redis-py` or any other Redis-compatible client
-- **Test conventions**: test file naming, fixture patterns, use of mocks vs real objects, assertion style
+Read the existing codebase following `_shared/codebase-context-checklist.md` (language/runtime, code style, patterns, existing utilities, test conventions, and the `valkey-glide` key/value standard). The checklist is written for both review and implementation — apply it to understand what the new code must match and reuse.
 
 Produce a short **Codebase Context** note. Write to Valkey: `valkey-cli -p 8888 SET jira:$ARGUMENTS:codebase_context "<note>" EX 86400`.
 
