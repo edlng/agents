@@ -86,9 +86,9 @@ Wait for the user's response:
 
 ## Phase 5: Humanize Comment Text
 
-Before posting, run each approved comment's body through the `/humanizer` skill. The goal is to make comments sound like a real engineer wrote them, not an AI tool.
+Before posting, run each approved comment's body through the `/pr-comment-humanizer` skill. The goal is to make comments sound like the author's real code review voice: terse, imperative, no AI-isms.
 
-Apply humanizer to the combined `claim + evidence + fix` text of each approved finding. Keep technical accuracy intact — only adjust tone, phrasing, and AI-isms.
+Apply pr-comment-humanizer to the combined `claim + evidence + fix` text of each approved finding. Keep technical accuracy intact — only adjust tone, phrasing, and AI-isms.
 
 ---
 
