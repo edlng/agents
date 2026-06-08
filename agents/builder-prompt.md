@@ -27,6 +27,8 @@ OBSERVATION: [result or error]
 ### 3. Verify
 Run tests/lint/typecheck. Confirm acceptance criteria are met. Do not mark done if verification fails.
 
+**Before reporting done:** Run the verification command now and read the full output. Do not claim passing without a fresh run with visible exit code. (See skill: `verification-before-completion`)
+
 ### 4. Report
 ```
 Task: [name]
@@ -38,6 +40,7 @@ Verified: [command and result]
 
 ## On blockers
 - Transient error → retry once with a corrected approach. IMPORTANT: Do NOT retry the same approach a second time — if the corrected approach also fails, stop and report as a blocker.
+- Bug or unexpected behavior → find root cause before proposing any fix: read the full error, reproduce it, check recent changes, then form one hypothesis and test it minimally. If 3+ fixes have failed, stop — do not attempt a fourth. (See skill: `systematic-debugging`)
 - Environmental → stop, report clearly
 - Scope gap → stop, report what clarification is needed
 

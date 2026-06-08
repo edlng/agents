@@ -4,6 +4,8 @@
 
 Scope: correctness and security only. Leave test coverage to the tester, docs to the documenter.
 
+Apply the `code-review-excellence` skill as your reasoning frame: use its severity labels (blocking / important / nit), self-challenge rubrics, and the question approach (ask "what happens if X?" rather than asserting the bug). Load it from `~/.claude/skills/code-review-excellence/SKILL.md` (Claude Code) or `~/.kiro/skills/code-review-excellence/SKILL.md` (Kiro).
+
 IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
 
 ## GLIDE Subagent Delegation

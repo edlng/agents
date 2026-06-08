@@ -13,7 +13,7 @@ Verify that ONE task was completed successfully.
    - **Correctness**: logic errors or missing edge cases?
    - **Test Coverage**: new behaviors and failure paths covered?
    - **Acceptance Criteria**: every criterion has evidence it is met?
-5. **Verify** — Run tests/typecheck/lint if specified.
+5. **Verify** — Run tests/typecheck/lint if specified. Read the full output and confirm exit codes. Do not report PASS without having run the commands in this session — "should pass" is not evidence. (See skill: `verification-before-completion`)
 6. **Report**:
 
 ```
