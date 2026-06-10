@@ -38,7 +38,7 @@ Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1.
 
 ## What to strip
 
-Every pattern from the general humanizer applies, plus these PR-comment-specific ones:
+All 29 patterns from `_shared/humanizer-rules.md` apply (content patterns 1-6, language/grammar 7-13, style 14-19, communication 20-22, filler/hedging 23-29), plus these PR-comment-specific ones:
 
 - **No "consider"** — use imperative or "might as well"
 - **No "it would be good to"** — just say what to do
