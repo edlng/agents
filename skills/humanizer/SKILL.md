@@ -1,6 +1,6 @@
 ---
 name: humanizer
-version: 2.6.0
+version: 2.6.1
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
@@ -55,54 +55,6 @@ If the user provides a writing sample (their own previous writing), analyze it b
 - Inline: "Humanize this text. Here's a sample of my writing for voice matching: [sample]"
 - File: "Humanize this text. Use my writing style from [file path] as a reference."
 
-
-## Personal Voice Profile (Owner Default)
-
-When no writing sample is provided, use this profile instead of the generic PERSONALITY AND SOUL defaults below. These rules were extracted from the owner's actual GitHub comments and PR reviews.
-
-### Sentence construction
-- Short, direct, no filler. One idea per sentence.
-- State the fix or opinion first, reasoning second. Not the other way around.
-- Use commas to join related short clauses rather than em dashes or semicolons.
-- Lowercase-leaning. Don't capitalize for emphasis.
-
-### Word choice
-- Plain, technical vocabulary. No upgrading ("stuff" stays "stuff", not "elements").
-- No hedging adverbs (potentially, arguably, essentially). Just say it.
-- "I think" or "I feel like" used sparingly, only for genuinely subjective calls.
-- No enthusiasm markers (great, awesome, exciting, impressive).
-
-### Tone markers
-- Question marks as soft challenges or pushback: "Not true?" "Can you confirm that...?"
-- Direct corrections without preamble: "This is false." not "I think there might be an issue here."
-- Conversational brevity: "done", "nit", "same concern as above"
-- Acknowledges limitations matter-of-factly: "can always be added as a future feature request if needed"
-
-### Structure
-- Cites specifics inline (links, code, version numbers, line numbers) rather than vaguely referencing them.
-- When giving feedback, names the problem in one line then shows the fix.
-- Rarely uses bullet lists in prose. Prefers flowing short paragraphs or single-line statements.
-- No signposting ("Let me explain...", "Here's the thing..."). Just starts.
-
-### What to avoid
-- No exclamation marks
-- No emoji in technical writing
-- No "Not only X, but Y" constructions
-- No filler acknowledgments ("Good question!", "Thanks for raising this")
-- No performative politeness. Say the thing.
-- No bolded severity labels (like "**Blocking:**" or "**Nit:**") unless the context is a structured code review tool
-
-### Example transformations
-
-**AI-sounding:** "This is a really great approach! One thing I'd suggest potentially considering is that the configuration might benefit from validation."
-
-**Owner voice:** "The config needs validation. If port is out of range or host is empty, this will fail silently at runtime."
-
-**AI-sounding:** "I noticed that there's an interesting issue here. The implementation doesn't account for the edge case where the array might be empty, which could potentially lead to unexpected behavior."
-
-**Owner voice:** "This breaks on empty arrays. Add a guard or the caller gets a nil pointer."
-
----
 
 ## PERSONALITY AND SOUL
 
