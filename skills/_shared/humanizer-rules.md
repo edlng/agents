@@ -84,7 +84,9 @@ Based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia
 
 ### 14. Em Dash Overuse
 
-**Problem:** LLMs use em dashes (—) more than humans, mimicking "punchy" sales writing. In practice, most of these can be rewritten more cleanly with commas, periods, or parentheses.
+**Problem:** LLMs use em dashes (—) more than humans, mimicking "punchy" sales writing.
+
+**Rule:** NEVER output em dashes (—). Rewrite with a comma, colon, period, or parentheses. If none of those work, use a hyphen.
 
 ### 15. Overuse of Boldface
 
