@@ -17,16 +17,16 @@ Output a flat JSON array of findings. Each finding has:
 
 ## The four core lenses
 
-Apply all lenses in a single pass — load the diff once, not once per lens.
+Apply lenses in the order listed. **Codebase alignment is the primary lens** — a change that doesn't fit the existing codebase is a defect regardless of correctness. Evaluate it first; then check correctness, requirements, and tests. Load the diff once, not once per lens.
 
-### Lens 1 — Requirements alignment
-Does the implementation satisfy every acceptance criterion? Cite the requirement item by quoting it. Flag missing or partial coverage. Flag scope creep (changes unrelated to any requirement). Skip this lens if no requirements source exists.
+### Lens 1 — Codebase Alignment & Design Fit (PRIMARY)
+Does the code look like it belongs in this codebase? Flag: reimplemented utilities that already exist nearby, naming/casing that deviates from the project convention, error-handling or logging style that doesn't match, layering violations (e.g. data access bleeding into HTTP handlers), premature abstraction, duplication of adjacent code. **Only flag what conflicts with patterns visible in the codebase context** — not general preferences or matters of taste. This lens has priority: findings here are architectural defects, not suggestions.
 
 ### Lens 2 — Correctness & Security
 Logic bugs, off-by-ones, race conditions, unhandled errors, dropped exceptions, broken invariants. Security: injection (SQL, command, template), authn/authz gaps, secrets in code, unsafe deserialization, SSRF, path traversal, weak crypto, missing input validation at trust boundaries. Be concrete about the threat model — generic "add validation" findings are rejected by the validator.
 
-### Lens 3 — Design fit
-Does the code match the codebase context? Reused existing utilities? Premature abstraction? Duplication of nearby code? Naming and error-handling consistent? Layering respected (e.g. data access not bleeding into HTTP handlers)? Only flag what conflicts with patterns visible in the codebase context — not matters of taste.
+### Lens 3 — Requirements alignment
+Does the implementation satisfy every acceptance criterion? Cite the requirement item by quoting it. Flag missing or partial coverage. Flag scope creep (changes unrelated to any requirement). Skip this lens if no requirements source exists.
 
 ### Lens 4 — Testability
 Do tests cover every acceptance criterion and the edge cases listed in requirements? Are tests asserting behavior or just exercising code paths? Mocked dependencies that should be real (e.g. mocked DB when an integration test would catch the bug)? Missing tests for new failure paths?

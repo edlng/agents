@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Senior-grade PR review against the linked Jira ticket and existing codebase. Uses Valkey caching, a merged-lens reviewer (latest Sonnet), and a skeptic validator pass (Opus for large diffs). Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.
+description: Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.
 ---
 
 # Review PR (senior-dev grade)

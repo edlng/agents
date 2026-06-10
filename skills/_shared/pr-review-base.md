@@ -46,20 +46,34 @@ Follow `_shared/codebase-context-checklist.md`. For each touched file, fetch its
 
 ---
 
-## Phase 2: Initial Review (merged lenses)
+## Phase 2: Initial Review
 
-Spawn ONE `code-reviewer` subagent. It applies all lenses in one pass — diff loaded once, not once per lens. Use the `code-review-excellence` skill as the reasoning frame for the correctness/security and design lenses.
+**Size gate** (use `additions + deletions` from metadata):
+- `<= 500`: spawn ONE `code-reviewer` subagent, all lenses in one pass.
+- `> 500`: spawn **4 `code-reviewer` subagents in parallel** — one per lens (see below). Each re-reads the same Valkey cache keys, so only use this tier when a single agent would genuinely lose the thread across 500+ lines.
 
-Prompt the subagent to:
+**Prompt for the single-agent path (`<= 500`):**
 > Read `pr:$RUNID:diff`, `pr:$RUNID:requirements`, and `pr:$RUNID:codebase_context` from Valkey at `localhost:8888`. If you need a file beyond the cached context, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do not invent file contents.
 >
-> Apply the four lenses and the findings schema defined in `_shared/review-findings-schema.md`. Write the JSON to `pr:$RUNID:findings_v1`.
+> Use the `code-review-excellence` skill as your reasoning frame. Apply the four lenses in `_shared/review-findings-schema.md` in order — **Codebase Alignment first** (primary lens), then Correctness & Security, then Requirements, then Testability. Only flag codebase-alignment issues that conflict with patterns visible in `pr:$RUNID:codebase_context`. Write the findings JSON to `pr:$RUNID:findings_v1`.
+
+**For `> 500` line diffs, spawn 4 parallel subagents:**
+
+- **Subagent A — `code-reviewer` — Codebase Alignment & Software Principles (PRIMARY):** Does the code fit this codebase? Flag reimplemented utilities, naming/casing/error-handling deviations, layering violations, premature abstraction, duplication of adjacent code, violations of SOLID/DRY/YAGNI where the codebase visibly follows them. Only flag what conflicts with patterns visible in `pr:$RUNID:codebase_context` — not general preferences.
+- **Subagent B — `code-reviewer` — Correctness & Requirements:** Logic bugs, off-by-ones, race conditions, unhandled errors, broken invariants, boundary/edge cases. Plus: does the implementation satisfy every acceptance criterion from `pr:$RUNID:requirements`? Quote each criterion and mark MET or MISSING. Skip requirements if `pr:$RUNID:requirements` is absent.
+- **Subagent C — `security-reviewer` — Security:** Full CWE-anchored threat model per the security-reviewer agent definition. Receives `pr:$RUNID:diff` and `pr:$RUNID:codebase_context` only — not requirements.
+- **Subagent D — `tester` — Testability:** New behavior without tests, untested error paths, tests that don't assert behavior, mocks hiding real bugs, flaky patterns, missing edge cases. Only flag code that is new in this diff.
+- **Subagent E — `glide-code-reviewer` — Valkey GLIDE:** Client lifecycle, batch/pipeline usage, cluster awareness, connection management, error handling, resource leaks, and GLIDE anti-patterns. Self-gates if the diff contains no GLIDE code — no findings, no cost.
+
+After all 5 subagents complete, merge their JSON arrays, deduplicate findings on the same file+line (keep highest severity), and write to `pr:$RUNID:findings_v1`.
 
 ---
 
 ## Phase 3: Validator (skeptic pass)
 
-Follow `_shared/validator-skeptic-pass.md`. Use its diff-size model-selection rubric (skip at `<= 300`; `code-reviewer` at `<= 800`; `validator` at `> 800`). Pass `$RUNID` and `n` (current findings version); the validator writes `pr:$RUNID:findings_v$(n+1)`. Apply the loop control from that file; cap at **3 validator passes total**.
+Spawn ONE `validator` subagent (Opus). Pass it the merged findings from `pr:$RUNID:findings_v1` directly — do not re-read the diff. This is a single pass; no loop.
+
+Follow the self-challenge rubric in `_shared/validator-skeptic-pass.md`. The validator reads only the findings list and the codebase context (`pr:$RUNID:codebase_context`) to verify claims — it does not re-read the full diff. Write the validated findings to `pr:$RUNID:findings_v2`.
 
 ---
 

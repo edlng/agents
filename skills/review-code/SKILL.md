@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: Self-review uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, Valkey caching, parallel subagent reviewers, Opus skeptic validator, and auto-fix offer. Pass a branch name to review vs main, a Jira key to use as requirements source, or leave empty to review staged+unstaged changes.
+description: Self-review uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, Valkey caching, a single Sonnet reviewer, an Opus validator skeptic pass, and auto-fix offer. Pass a branch name to review vs main, a Jira key to use as requirements source, or leave empty to review staged+unstaged changes.
 ---
 
 # Review My Local Changes
@@ -54,6 +54,8 @@ Build per `_shared/codebase-context-checklist.md`, reading touched files at the 
 
 Spawn ONE `code-reviewer` subagent. Apply lenses in a single pass. Use the `code-review-excellence` skill as the reasoning frame.
 
+Apply lenses in order: **Codebase Alignment first** (primary lens — a change that doesn't fit the codebase is a defect even if logically correct), then Correctness & Security, then Requirements (if a ticket was found), then Testability. Only flag codebase-alignment issues that conflict with visible patterns in `local:$RUNID:codebase_context` — not general preferences.
+
 Use the findings schema and the four core lenses from `_shared/review-findings-schema.md`, with these **local-review overrides**:
 
 - **Severity vocabulary:** `must_fix` | `should_fix` | `consider` (instead of blocking/suggestion/nit).
@@ -69,10 +71,13 @@ Tell the subagent: "You are reviewing the author's own uncommitted work. Be dire
 
 ## Phase 3: Validator (skeptic pass)
 
-Follow `_shared/validator-skeptic-pass.md` with a `validator` subagent. Apply these local-review specifics on top of the shared template:
+Spawn ONE `validator` subagent (Opus). Pass it the findings from `local:$RUNID:findings_v1` directly — do not re-read the full diff. Single pass only; no loop.
+
+Follow the self-challenge rubric in `_shared/validator-skeptic-pass.md`. The validator reads only the findings list and `local:$RUNID:codebase_context`. Apply these local-review specifics on top:
 - Re-evaluate `auto_fixable`: only true if the fix is small, local, and unambiguous. If unsure, set false.
-- Bias added findings toward Lens 5 (unfinished work) — that is the highest-value lens for local review. Add at most 2.
-- **Cap at 2 validator passes** — local review should be fast. If findings are still volatile after 2 passes, ship the current set with a note.
+- Bias added findings toward Lens 5 (unfinished work). Add at most 2 new findings.
+
+Write validated findings to `local:$RUNID:findings_v2`.
 
 ---
 

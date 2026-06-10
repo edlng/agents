@@ -195,7 +195,7 @@ Construct a single review via `gh api`. Each comment's `body` is the humanized t
 cat <<'EOF' | gh api repos/<owner>/<repo>/pulls/<number>/reviews --method POST --input -
 {
   "commit_id": "<commit_sha>",
-  "event": "COMMENT",
+  "event": "<REQUEST_CHANGES if any approved finding is Blocking, else COMMENT>",
   "body": "<friendly review body written above>",
   "comments": [
     {
@@ -231,6 +231,6 @@ After posting, print a confirmation with the review URL and the count of comment
 - Always run approved comment bodies through `/pr-comment-humanizer` before posting (Phase 5).
 - Skip findings already covered by an existing PR comment (Phase 3b).
 - NEVER modify the Obsidian note.
-- NEVER approve or request changes — always use `event: "COMMENT"`.
+- Choose `event` based on severity: use `"REQUEST_CHANGES"` when any approved finding has `Blocking` severity, otherwise use `"COMMENT"`. Never use `"APPROVE"`.
 - If `gh auth status` fails, stop and tell the user to authenticate.
 - If the PR has been merged or closed, warn the user and ask whether to proceed.

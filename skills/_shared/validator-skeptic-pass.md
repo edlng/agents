@@ -44,7 +44,6 @@ Cap total validator passes per the consuming skill (PR review caps at 3; local r
 
 ## Model / role selection
 
-The consuming skill selects the subagent role and model. Typical pattern, gated by diff size (`additions + deletions`):
-- `<= 300`: skip the validator entirely — the initial reviewer is sufficient for small diffs.
-- `<= 800`: use a `code-reviewer` subagent as the validator (cheaper, still catches hallucinations).
-- `> 800`: use a `validator` subagent (earns its cost on large/complex diffs).
+Always use the `validator` subagent (Opus). The validator's job is to read a compact findings list — not the full diff — so Opus cost is bounded and justified: it earns its cost by killing false positives before they reach the user.
+
+**What the validator reads:** the merged findings list and `codebase_context` only. It does NOT re-read the full diff. Reviewers already extracted the relevant evidence into each finding's `evidence` field; the validator verifies claims against that evidence and the codebase context, and may spot-check a specific file/line if a claim looks suspicious.
