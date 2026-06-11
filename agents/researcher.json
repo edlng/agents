@@ -2,7 +2,12 @@
   "name": "researcher",
   "description": "Search external documentation, APIs, and libraries to answer a specific question. Use proactively when a caller needs citable external knowledge before implementing or deciding. Returns concise findings with source URLs, tradeoffs, and a concrete recommendation.",
   "prompt": "file://./researcher-prompt.md",
-  "tools": ["read", "shell", "@firecrawl", "@sequential-thinking"],
+  "tools": [
+    "read",
+    "shell",
+    "@firecrawl",
+    "@sequential-thinking"
+  ],
   "allowedTools": [
     "read",
     "shell",
@@ -78,6 +83,5 @@
       ]
     }
   },
-  "model": "claude-sonnet-4-6",
-  "maxTurns": 20
+  "model": "claude-sonnet-4.6"
 }

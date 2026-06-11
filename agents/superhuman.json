@@ -8,7 +8,10 @@
     },
     "sequential-thinking": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
     }
   },
   "tools": [
@@ -40,7 +43,6 @@
     "@sequential-thinking/sequentialthinking"
   ],
   "prompt": "file://./superhuman-prompt.md",
-  "model": "claude-opus-4-8",
-  "maxTurns": 50,
+  "model": "claude-opus-4.8",
   "useLegacyMcpJson": false
 }

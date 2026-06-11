@@ -2,7 +2,10 @@
   "name": "glide-code-reviewer",
   "description": "Specialized GLIDE code reviewer. Reviews Valkey GLIDE client code for correctness, anti-patterns, resource leaks, and cluster-awareness using the glide skill references. Invoked as a subagent of code-reviewer when GLIDE code is in the diff.",
   "prompt": "file://./glide-code-reviewer-prompt.md",
-  "tools": ["read", "shell"],
+  "tools": [
+    "read",
+    "shell"
+  ],
   "allowedTools": [
     "read",
     "shell"
@@ -16,7 +19,5 @@
   "resources": [
     "skill://~/.kiro/skills/glide-skill/SKILL.md"
   ],
-  "model": "claude-sonnet-4-6",
-  "maxTurns": 15,
-  "permissionMode": "dontAsk"
+  "model": "claude-sonnet-4.6"
 }

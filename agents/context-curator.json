@@ -2,8 +2,13 @@
   "name": "context-curator",
   "description": "Curates memory context for worker agents. Given a task description, selects relevant memories from Valkey and Obsidian and returns a <context-memory> block. Does NOT perform tasks.",
   "prompt": "file://./context-curator-prompt.md",
-  "tools": ["read", "shell"],
-  "allowedTools": ["read", "shell"],
-  "model": "claude-haiku-4-5",
-  "maxTurns": 5
+  "tools": [
+    "read",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "shell"
+  ],
+  "model": "claude-haiku-4.5"
 }

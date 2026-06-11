@@ -2,9 +2,16 @@
   "name": "builder",
   "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
   "prompt": "file://./builder-prompt.md",
-  "tools": ["read", "write", "shell"],
-  "allowedTools": ["read", "write", "shell"],
-  "model": "claude-sonnet-4-6",
-  "maxTurns": 20,
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "model": "claude-sonnet-4.6",
   "welcomeMessage": "Builder ready. What task should I execute?"
 }

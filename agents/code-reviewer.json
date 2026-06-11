@@ -2,7 +2,13 @@
   "name": "code-reviewer",
   "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
   "prompt": "file://./code-reviewer-prompt.md",
-  "tools": ["read", "write", "shell", "@sequential-thinking", "@github"],
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "@sequential-thinking",
+    "@github"
+  ],
   "allowedTools": [
     "read",
     "write",
@@ -72,9 +78,7 @@
     }
   },
   "resources": [
-      "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
+    "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
   ],
-  "model": "claude-sonnet-4-6",
-  "maxTurns": 20,
-  "permissionMode": "dontAsk"
+  "model": "claude-sonnet-4.6"
 }

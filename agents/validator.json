@@ -1,16 +1,22 @@
 {
   "name": "validator",
-  "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only — inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
+  "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only \u2014 inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
   "prompt": "file://./validator-prompt.md",
-  "tools": ["read", "write", "shell"],
-  "allowedTools": ["read", "write", "shell"],
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell"
+  ],
   "toolsSettings": {
     "shell": {
       "autoAllowReadonly": true
     }
   },
-  "model": "claude-opus-4-8",
-  "welcomeMessage": "Validator ready. What should I verify?",
-  "permissionMode": "dontAsk",
-  "maxTurns": 15
+  "model": "claude-opus-4.8",
+  "welcomeMessage": "Validator ready. What should I verify?"
 }
