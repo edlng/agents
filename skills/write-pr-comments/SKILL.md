@@ -1,6 +1,6 @@
 ---
 name: write-pr-comments
-description: Post inline PR review comments from an Obsidian review note. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as inline code comments via gh api.
+description: Post inline PR review comments from an Obsidian review note as a pending review. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as a pending GitHub review (visible only to you until manually submitted).
 ---
 
 # Write PR Comments
@@ -180,14 +180,12 @@ Notes:
 
 ## Phase 7: Post Approved Comments
 
-Write a top-level review body that:
-- Opens warmly and positively — lead with what's great about the PR, what it accomplishes, what you genuinely liked
-- Frames any comments as small opportunities rather than problems — "one quick thing to sort out", "a couple of small notes"
-- Closes on an encouraging note — something that signals you're rooting for this to land
-- Tone: enthusiastic teammate who's excited the work exists, not a gatekeeper looking for problems
+The review is posted as **PENDING** - it will be visible only to you in the GitHub UI with inline comments attached, but NOT submitted publicly. You finish the review manually in the browser (choose Approve, Comment, or Request Changes).
 
-Example:
-> Good stuff here — the three-tier progression from single-node to EKS is well-structured, and the architecture diagrams are clear and useful. Left one note about credential wiring in the Kubernetes manifest worth a look before merge, plus a couple of small nits. Nice work!
+Write a top-level review body as a draft summary for your reference:
+- Brief note on what the PR does well
+- One-line summary of the comments left (e.g. "1 blocking issue re: credential handling, 2 nits")
+- Keep it short - you'll edit this before submitting if needed
 
 Construct a single review via `gh api`. Each comment's `body` is the humanized text from Phase 5 (anchored with `line` + `side`, never `position`):
 
@@ -195,7 +193,7 @@ Construct a single review via `gh api`. Each comment's `body` is the humanized t
 cat <<'EOF' | gh api repos/<owner>/<repo>/pulls/<number>/reviews --method POST --input -
 {
   "commit_id": "<commit_sha>",
-  "event": "<REQUEST_CHANGES if any approved finding is Blocking, else COMMENT>",
+  "event": "PENDING",
   "body": "<friendly review body written above>",
   "comments": [
     {
@@ -219,7 +217,7 @@ EOF
 
 If more than 20 comments are queued, batch into multiple reviews (GitHub API limit).
 
-After posting, print a confirmation with the review URL and the count of comments posted.
+After posting, print a confirmation with the review URL, the count of comments posted, and a reminder: "Review is pending — open the PR in your browser to submit with your chosen action."
 
 ---
 
@@ -231,6 +229,6 @@ After posting, print a confirmation with the review URL and the count of comment
 - Always run approved comment bodies through `/pr-comment-humanizer` before posting (Phase 5).
 - Skip findings already covered by an existing PR comment (Phase 3b).
 - NEVER modify the Obsidian note.
-- Choose `event` based on severity: use `"REQUEST_CHANGES"` when any approved finding has `Blocking` severity, otherwise use `"COMMENT"`. Never use `"APPROVE"`.
+- Always post with `"event": "PENDING"` so the review stays as a draft visible only to you. You submit manually in the GitHub UI with your chosen action (Approve, Comment, Request Changes). NEVER use `"APPROVE"`, `"REQUEST_CHANGES"`, or `"COMMENT"` as the event.
 - If `gh auth status` fails, stop and tell the user to authenticate.
 - If the PR has been merged or closed, warn the user and ask whether to proceed.

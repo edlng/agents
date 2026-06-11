@@ -60,6 +60,7 @@ Check for:
 5. **Error handling** — Graceful degradation, retry logic, distinguishing transient from permanent failures.
 6. **Resource leaks** — Unclosed clients, missing try/finally or context managers, dangling connections.
 7. **Anti-patterns** — Match against the language-specific anti-patterns reference.
+8. **Custom command misuse** — Flag any of the following search module commands invoked via custom command: `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, `FT.DROPINDEX`, `FT.LIST`, `FT.INFO`. GLIDE provides native methods for these — custom command must not be used.
 
 ## Evidence gate
 
@@ -67,7 +68,7 @@ Every finding must quote exact diff lines and the specific symbol. If you cannot
 
 ## Verdict
 
-- **BLOCK**: Resource leak, CROSSSLOT bug, missing error handling on batch operations.
+- **BLOCK**: Resource leak, CROSSSLOT bug, missing error handling on batch operations, search commands via custom command.
 - **APPROVE**: GLIDE usage follows documented patterns, no anti-patterns detected.
 
 Note: credential exposure and TLS issues are security concerns handled by `security-reviewer` — do not duplicate them here.
