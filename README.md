@@ -10,45 +10,47 @@ Agents are defined in `agents/` as JSON configs with co-located prompt files. Th
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **team-lead** | Sonnet 4.6 | Orchestrator. Triages tasks: handles trivial ones directly, delegates complex work to builder/validator/documenter subagents. Does not write code itself. |
-| **team-leader** | Sonnet 4.6 | Alternative orchestrator. Delegates to researcher/developer/tester/code-reviewer. |
+| **team-lead** | Sonnet | Orchestrator. Breaks specs into tasks, delegates to builder/validator/code-reviewer with two-stage review (spec compliance then quality). Never writes code. Continuous execution without pausing. |
+| **context-curator** | Haiku | Memory curation. Given a task description, selects relevant memories from Valkey/Obsidian and returns a `<context-memory>` block for worker injection. |
+| **team-leader** | Sonnet | Legacy orchestrator. Delegates to researcher/developer/tester/code-reviewer. |
 
 ### Implementation
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **builder** | Sonnet 4.6 | Worker agent. Executes one scoped implementation task at a time. Writes and edits code, runs shell commands. No subagents. |
+| **builder** | Sonnet | Worker agent. Executes one scoped implementation task at a time. Reports DONE/DONE_WITH_CONCERNS/BLOCKED/NEEDS_CONTEXT. Fresh subagent per task. |
 | **developer** | - | General-purpose developer agent using the CAO MCP server. |
-| **superhuman** | Opus 4.8 | Expert engineer for complex multi-step tasks requiring deep reasoning across AWS, backend, UI/UX, and architecture. |
+| **superhuman** | Opus | Expert engineer for complex multi-step tasks requiring deep reasoning across AWS, backend, UI/UX, and architecture. |
 
 ### Quality Assurance
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **tester** | Sonnet 4.6 | Runs tests, linters, and security scans. Writes missing tests. Recommends merge only when all quality gates pass. |
-| **validator** | Opus 4.8 | Read-only verification. Checks that a completed task satisfies its acceptance criteria. Scores and issues PASS/FAIL. |
-| **code-reviewer** | Sonnet 4.6 | Read-only reviewer. Issues APPROVE/BLOCK verdicts with evidence-backed findings grouped by severity. |
-| **glide-code-reviewer** | Sonnet 4.6 | Specialized GLIDE reviewer. Subagent of code-reviewer for Valkey GLIDE client code. |
+| **tester** | Sonnet | Runs tests, linters, and security scans. Writes missing tests. Recommends merge only when all quality gates pass. |
+| **validator** | Opus | Spec compliance verification. Reads actual code and verifies requirements are met (nothing missing, nothing extra). Scores and issues PASS/FAIL. |
+| **code-reviewer** | Sonnet | Code quality reviewer. Issues APPROVE/BLOCK verdicts with evidence-backed findings. Checks codebase alignment, correctness, maintainability. |
+| **security-reviewer** | Sonnet | Threat-model-driven security analysis anchored to CWE taxonomy. Injection, access control, secrets, crypto, SSRF, path traversal. |
+| **glide-code-reviewer** | Sonnet | Specialized GLIDE reviewer. Subagent of code-reviewer for Valkey GLIDE client code. |
 
 ### Research
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **researcher** | Sonnet 4.6 | External research via Firecrawl. Returns concise findings with source URLs and a concrete recommendation. |
-| **research-validator** | Sonnet 4.6 | Adversarially verifies researcher findings by cross-checking cited source URLs. |
-| **research-summarizer** | Sonnet 4.6 | Orchestrates researcher and research-validator, then produces a final synthesis. |
+| **researcher** | Sonnet | External research via Firecrawl. Returns concise findings with source URLs and a concrete recommendation. |
+| **research-validator** | Sonnet | Adversarially verifies researcher findings by cross-checking cited source URLs. |
+| **research-summarizer** | Sonnet | Orchestrates researcher and research-validator, then produces a final synthesis. |
 
 ### Documentation
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **documenter** | Haiku 4.5 | Generates documentation after build/validate cycles. Read-only for implementation files. |
+| **documenter** | Haiku | Generates documentation after build/validate cycles. Read-only for implementation files. |
 
 ### Valkey & GLIDE
 
 | Agent | Model | Purpose |
 |---|---|---|
-| **valkey-glide-implementor** | Sonnet 4.6 | Generates production-ready Valkey GLIDE code snippets across 6 languages for client setup, vector search, batch operations, caching, and session management. |
+| **valkey-glide-implementor** | Sonnet | Generates production-ready Valkey GLIDE code snippets across 6 languages for client setup, vector search, batch operations, caching, and session management. |
 
 ## Skills
 
@@ -71,7 +73,7 @@ Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in 
 | Skill | Purpose |
 |---|---|
 | **write-pr** | Generate a human-sounding PR description from the current git diff. Uses the repo's PR template. |
-| **write-pr-comments** | Post approved inline PR comments from an Obsidian review note. |
+| **write-pr-comments** | Post inline PR review comments from an Obsidian review note. |
 | **write-narrative** | Draft a humanized technical narrative from a Jira issue. |
 | **humanizer** | Remove AI writing patterns from text. |
 | **pr-comment-humanizer** | Humanize PR review comments before posting. |
@@ -81,6 +83,7 @@ Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in 
 | Skill | Purpose |
 |---|---|
 | **implement-jira** | Fetch a Jira ticket, plan with Opus, implement with Sonnet, run tests, then review. |
+| **subagent-driven-development** | Execute implementation plans with independent tasks via subagents. Two-stage review (spec then quality) per task. |
 | **systematic-debugging** | Structured debugging workflow before proposing any fix. |
 | **test-driven-development** | TDD workflow for features and bugfixes. |
 | **brainstorming** | Explore intent, requirements, and design before implementation. |
@@ -94,7 +97,6 @@ Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in 
 | **writing-plans** | Write implementation plans from specs or requirements before touching code. |
 | **executing-plans** | Execute written plans in a separate session with review checkpoints. |
 | **dispatching-parallel-agents** | Handle 2+ independent tasks that can be worked on without shared state. |
-| **subagent-driven-development** | Execute implementation plans with independent tasks via subagents. |
 | **using-git-worktrees** | Ensure an isolated workspace exists via native tools or git worktree fallback. |
 
 ### Valkey & GLIDE
@@ -117,6 +119,24 @@ Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in 
 
 Full list: `ls skills/`
 
+## Shared References
+
+Shared refs in `skills/_shared/` encode cross-cutting conventions used by multiple agents and skills:
+
+| Reference | Purpose |
+|---|---|
+| **security-constraints.md** | Standardized security boundary for all agents: credential access, exfiltration, destructive commands, prompt injection resistance. |
+| **memory-protocol.md** | Scoped memory system using Valkey (hot) + Obsidian (durable). Defines scopes, key naming, injection format, and store/recall conventions. |
+| **async-dispatch-protocols.md** | Idle-based delivery, callback patterns, and anti-patterns for async agent dispatch. |
+| **three-root-sync.md** | Sync convention for keeping agents/skills identical across `~/.kiro/`, `~/.claude/`, and `~/agents/`. |
+| **pr-review-base.md** | Base workflow for senior-grade PR reviews (context, merged-lens review, validator pass, report). |
+| **review-findings-schema.md** | JSON schema and severity labels for review findings. |
+| **validator-skeptic-pass.md** | Self-challenge rubric for the Opus validator skeptic pass. |
+| **humanizer-rules.md** | Rules for removing AI writing patterns from text. |
+| **valkey-cache-conventions.md** | How skills use Valkey at localhost:8888 as a shared cache. |
+| **codebase-context-checklist.md** | What to gather about touched files before reviewing. |
+| **no-github-writes.md** | Enforcement rule: reviews are local-only, never posted to GitHub. |
+
 ## Getting Started
 
 ```bash
@@ -133,7 +153,7 @@ kiro-cli --version
 Sync skills and agents to your local `~/.kiro`:
 
 ```bash
-make push   # copy from repo → ~/.kiro
+make push   # copy from repo → ~/.kiro and ~/.claude
 make pull   # copy from ~/.kiro → repo
 make status # diff between repo and ~/.kiro
 ```
@@ -177,3 +197,7 @@ Scoring is 80% quality / 20% cost (output length proxy). See `scoring.js`.
       metric: accuracy
       weight: 3
 ```
+
+## Credits
+
+Orchestration patterns (review iteration loop, security constraints block, memory protocol, async dispatch conventions) adapted from [CLI Agent Orchestrator (CAO)](https://github.com/awslabs/cli-agent-orchestrator) by AWS Labs — an open-source multi-agent orchestration framework for AI coding CLIs. CAO's supervisor/worker protocols and scoped memory system informed the design of the team-lead agent and shared references in this collection.
