@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run evaluations. Cache is preserved between runs for efficiency.
-# Use --reset flag or npm run eval:reset to clear state when needed.
+# Use --reset flag or make eval-reset to clear state when needed.
 set -euo pipefail
 
 if [[ "${1:-}" == "--reset" ]]; then
@@ -12,4 +12,4 @@ REPEAT=${EVAL_REPEAT:-1}
 echo "==> Running evaluations (repeat=${REPEAT})..."
 npx promptfoo eval --repeat "$REPEAT"
 
-echo "==> Done. Run 'npm run eval:view' to see results in browser."
+echo "==> Done. Run 'make eval-view' to see results in browser."

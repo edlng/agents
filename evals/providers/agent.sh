@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# Universal agent eval provider.
+# Usage (direct):    agent.sh <agent-name> <prompt>
+# Usage (promptfoo): agent.sh <agent-name> <prompt> <options-json> <context-json>
+#   When agent-name is "placeholder", reads the actual agent from context JSON vars.agent.
+#
+# - Reads the agent's system prompt and model from agents/
+# - Runs via claude -p --output-format json
+# - Outputs only the text result (for promptfoo)
+# - Appends token metrics to evals/metrics/token_usage.jsonl
+set -euo pipefail
+
+AGENT_NAME="$1"
+PROMPT="$2"
+CONTEXT_JSON="${4:-}"
+
+# If called as placeholder (global provider fallback), extract agent name from context vars
+if [[ "$AGENT_NAME" == "placeholder" && -n "$CONTEXT_JSON" ]]; then
+  AGENT_NAME=$(echo "$CONTEXT_JSON" | jq -r '.vars.agent // empty' 2>/dev/null || true)
+  if [[ -z "$AGENT_NAME" ]]; then
+    echo "ERROR: agent name not found in context vars" >&2
+    exit 1
+  fi
+fi
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+AGENTS_DIR="$REPO_ROOT/agents"
+METRICS_FILE="$REPO_ROOT/evals/metrics/token_usage.jsonl"
+
+# Resolve system prompt: prefer prompt file, fall back to inline JSON prompt field
+if [[ -f "$AGENTS_DIR/${AGENT_NAME}-prompt.md" ]]; then
+  SYSTEM_PROMPT=$(cat "$AGENTS_DIR/${AGENT_NAME}-prompt.md")
+elif [[ -f "$AGENTS_DIR/${AGENT_NAME}.md" ]]; then
+  SYSTEM_PROMPT=$(cat "$AGENTS_DIR/${AGENT_NAME}.md")
+elif [[ -f "$AGENTS_DIR/${AGENT_NAME}.json" ]]; then
+  INLINE=$(jq -r '.prompt // empty' "$AGENTS_DIR/${AGENT_NAME}.json" 2>/dev/null || true)
+  if [[ -n "$INLINE" && "$INLINE" != "null" && ! "$INLINE" == file://* ]]; then
+    SYSTEM_PROMPT="$INLINE"
+  else
+    echo "ERROR: No prompt file found for agent '$AGENT_NAME'" >&2
+    exit 1
+  fi
+else
+  echo "ERROR: No prompt file found for agent '$AGENT_NAME'" >&2
+  exit 1
+fi
+
+# Resolve model from JSON config (default to sonnet)
+if [[ -f "$AGENTS_DIR/${AGENT_NAME}.json" ]]; then
+  RAW_MODEL=$(jq -r '.model // "claude-sonnet-4.6"' "$AGENTS_DIR/${AGENT_NAME}.json" 2>/dev/null || echo "claude-sonnet-4.6")
+else
+  RAW_MODEL="claude-sonnet-4.6"
+fi
+
+# Normalize to short aliases that claude CLI accepts in this environment.
+# Agent configs use dot-notation (claude-sonnet-4.6) which the CLI rejects; use short aliases.
+case "$RAW_MODEL" in
+  claude-sonnet-4.6|claude-sonnet-4-6|sonnet) MODEL="sonnet" ;;
+  claude-haiku-4.5|claude-haiku-4-5|haiku)    MODEL="haiku" ;;
+  claude-opus-4.8|claude-opus-4-8|opus)        MODEL="opus" ;;
+  *)                                            MODEL="$RAW_MODEL" ;;
+esac
+
+# For researcher/research-validator: inject stub fixture so no live network calls needed
+if [[ "$AGENT_NAME" == "researcher" || "$AGENT_NAME" == "research-validator" ]]; then
+  FIXTURE=$(bash "$REPO_ROOT/evals/providers/stubs/firecrawl_stub.sh")
+  PROMPT="$PROMPT
+
+[Search results available — use these as your source]:
+$FIXTURE"
+fi
+
+# Run the agent
+RAW_OUTPUT=$(echo "$PROMPT" | claude -p \
+  --output-format json \
+  --model "$MODEL" \
+  --system-prompt "$SYSTEM_PROMPT" \
+  2>/dev/null)
+
+# Extract text result for promptfoo
+RESULT=$(echo "$RAW_OUTPUT" | jq -r '.result // ""')
+
+# Append token metrics
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+INPUT_TOKENS=$(echo "$RAW_OUTPUT" | jq -r '.usage.input_tokens // 0')
+OUTPUT_TOKENS=$(echo "$RAW_OUTPUT" | jq -r '.usage.output_tokens // 0')
+TOTAL_COST=$(echo "$RAW_OUTPUT" | jq -r '.total_cost_usd // 0')
+
+mkdir -p "$(dirname "$METRICS_FILE")"
+echo "{\"agent\":\"$AGENT_NAME\",\"model\":\"$MODEL\",\"input_tokens\":$INPUT_TOKENS,\"output_tokens\":$OUTPUT_TOKENS,\"total_cost_usd\":$TOTAL_COST,\"timestamp\":\"$TIMESTAMP\"}" >> "$METRICS_FILE"
+
+echo "$RESULT"

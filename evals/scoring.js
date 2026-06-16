@@ -2,15 +2,11 @@
  * Custom assertion scoring function.
  * Splits metrics into quality vs cost, blends 80/20.
  *
- * Cost metric: "cost" (output length proxy — fewer tokens = higher score)
+ * Cost metrics: "cost", "token_cost" (actual USD from Claude's JSON output)
  * Quality metrics: everything else (accuracy, completeness, rubric_quality, etc.)
- *
- * @param {Record<string, number>} namedScores - metric name → score (0-1)
- * @param {{ threshold?: number }} context
- * @returns {{ pass: boolean, score: number, reason: string }}
  */
 module.exports = function (namedScores, context) {
-  const costMetricNames = ['cost', 'conciseness'];
+  const costMetricNames = ['cost', 'token_cost', 'conciseness'];
 
   const quality = [];
   const cost = [];
@@ -25,7 +21,7 @@ module.exports = function (namedScores, context) {
     : 0;
   const avgCost = cost.length > 0
     ? cost.reduce((a, b) => a + b, 0) / cost.length
-    : 1; // no cost signal = assume no penalty
+    : 1; // no cost signal = no penalty
 
   const finalScore = avgQuality * 0.8 + avgCost * 0.2;
   const pass = finalScore >= (context.threshold || 0.5);

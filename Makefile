@@ -11,7 +11,7 @@ KIRO_AGENTS  := $(HOME)/.kiro/agents
 LOCAL_SKILLS := skills
 LOCAL_AGENTS := agents
 
-.PHONY: push pull status
+.PHONY: push pull status eval eval-agent eval-view eval-reset eval-cost
 
 # Promote local changes to ~/.kiro (additive — never deletes from ~/.kiro)
 push:
@@ -39,3 +39,32 @@ status:
 	@rsync -avn $(LOCAL_AGENTS)/ $(KIRO_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
 	@echo "=== agents: ~/.kiro -> agents/ (would pull) ==="
 	@rsync -avn $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
+
+# ── Evals ────────────────────────────────────────────────────────────────────
+
+# Run the full eval suite and print a cost summary when done.
+eval:
+	@mkdir -p evals/metrics
+	@rm -f evals/metrics/token_usage.jsonl
+	./run-eval.sh; EXIT=$$?; node evals/scripts/cost-summary.js; exit $$EXIT
+
+# Run tests for a single agent. Usage: make eval-agent AGENT=code-reviewer
+eval-agent:
+	@if [ -z "$(AGENT)" ]; then echo "Usage: make eval-agent AGENT=<agent-name>"; exit 1; fi
+	@mkdir -p evals/metrics
+	@rm -f evals/metrics/token_usage.jsonl
+	npx promptfoo eval --filter-pattern "$(AGENT)"
+	@node evals/scripts/cost-summary.js
+
+# Open the promptfoo results UI in a browser.
+eval-view:
+	npm run eval:view
+
+# Clear promptfoo state and re-run.
+eval-reset:
+	npm run eval:reset
+	$(MAKE) eval
+
+# Print cost summary from the last run without re-running evals.
+eval-cost:
+	@node evals/scripts/cost-summary.js

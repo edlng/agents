@@ -160,33 +160,49 @@ make status # diff between repo and ~/.kiro
 
 ## Evaluation Suite
 
-Automated evaluation of agent and skill quality using [promptfoo](https://promptfoo.dev). One test per agent/skill; each test uses multiple assertions to validate distinct behaviors in a single LLM call.
+Automated unit tests for each non-orchestrator agent using [promptfoo](https://promptfoo.dev). Each test targets a single agent with a focused single-turn prompt. Assertions are grounded in each agent's documented behavioral rules.
+
+Token costs are tracked via `claude -p --output-format json` and summarized after each run.
 
 ### Running evals
 
 ```bash
-./run-eval.sh          # run all tests, cache preserved between runs
-./run-eval.sh --reset  # clear state and run (use when DB errors occur)
-npm run eval:view      # open results in browser
+make eval                        # run full suite + print cost summary
+make eval-agent AGENT=code-reviewer  # run tests for one agent only
+make eval-view                   # open results in browser
+make eval-reset                  # clear promptfoo state and re-run
+make eval-cost                   # reprint cost summary from last run
 ```
 
 ### Test structure
 
-Tests are in `promptfooconfig.yaml`, grouped by agent/skill. Each test uses a combination of:
+Tests live in `evals/promptfooconfig.yaml`, one section per agent (15 tests total across 11 agents). Each test uses:
 
-- `javascript` assertions for deterministic checks (keyword presence, word counts, structural patterns)
-- `llm-rubric` for subjective quality where keyword matching falls short
+- `javascript` assertions for deterministic checks — grounded in each agent's documented rules (PLAN blocks, output formats, required CWEs, no-delegation rules, etc.)
+- `llm-rubric` for subjective quality using `evals/graders/judge-prompt.txt`; rubric text references the [Valkey AI rubric](~/Documents/work/valkey-ai-rubric.md) for Valkey-specific agents
 - `icontains` for exact substring requirements
 
-Scoring is 80% quality / 20% cost (output length proxy). See `scoring.js`.
+Scoring is 80% quality / 20% cost (token-based). See `evals/scoring.js`.
+
+### Cost tracking
+
+Each eval run appends to `evals/metrics/token_usage.jsonl` (gitignored). `make eval` prints a per-agent cost table at the end:
+
+```
+Agent                     | Runs | Avg In  | Avg Out | Total Cost
+code-reviewer             |    2 |    3241 |     892 |    $0.0421
+valkey-glide-implementor  |    1 |    2960 |     720 |    $0.0216
+...
+TOTAL                     |   13 |         |         |    $0.23
+```
 
 ### Adding a test
 
 ```yaml
+# In evals/promptfooconfig.yaml
 - description: 'agent-name — what behavior this checks'
-  options:
-    provider: 'exec: bash providers/your_provider.sh'
   vars:
+    agent: agent-name
     task: 'The prompt to send'
   assert:
     - type: javascript
@@ -197,6 +213,8 @@ Scoring is 80% quality / 20% cost (output length proxy). See `scoring.js`.
       metric: accuracy
       weight: 3
 ```
+
+The `agent` var is passed to `evals/providers/agent.sh`, which reads the agent's system prompt and model from `agents/`, runs it via `claude -p`, and appends token metrics.
 
 ## Credits
 

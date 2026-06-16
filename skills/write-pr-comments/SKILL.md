@@ -7,7 +7,7 @@ description: Post inline PR review comments from an Obsidian review note as a pe
 
 Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note.
 
-`$ARGUMENTS` is a PR URL, `owner/repo#number`, or empty. If empty, list recent notes in `PRs/` via `mcp__obsidian__list_directory` and ask which review to post.
+`$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/<slug>.md`. If empty, list recent notes in `PRs/` via `mcp__obsidian__list_directory` and ask which review to post.
 
 ---
 
@@ -193,7 +193,6 @@ Construct a single review via `gh api`. Each comment's `body` is the humanized t
 cat <<'EOF' | gh api repos/<owner>/<repo>/pulls/<number>/reviews --method POST --input -
 {
   "commit_id": "<commit_sha>",
-  "event": "PENDING",
   "body": "<friendly review body written above>",
   "comments": [
     {
@@ -229,6 +228,6 @@ After posting, print a confirmation with the review URL, the count of comments p
 - Always run approved comment bodies through `/pr-comment-humanizer` before posting (Phase 5).
 - Skip findings already covered by an existing PR comment (Phase 3b).
 - NEVER modify the Obsidian note.
-- Always post with `"event": "PENDING"` so the review stays as a draft visible only to you. You submit manually in the GitHub UI with your chosen action (Approve, Comment, Request Changes). NEVER use `"APPROVE"`, `"REQUEST_CHANGES"`, or `"COMMENT"` as the event.
+- To create a pending review, **omit the `"event"` field entirely** from the POST body — that is what GitHub requires. The API rejects `"event": "PENDING"` with HTTP 422. NEVER include an `event` field when creating the review; the review will be pending (draft, visible only to you) by default. You submit manually in the GitHub UI.
 - If `gh auth status` fails, stop and tell the user to authenticate.
 - If the PR has been merged or closed, warn the user and ask whether to proceed.

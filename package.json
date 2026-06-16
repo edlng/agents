@@ -6,8 +6,8 @@
   "scripts": {
     "eval": "promptfoo eval",
     "eval:view": "promptfoo view",
-    "eval:cache-clear": "promptfoo cache clear",
-    "eval:reset": "rm -rf ~/.promptfoo && echo 'Reset complete. Run: npm run eval'"
+    "eval:reset": "rm -rf ~/.promptfoo && echo 'Reset complete. Run: make eval'",
+    "eval:cost": "node evals/scripts/cost-summary.js"
   },
   "keywords": [],
   "author": "",
