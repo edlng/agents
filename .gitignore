@@ -5,3 +5,12 @@ output/
 .DS_Store
 skills/humanizer/.git/
 evals/metrics/*.jsonl
+
+# Python / LangGraph
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.langgraph-data/
+.langgraph_api/
+langgraph-agents/.langgraph/

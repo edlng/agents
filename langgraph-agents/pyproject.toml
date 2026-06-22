@@ -1,0 +1,14 @@
+[project]
+name = "langgraph-agents"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.4.0",
+    "langchain-ollama>=0.3.0",
+    "langchain-core>=0.3.0",
+    "httpx>=0.28.1",
+    "langgraph-cli[inmem]>=0.4.30",
+]
+
+[tool.uv]
+dev-dependencies = []
