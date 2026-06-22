@@ -27,11 +27,15 @@ REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 AGENTS_DIR="$REPO_ROOT/agents"
 METRICS_FILE="$REPO_ROOT/evals/metrics/token_usage.jsonl"
 
-# Resolve system prompt: prefer prompt file, fall back to inline JSON prompt field
+# Resolve system prompt: agents dir first, then skills dir, then inline JSON
+SKILLS_DIR="$REPO_ROOT/skills"
+
 if [[ -f "$AGENTS_DIR/${AGENT_NAME}-prompt.md" ]]; then
   SYSTEM_PROMPT=$(cat "$AGENTS_DIR/${AGENT_NAME}-prompt.md")
 elif [[ -f "$AGENTS_DIR/${AGENT_NAME}.md" ]]; then
   SYSTEM_PROMPT=$(cat "$AGENTS_DIR/${AGENT_NAME}.md")
+elif [[ -f "$SKILLS_DIR/${AGENT_NAME}/SKILL.md" ]]; then
+  SYSTEM_PROMPT=$(cat "$SKILLS_DIR/${AGENT_NAME}/SKILL.md")
 elif [[ -f "$AGENTS_DIR/${AGENT_NAME}.json" ]]; then
   INLINE=$(jq -r '.prompt // empty' "$AGENTS_DIR/${AGENT_NAME}.json" 2>/dev/null || true)
   if [[ -n "$INLINE" && "$INLINE" != "null" && ! "$INLINE" == file://* ]]; then
@@ -41,7 +45,7 @@ elif [[ -f "$AGENTS_DIR/${AGENT_NAME}.json" ]]; then
     exit 1
   fi
 else
-  echo "ERROR: No prompt file found for agent '$AGENT_NAME'" >&2
+  echo "ERROR: No prompt file found for agent or skill '$AGENT_NAME'" >&2
   exit 1
 fi
 

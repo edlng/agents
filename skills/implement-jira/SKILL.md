@@ -73,18 +73,53 @@ Write the resulting plan to `jira:$ARGUMENTS:plan` in Valkey."
 
 ---
 
+## Phase 3.5: Research Gate
+
+**Model: sonnet-4-6** (same agent as Phases 1-2)
+
+Read the plan from Valkey (`jira:$ARGUMENTS:plan`). For each subtask, check whether it references an external API, library, or system not already present in the codebase (compare against the Codebase Context).
+
+**If unfamiliar tech is detected:** spawn a `researcher` subagent. Prompt:
+
+"Research the following technologies for use in this implementation. For each, find: official documentation URL, correct installation/import, key API surface relevant to our use case, and any gotchas or version constraints.
+
+Technologies: {list}
+Use case context: {relevant subtask descriptions}
+
+Return findings in your standard format (URL, Summary, Tradeoffs, Recommendation)."
+
+Write research findings to Valkey: `valkey-cli -p 8888 SET jira:$ARGUMENTS:research "<findings>" EX 86400`.
+
+**If all tech is already in the codebase:** skip this phase.
+
+---
+
+## Phase 3.7: Context Enrichment
+
+Spawn a `context-curator` subagent. Pass the task description derived from the Requirements summary and the plan's subtask list.
+
+Prompt: "A builder agent is about to implement Jira ticket $ARGUMENTS. The work involves: {one-line summary from requirements}. Subtasks touch: {comma-separated file list from plan}. Curate relevant memories."
+
+Write the returned `<context-memory>` block to Valkey: `valkey-cli -p 8888 SET jira:$ARGUMENTS:context_memory "<block>" EX 86400`.
+
+If the context-curator returns an empty block, proceed without it.
+
+---
+
 ## Phase 4: Implementation
 
 Spawn one `builder` subagent as the Implementor.
 
-Prompt: "You are the implementor. **Effort budget: 30-60 tool calls total across all subtasks.** Read `jira:$ARGUMENTS:plan`, `jira:$ARGUMENTS:requirements`, and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888.
+Prompt: "You are the implementor. **Effort budget: 30-60 tool calls total across all subtasks.** Read `jira:$ARGUMENTS:plan`, `jira:$ARGUMENTS:requirements`, and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888. Also read `jira:$ARGUMENTS:context_memory` (prior decisions and project conventions) and `jira:$ARGUMENTS:research` (external API/library findings) if they exist — these provide additional context from earlier phases.
 
 For each subtask in the plan, in dependency order:
 - If `complexity == medium`: implement it yourself.
 - If `complexity == low` AND its `files` do not overlap any other subtask currently in flight: spawn another `builder` subagent to handle it. Pass only the subtask description, the relevant files list, and the Codebase Context.
 - Otherwise: handle it yourself.
 
-You MUST match the existing codebase exactly: same language, same code style, same naming conventions, same error-handling patterns, same logging approach. Reuse existing utilities and helpers — do not re-implement what already exists. If a cache or key/value client is needed, use `valkey-glide`. When `valkey-glide` has a native command implemented, you MUST use that over `custom_command` unless there is a clearly justified reason. Write minimal code; do not add abstractions beyond what the requirements ask for."
+You MUST match the existing codebase exactly: same language, same code style, same naming conventions, same error-handling patterns, same logging approach. Reuse existing utilities and helpers — do not re-implement what already exists. If a cache or key/value client is needed, use `valkey-glide`. When `valkey-glide` has a native command implemented, you MUST use that over `custom_command` unless there is a clearly justified reason. Write minimal code; do not add abstractions beyond what the requirements ask for.
+
+**Decisions log:** After completing each subtask, append a brief entry to `.decisions.md` in the working directory: what was decided, why, and which files were affected. When spawning low-complexity subagents, pass the current `.decisions.md` content so they have visibility into prior choices."
 
 ---
 

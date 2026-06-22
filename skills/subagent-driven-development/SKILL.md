@@ -99,9 +99,34 @@ Use the defined agent roles to match each task to the right specialization:
 **Code quality review**: use `code-reviewer` role.
 
 **Task complexity signals:**
+- Trivial (rename, add import, update config, fix typo, boilerplate) → `builder` with `model: haiku`
 - Touches 1-2 files with a complete spec → `builder`
 - Touches multiple files with integration concerns → `builder` (it handles multi-file work)
 - Requires design judgment or broad codebase understanding → `superhuman`
+
+## Pre-Dispatch Steps (per task)
+
+Before dispatching any implementer subagent, apply these steps in order:
+
+### 1. Research gate
+
+Does this task reference an external API, library, or system not already used in this codebase? If yes, dispatch a `researcher` subagent first:
+
+"Research {technology} for use in this task: {task description}. Find: official docs URL, correct installation/import, relevant API surface, gotchas or version constraints. Return findings with URLs."
+
+Pass the findings to the implementer as part of the `## Context` section.
+
+If all tech is familiar, skip.
+
+### 2. Context enrichment
+
+Dispatch a `context-curator` subagent: "A builder agent is about to implement: {task description}. Files involved: {file list}. Curate relevant memories."
+
+Prepend the returned `<context-memory>` block to the implementer's prompt. If the block is empty, proceed without it.
+
+### 3. Decisions log
+
+Before dispatching, pass the current `.decisions.md` content (if it exists) as part of `## Context`. After the task completes, append an entry: what was decided, why, which files were affected. This ensures later tasks have visibility into earlier choices.
 
 ## Handling Implementer Status
 

@@ -17,7 +17,12 @@
       "trustedAgents": [
         "builder",
         "validator",
-        "documenter"
+        "documenter",
+        "researcher",
+        "context-curator",
+        "code-reviewer",
+        "tester",
+        "superhuman"
       ]
     }
   },
