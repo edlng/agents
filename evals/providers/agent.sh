@@ -74,12 +74,50 @@ if [[ "$AGENT_NAME" == "researcher" || "$AGENT_NAME" == "research-validator" ]];
 $FIXTURE"
 fi
 
-# Run the agent
+# For glide-dependent agents: inject minimal skill content so they don't try to read from disk
+if [[ "$AGENT_NAME" == "glide-code-reviewer" || "$AGENT_NAME" == "valkey-glide-implementor" ]]; then
+  GLIDE_STUB="[GLIDE Skill Reference — Python]:
+- Client lifecycle: Create ONE GlideClient at startup, reuse across requests. NEVER create per-request.
+- Batch API (v2.x): Use ClusterBatch/Batch for pipelining. Append ops, call exec(). Transaction is DEPRECATED.
+- Imports: from glide import GlideClient, GlideClusterClient, GlideClientConfiguration, NodeAddress
+- Batch: from glide import ClusterBatch (cluster) or Batch (standalone)
+- Anti-patterns: asyncio.gather for parallel ops (use Batch), client-per-request, Transaction API, redis-py imports
+- Error handling: RequestError, TimeoutError, ClosingError — wrap in try/except with retry for transient errors
+- Search: use native ft.create/ft.search/ft.aggregate — NEVER use custom_command for search ops
+- Dependencies: valkey-glide>=2.1.0 in requirements.txt"
+  PROMPT="$GLIDE_STUB
+
+$PROMPT"
+fi
+
+# Run the agent (cap budget to control cost in evals)
+MAX_BUDGET="${EVAL_MAX_BUDGET:-0.40}"
+START_TIME=$(date +%s)
+
+# Most agents don't need tools in eval mode (single-turn, no filesystem).
+# Allow tools only for agents whose test requires it.
+TOOL_FLAG=""
+case "$AGENT_NAME" in
+  researcher|research-validator|builder) ;; # need tools for their workflow
+  *) TOOL_FLAG="--allowedTools none" ;;
+esac
+
 RAW_OUTPUT=$(echo "$PROMPT" | claude -p \
   --output-format json \
   --model "$MODEL" \
+  --max-budget-usd "$MAX_BUDGET" \
+  $TOOL_FLAG \
   --system-prompt "$SYSTEM_PROMPT" \
   2>/dev/null)
+DURATION=$(( $(date +%s) - START_TIME ))
+
+# Handle budget-exceeded or error responses
+IS_ERROR=$(echo "$RAW_OUTPUT" | jq -r '.is_error // false' 2>/dev/null || echo "true")
+if [[ "$IS_ERROR" == "true" ]]; then
+  ERROR_MSG=$(echo "$RAW_OUTPUT" | jq -r '.errors[0] // "Unknown error"' 2>/dev/null || echo "Provider error")
+  echo "ERROR: $ERROR_MSG" >&2
+  exit 1
+fi
 
 # Extract text result for promptfoo
 RESULT=$(echo "$RAW_OUTPUT" | jq -r '.result // ""')
@@ -91,6 +129,6 @@ OUTPUT_TOKENS=$(echo "$RAW_OUTPUT" | jq -r '.usage.output_tokens // 0')
 TOTAL_COST=$(echo "$RAW_OUTPUT" | jq -r '.total_cost_usd // 0')
 
 mkdir -p "$(dirname "$METRICS_FILE")"
-echo "{\"agent\":\"$AGENT_NAME\",\"model\":\"$MODEL\",\"input_tokens\":$INPUT_TOKENS,\"output_tokens\":$OUTPUT_TOKENS,\"total_cost_usd\":$TOTAL_COST,\"timestamp\":\"$TIMESTAMP\"}" >> "$METRICS_FILE"
+echo "{\"agent\":\"$AGENT_NAME\",\"model\":\"$MODEL\",\"input_tokens\":$INPUT_TOKENS,\"output_tokens\":$OUTPUT_TOKENS,\"total_cost_usd\":$TOTAL_COST,\"duration_s\":$DURATION,\"timestamp\":\"$TIMESTAMP\"}" >> "$METRICS_FILE"
 
 echo "$RESULT"

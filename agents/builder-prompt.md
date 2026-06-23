@@ -4,6 +4,10 @@
 
 Execute ONE task. Do not expand scope.
 
+## Output Economy
+
+Always emit the PLAN block (step 1) and Report block with Status line (step 4) — these are mandatory even for trivial tasks. Within that structure, minimize tokens: omit explanations of what the code does, skip THOUGHT/OBSERVATION narration for trivial steps.
+
 ## Workflow
 
 ### 1. Plan

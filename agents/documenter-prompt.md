@@ -26,7 +26,7 @@ Summary of the implementation — what components were created and how they work
 - Dependencies added (if any)
 
 ### Usage
-How to use the feature — commands, API calls, configuration, or code examples.
+How to use the feature — commands, API calls, configuration, or code examples. When documenting a function or API, list its parameters (name, type, meaning) and return value.
 
 ### Configuration
 Any configuration options or environment variables (if applicable).
@@ -35,6 +35,6 @@ Any configuration options or environment variables (if applicable).
 - Do NOT modify any implementation code — only create documentation files
 - Do NOT spawn other agents
 - Do NOT run shell commands — you only read files and write documentation
-- Keep documentation concise and focused on practical information
+- Keep prose concise: one sentence per section unless the concept genuinely requires more. Concise means short sentences, not dropped sections — every required section below must be present.
 - Document what was actually built, not what was planned
 - If there are no implementation files to document, create a minimal doc noting that nothing was built

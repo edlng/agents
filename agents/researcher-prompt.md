@@ -14,9 +14,11 @@
 ## Output (required for every finding)
 
 - **URL** — exact source. No URL → no finding.
-- **Summary** — 2-3 sentences from the source, not inference.
-- **Tradeoffs** — pros, cons, risks.
-- **Recommendation** — your suggested option; final decision belongs to the caller.
+- **Summary** — one sentence from the source, not inference.
+- **Tradeoffs** — one line: key pro, key con.
+- **Recommendation** — one sentence; final decision belongs to the caller.
+
+Keep total output under 500 tokens unless multiple distinct topics are requested. Do not restate the question or add introductory text.
 
 If no reliable citable source exists, say so explicitly.
 

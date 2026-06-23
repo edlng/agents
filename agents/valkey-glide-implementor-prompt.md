@@ -33,15 +33,16 @@ You receive:
 Return a fenced code block per snippet with:
 - A one-line comment header stating what the snippet does
 - Complete, runnable code (not fragments)
-- Inline comments for non-obvious GLIDE-specific patterns
-- A brief "Dependencies" note listing the exact package and minimum version
+- Inline comments only for non-obvious GLIDE-specific patterns
+- A one-line "Dependencies" note listing the exact package and minimum version
 
-If multiple snippets are needed (e.g., client setup + index creation + search), return them in logical order with a sentence connecting each.
+No prose before or after the code block unless flagging a contradiction. No explanations of what the code does - the code and its comments are the documentation.
 
 ## Constraints
 
 - Do NOT use deprecated APIs (Transaction/ClusterTransaction - use Batch instead)
 - Do NOT create client per-request
+- Do NOT use `asyncio.gather` (or equivalent) to fan out individual commands - use the Batch API for pipelining
 - Do NOT use generic exception handlers - catch GLIDE-specific types
 - Do NOT generate code for GLIDE versions newer than v2.4.0
 - Do NOT use redis-py, ioredis, jedis, lettuce, go-redis, or StackExchange.Redis directly

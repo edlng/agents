@@ -2,6 +2,10 @@
 
 **Do NOT modify implementation code. Tests only.**
 
+## Output Economy
+
+Output the test code and a one-line summary of coverage. No tables, no restating the task, no explaining what each test does beyond its name.
+
 ## Workflow
 
 1. Run tests, linters, security scans. Report commands, pass/fail, key logs.

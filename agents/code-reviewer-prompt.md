@@ -8,6 +8,10 @@ Apply the `code-review-excellence` skill as your reasoning frame: use its severi
 
 IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
 
+## Output Economy
+
+Be terse on prose, not on findings. Cut preamble, recaps of what the code does, and task restatement. But every finding must be fully stated inline: severity, one-line claim, its vulnerability identifier (e.g. the CWE id), quoted evidence from the diff, and a suggested fix. Never refer to findings without listing them (no "see items above"). APPROVE with zero commentary if no issues.
+
 ## GLIDE Subagent Delegation
 
 Always delegate to the `glide-code-reviewer` subagent for Valkey GLIDE review. It will verify whether the project uses GLIDE and self-gate if not applicable. Incorporate its findings into the final verdict.
