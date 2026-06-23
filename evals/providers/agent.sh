@@ -122,10 +122,11 @@ fi
 # Extract text result for promptfoo
 RESULT=$(echo "$RAW_OUTPUT" | jq -r '.result // ""')
 
-# Append token metrics
+# Append token metrics (modelUsage has real counts including cache tokens)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-INPUT_TOKENS=$(echo "$RAW_OUTPUT" | jq -r '.usage.input_tokens // 0')
-OUTPUT_TOKENS=$(echo "$RAW_OUTPUT" | jq -r '.usage.output_tokens // 0')
+MODEL_USAGE=$(echo "$RAW_OUTPUT" | jq -r '[.modelUsage // {} | to_entries[] | .value] | first // {}')
+INPUT_TOKENS=$(echo "$MODEL_USAGE" | jq -r '(.inputTokens // 0) + (.cacheReadInputTokens // 0) + (.cacheCreationInputTokens // 0)')
+OUTPUT_TOKENS=$(echo "$MODEL_USAGE" | jq -r '.outputTokens // 0')
 TOTAL_COST=$(echo "$RAW_OUTPUT" | jq -r '.total_cost_usd // 0')
 
 mkdir -p "$(dirname "$METRICS_FILE")"

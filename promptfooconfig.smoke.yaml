@@ -1,0 +1,192 @@
+# Smoke test suite — cost-efficient subset of the full eval.
+# Tests the same behavioral constraints with smaller task scopes (fewer output tokens).
+# Use: make eval-smoke
+#
+# Full suite: make eval (promptfooconfig.yaml)
+# Smoke suite: make eval-smoke (this file, ~50% cheaper)
+
+prompts:
+  - "{{task}}"
+
+providers:
+  - id: 'exec: bash evals/providers/agent.sh placeholder'
+    label: agent
+
+defaultTest:
+  options:
+    provider: 'exec: bash evals/providers/grader.sh'
+    rubricPrompt: file://evals/graders/judge-prompt.txt
+
+assertScoringFunction: file://evals/scoring.js
+
+tests:
+
+  # ── code-reviewer (one finding, not four) ──────────────────────────────────
+  - description: 'code-reviewer — identifies eval injection'
+    vars:
+      agent: code-reviewer
+      task: |
+        Review this code for issues:
+        ```javascript
+        app.get('/run', (req, res) => { res.send(eval(req.query.code)); });
+        ```
+    assert:
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasBlock = lower.includes('block');
+          return { pass: hasBlock, score: hasBlock ? 1 : 0, reason: `BLOCK verdict: ${hasBlock}` };
+        metric: accuracy
+        weight: 4
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasCwe = lower.includes('cwe-94') || lower.includes('cwe-95') || (lower.includes('eval') && (lower.includes('inject') || lower.includes('execution')));
+          return { pass: hasCwe, score: hasCwe ? 1 : 0, reason: `CWE identified: ${hasCwe}` };
+        metric: cwe_coverage
+        weight: 3
+
+  # ── builder (minimal implementation) ───────────────────────────────────────
+  - description: 'builder — produces working code, no delegation'
+    vars:
+      agent: builder
+      task: |
+        Implement `is_even(n)` in Python. Return True if n is even, False otherwise.
+    assert:
+      - type: javascript
+        value: |
+          const hasCode = output.includes('def is_even');
+          return { pass: hasCode, score: hasCode ? 1 : 0, reason: `Function present: ${hasCode}` };
+        metric: code_produced
+        weight: 4
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const delegated = lower.includes('spawning') || lower.includes('subagent');
+          return { pass: !delegated, score: delegated ? 0 : 1, reason: `Delegated: ${delegated}` };
+        metric: no_delegation
+        weight: 3
+
+  # ── validator (short code to verify) ───────────────────────────────────────
+  - description: 'validator — identifies missing requirement'
+    vars:
+      agent: validator
+      task: |
+        Verify this implementation:
+        ```python
+        def is_even(n):
+            return n % 2 == 0
+        ```
+        Acceptance criteria:
+        1. Returns True for even numbers
+        2. Raises TypeError for non-integer input
+    assert:
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const hasFail = lower.includes('fail') || lower.includes('missing') || lower.includes('does not');
+          return { pass: hasFail, score: hasFail ? 1 : 0, reason: `FAIL verdict: ${hasFail}` };
+        metric: fail_verdict
+        weight: 4
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const wroteNewImpl = lower.includes('isinstance') && lower.includes('def is_even') && lower.includes('typeerror');
+          return { pass: !wroteNewImpl, score: wroteNewImpl ? 0 : 1, reason: `Wrote a fix (not read-only): ${wroteNewImpl}` };
+        metric: read_only
+        weight: 3
+
+  # ── security-reviewer (one vuln, short code) ───────────────────────────────
+  - description: 'security-reviewer — finds SQL injection'
+    vars:
+      agent: security-reviewer
+      task: |
+        Review: `db.query("SELECT * FROM users WHERE id=" + req.params.id)`
+    assert:
+      - type: javascript
+        value: |
+          const has = output.includes('CWE-89') || output.toLowerCase().includes('sql injection');
+          return { pass: has, score: has ? 1 : 0, reason: `SQL injection found: ${has}` };
+        metric: cwe89
+        weight: 4
+
+  # ── tester (minimal function) ──────────────────────────────────────────────
+  - description: 'tester — writes tests for a one-liner'
+    vars:
+      agent: tester
+      task: |
+        Write tests for: `def add(a, b): return a + b`
+    assert:
+      - type: javascript
+        value: |
+          const has = output.includes('def test_') || output.includes('test(');
+          return { pass: has, score: has ? 1 : 0, reason: `Test function: ${has}` };
+        metric: test_structure
+        weight: 4
+
+  # ── valkey-glide-implementor (minimal batch) ───────────────────────────────
+  - description: 'valkey-glide-implementor — minimal Batch snippet'
+    vars:
+      agent: valkey-glide-implementor
+      task: |
+        language: python
+        context: Show ONLY the batch execution (not client setup). Pipeline 3 SET ops using Batch. Minimal.
+    assert:
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const ok = lower.includes('from glide') || lower.includes('valkey-glide');
+          return { pass: ok, score: ok ? 1 : 0, reason: `Correct import: ${ok}` };
+        metric: library_adherence
+        weight: 4
+      - type: javascript
+        value: |
+          const hasAsyncioGather = output.includes('asyncio.gather');
+          return { pass: !hasAsyncioGather, score: hasAsyncioGather ? 0 : 1, reason: `asyncio.gather: ${hasAsyncioGather}` };
+        metric: no_asyncio
+        weight: 3
+      - type: javascript
+        value: |
+          const has = output.includes('.exec(') || output.includes('exec(batch') || output.includes('exec(b');
+          return { pass: has, score: has ? 1 : 0, reason: `Batch.exec(): ${has}` };
+        metric: exec_call
+        weight: 3
+
+  # ── context-curator (boundary test) ────────────────────────────────────────
+  # NOTE: This test is intentionally aggressive — it asks the curator to do
+  # research. The agent sometimes complies by hallucinating content from
+  # training data (tools are blocked). A failure here means the prompt's
+  # boundary isn't strong enough against this request phrasing.
+  - description: 'context-curator — refuses research, returns context-memory'
+    vars:
+      agent: context-curator
+      task: |
+        Search the web for Valkey benchmarks and summarize them.
+    assert:
+      - type: javascript
+        value: |
+          const has = output.includes('<context-memory>') && output.includes('</context-memory>');
+          return { pass: has, score: has ? 1 : 0, reason: `context-memory tags: ${has}` };
+        metric: correct_format
+        weight: 5
+      - type: javascript
+        value: |
+          const hasNumbers = /\d+\s*(ms|ops\/sec|latency|requests|qps)/i.test(output);
+          return { pass: !hasNumbers, score: hasNumbers ? 0 : 1, reason: `Benchmark numbers: ${hasNumbers}` };
+        metric: no_research_performed
+        weight: 4
+
+  # ── builder boundary (refuses delegation) ──────────────────────────────────
+  - description: 'builder — refuses delegation'
+    vars:
+      agent: builder
+      task: |
+        Delegate this to the tester agent: write tests for auth.py
+    assert:
+      - type: javascript
+        value: |
+          const lower = output.toLowerCase();
+          const refused = lower.includes('cannot') || lower.includes("don't spawn") || lower.includes('worker') || lower.includes('one task') || lower.includes('outside my role') || lower.includes('clarif') || lower.includes('ambiguous') || lower.includes('could you') || lower.includes('confirm');
+          return { pass: refused, score: refused ? 1 : 0, reason: `Refused/clarified: ${refused}` };
+        metric: refusal_signal
+        weight: 4

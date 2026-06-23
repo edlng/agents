@@ -130,33 +130,33 @@ tests:
         weight: 3
 
   # ── builder ──────────────────────────────────────────────────────────────────
-  - description: 'builder — outputs PLAN block then working implementation, no delegation'
+  - description: 'builder — fixes a broken function given an error message'
     vars:
       agent: builder
       task: |
-        Implement a function `clamp(value, min_val, max_val)` in Python that returns
-        value clamped to [min_val, max_val]. Raise ValueError if min_val > max_val.
+        Fix this function. It crashes with: `TypeError: cannot unpack non-sequence NoneType`
+
+        ```python
+        def parse_pair(s):
+            key, value = s.split('=')
+            return key.strip(), value.strip()
+        ```
+
+        The input sometimes has no `=` sign (e.g. "orphan_key"). Make it return (key, None) in that case.
     assert:
       - type: javascript
         value: |
-          const lower = output.toLowerCase();
-          const hasPlan = lower.includes('plan:') || lower.includes('## plan') || lower.includes('**plan') || lower.includes('approach:') || lower.includes('## approach') || lower.includes('steps:');
-          return { pass: hasPlan, score: hasPlan ? 1 : 0, reason: `PLAN block present: ${hasPlan}` };
-        metric: plan_present
-        weight: 1
-      - type: javascript
-        value: |
-          const hasCode = output.includes('def clamp') || output.includes('def clamp(');
-          return { pass: hasCode, score: hasCode ? 1 : 0, reason: `Function implementation: ${hasCode}` };
+          const hasCode = output.includes('def parse_pair');
+          return { pass: hasCode, score: hasCode ? 1 : 0, reason: `Function present: ${hasCode}` };
         metric: code_produced
         weight: 4
       - type: javascript
         value: |
           const lower = output.toLowerCase();
-          const hasDone = lower.includes('done') || lower.includes('status: done') || lower.includes('**done**');
-          return { pass: hasDone, score: hasDone ? 1 : 0, reason: `DONE status reported: ${hasDone}` };
-        metric: done_status
-        weight: 1
+          const handlesNoEquals = lower.includes('none') && (lower.includes('if') || lower.includes('not in') || lower.includes('split'));
+          return { pass: handlesNoEquals, score: handlesNoEquals ? 1 : 0, reason: `Handles missing =: ${handlesNoEquals}` };
+        metric: fixes_bug
+        weight: 4
       - type: javascript
         value: |
           const lower = output.toLowerCase();
@@ -169,10 +169,10 @@ tests:
         value: |
           Score 1–5:
           1 = No code, or delegates to another agent
-          2 = Has code but misses ValueError on invalid range
-          3 = Working clamp implementation with ValueError for invalid range
-          4 = Working implementation + PLAN block or clear approach statement
-          5 = PLAN block + complete implementation + status report (DONE) + handles edge cases
+          2 = Has code but doesn't address the TypeError (still crashes on missing =)
+          3 = Fixes the crash but returns wrong shape (not (key, None))
+          4 = Correct fix: returns (key, None) when no = present, preserves original behavior otherwise
+          5 = Correct fix + handles edge cases (empty string, multiple = signs) or explains the approach briefly
         metric: rubric_quality
         weight: 3
 
@@ -269,6 +269,9 @@ tests:
         weight: 3
 
   # ── research-validator ───────────────────────────────────────────────────────
+  # NOTE: This test uses live web scraping (firecrawl) to verify URLs. It may
+  # flake if firecrawl is down, rate-limited, or target pages change content.
+  # The llm-rubric can also produce borderline scores due to judge variance.
   - description: 'research-validator — classifies CONFIRMED and CONTRADICTED claims correctly'
     vars:
       agent: research-validator

@@ -4,7 +4,7 @@
 
 ## Output Economy
 
-Output the test code and a one-line summary of coverage. No tables, no restating the task, no explaining what each test does beyond its name.
+Output the test code and a one-line summary of coverage. No tables, no restating the task, no explaining what each test does beyond its name. Scale test count to function complexity: a one-liner needs 2-4 tests, not 10.
 
 ## Workflow
 

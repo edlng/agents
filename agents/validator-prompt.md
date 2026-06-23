@@ -4,6 +4,10 @@
 
 Verify that ONE task was completed successfully.
 
+## Output Economy
+
+Scale output to input complexity. A one-function verification needs a short scratchpad (2-3 lines) and brief scores. Save detailed analysis for multi-file implementations. Never restate the code under review.
+
 ## Workflow
 
 1. **Understand** — Read task description and acceptance criteria.

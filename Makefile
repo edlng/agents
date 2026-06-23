@@ -11,7 +11,7 @@ KIRO_AGENTS  := $(HOME)/.kiro/agents
 LOCAL_SKILLS := skills
 LOCAL_AGENTS := agents
 
-.PHONY: push pull status eval eval-agent eval-view eval-reset eval-cost
+.PHONY: push pull status eval eval-smoke eval-agent eval-view eval-reset eval-cost
 
 # Promote local changes to ~/.kiro (additive — never deletes from ~/.kiro)
 push:
@@ -47,6 +47,12 @@ eval:
 	@mkdir -p evals/metrics
 	@rm -f evals/metrics/token_usage.jsonl
 	./run-eval.sh; EXIT=$$?; node evals/scripts/cost-summary.js; exit $$EXIT
+
+# Run the cost-efficient smoke suite (fewer tests, smaller tasks, same behavioral checks).
+eval-smoke:
+	@mkdir -p evals/metrics
+	@rm -f evals/metrics/token_usage.jsonl
+	EVAL_MAX_BUDGET=0.15 npx promptfoo eval -c promptfooconfig.smoke.yaml --no-cache; EXIT=$$?; node evals/scripts/cost-summary.js; exit $$EXIT
 
 # Run tests for a single agent. Usage: make eval-agent AGENT=code-reviewer
 eval-agent:

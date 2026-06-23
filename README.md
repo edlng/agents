@@ -167,33 +167,51 @@ Token costs are tracked via `claude -p --output-format json` and summarized afte
 ### Running evals
 
 ```bash
-make eval                        # run full suite + print cost summary
+make eval                        # full suite (20 tests) + cost summary
+make eval-smoke                  # smoke suite (8 tests, ~50% cheaper, no llm-rubric)
 make eval-agent AGENT=code-reviewer  # run tests for one agent only
 make eval-view                   # open results in browser
 make eval-reset                  # clear promptfoo state and re-run
 make eval-cost                   # reprint cost summary from last run
 ```
 
+**Caching:** promptfoo caches by task text, not by system prompt content. After editing an agent prompt, use `--no-cache` or `make eval-reset` to get fresh results.
+
+### Test suites
+
+| Suite | Config | Tests | Purpose | Est. cost |
+|---|---|---|---|---|
+| Full | `promptfooconfig.yaml` | 20 | Pre-merge, comprehensive | ~$3–4 |
+| Smoke | `promptfooconfig.smoke.yaml` | 8 | Fast iteration on prompt edits | ~$1–1.50 |
+
+The **full suite** uses `javascript` assertions for deterministic checks, `llm-rubric` for subjective quality, and covers behavioral boundaries, injection resistance, and output format compliance.
+
+The **smoke suite** uses only deterministic assertions (no LLM grader calls) with smaller task scopes that produce fewer output tokens. Same behavioral constraints, cheaper to run.
+
 ### Test structure
 
-Tests live in `evals/promptfooconfig.yaml`, one section per agent (15 tests total across 11 agents). Each test uses:
+Tests live in `promptfooconfig.yaml`, one section per agent (20 tests across 11 agents). Each test uses:
 
-- `javascript` assertions for deterministic checks — grounded in each agent's documented rules (PLAN blocks, output formats, required CWEs, no-delegation rules, etc.)
+- `javascript` assertions for deterministic checks — grounded in each agent's documented rules (output formats, required CWEs, no-delegation rules, etc.)
 - `llm-rubric` for subjective quality using `evals/graders/judge-prompt.txt`; rubric text references the [Valkey AI rubric](~/Documents/work/valkey-ai-rubric.md) for Valkey-specific agents
 - `icontains` for exact substring requirements
 
 Scoring is 80% quality / 20% cost (token-based). See `evals/scoring.js`.
+
+### Known flakiness
+
+- **research-validator**: Uses live web scraping (firecrawl) to verify cited URLs. May flake if firecrawl is down, rate-limited, or target pages change. The llm-rubric can also produce borderline scores due to judge variance.
 
 ### Cost tracking
 
 Each eval run appends to `evals/metrics/token_usage.jsonl` (gitignored). `make eval` prints a per-agent cost table at the end:
 
 ```
-Agent                     | Runs | Avg In  | Avg Out | Total Cost
-code-reviewer             |    2 |    3241 |     892 |    $0.0421
-valkey-glide-implementor  |    1 |    2960 |     720 |    $0.0216
+Agent                     | Runs | Avg In  | Avg Out | Avg s | Total Cost
+code-reviewer             |    2 |    3241 |     892 |    40 |    $0.0421
+valkey-glide-implementor  |    1 |    2960 |     720 |    55 |    $0.0216
 ...
-TOTAL                     |   13 |         |         |    $0.23
+TOTAL                     |   13 |         |         |       |    $0.23
 ```
 
 ### Adding a test
