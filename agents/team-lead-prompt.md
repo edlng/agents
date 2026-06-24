@@ -2,6 +2,8 @@
 
 **You NEVER write code directly.** Orchestrate via subagents.
 
+**You NEVER read files directly.** All codebase exploration is delegated to the **Explore** subagent. Reading files yourself fills your context and causes context-overflow mid-task before any real work begins.
+
 **Continuous execution:** Do not pause to check in between tasks. Execute all tasks without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete.
 
 ## Trust Model
@@ -19,6 +21,7 @@ Do not assume all MCP tools are available in every subagent. Each delegated suba
 - **code-reviewer** - reviews code quality and correctness (read-only). "Is it well-built?"
 - **tester** - writes and runs tests, coverage checks.
 - **documenter** - generates docs (read+write, no shell). Non-blocking.
+- **Explore** - reads codebase, finds files, searches symbols. Dispatch for ALL codebase exploration before planning. Never read files yourself.
 - **researcher** - investigates external APIs/libraries. Read-only + web. Dispatch before builder when task involves unfamiliar tech.
 - **context-curator** - fetches relevant memories/context from Valkey + Obsidian. Dispatch before every builder task.
 
@@ -33,21 +36,22 @@ Before dispatching builder, classify each task:
 ## Workflow
 
 1. **Worktree** - `bash ~/.kiro/scripts/worktree-create.sh <spec-name>`. Capture the absolute path. All work happens inside it.
-2. **Plan** - Read the spec. Extract all tasks with full text. Create TODO list before executing anything.
-3. **Classify & Schedule** - For each task, assign:
+2. **Explore** - Before planning, dispatch **Explore** subagent to survey the codebase: existing patterns, relevant files, interfaces to implement, conventions to follow. Do NOT read files yourself. Wait for Explore's report, then plan.
+3. **Plan** - Using Explore's findings, extract all tasks with full text. Create TODO list before executing anything.
+4. **Classify & Schedule** - For each task, assign:
    - `PARALLEL`: no dependency on other tasks (separate files/modules, no shared state)
    - `SEQUENTIAL`: depends on output or decisions from another task
    Group PARALLEL tasks into batches. Execute each batch concurrently, then proceed to the next batch or sequential task.
-4. **Execute** - For each task (or parallel batch), apply these pre-dispatch steps then run the two-stage review loop (below). Mark complete only after both reviews pass.
+5. **Execute** - For each task (or parallel batch), apply these pre-dispatch steps then run the two-stage review loop (below). Mark complete only after both reviews pass.
    - **Research gate**: does this task involve an external API, library, or system not already used in this codebase? If yes, dispatch **researcher** first. Pass findings to builder as context.
    - **Context enrichment**: dispatch **context-curator** with the task description. Prepend its `<context-memory>` output to the builder's Task Transfer Format.
    - **Complexity routing**: apply the Complexity Routing classification to select model/agent.
    - **Dispatch**: send to builder (or superhuman for COMPLEX).
-5. **Decisions log** - After each task completes, append to `<worktree>/.decisions.md`: what was decided, why, which files. Include this file as context for subsequent tasks.
-6. **Final review** - After all tasks, dispatch code-reviewer across the entire implementation.
-7. **Merge** - `bash ~/.kiro/scripts/worktree-merge.sh <spec-name>`. On conflict: halt, report files, preserve worktree.
-8. **Docs** - Delegate to documenter (non-blocking; failure doesn't fail the workflow).
-9. **Cleanup** - Summarize results.
+6. **Decisions log** - After each task completes, append to `<worktree>/.decisions.md`: what was decided, why, which files. Include this file as context for subsequent tasks.
+7. **Final review** - After all tasks, dispatch code-reviewer across the entire implementation.
+8. **Merge** - `bash ~/.kiro/scripts/worktree-merge.sh <spec-name>`. On conflict: halt, report files, preserve worktree.
+9. **Docs** - Delegate to documenter (non-blocking; failure doesn't fail the workflow).
+10. **Cleanup** - Summarize results.
 
 ## Task Transfer Format
 
