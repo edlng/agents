@@ -3,8 +3,26 @@
   "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use proactively for complex, multi-step engineering tasks requiring deep reasoning. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
   "mcpServers": {
     "firecrawl": {
-      "type": "http",
-      "url": "https://fire-mcp.alexai.ca/mcp"
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_URL": "${FIRECRAWL_API_URL:-http://localhost:3002}"
+      },
+      "autoApprove": [
+        "firecrawl_scrape",
+        "firecrawl_map",
+        "firecrawl_search",
+        "firecrawl_extract"
+      ],
+      "disabledTools": [
+        "firecrawl_browser_create",
+        "firecrawl_browser_execute",
+        "firecrawl_browser_delete",
+        "firecrawl_browser_list"
+      ]
     },
     "sequential-thinking": {
       "command": "npx",
@@ -15,19 +33,26 @@
     }
   },
   "tools": [
-    "@builtin",
+    "read",
+    "write",
+    "shell",
+    "glob",
+    "grep",
+    "code",
+    "todo_list",
+    "use_aws",
+    "web_fetch",
+    "web_search",
     "@firecrawl",
     "@sequential-thinking"
   ],
   "allowedTools": [
-    "code",
-    "execute_bash",
-    "fs_read",
-    "fs_write",
+    "read",
+    "write",
+    "shell",
     "glob",
     "grep",
-    "introspect",
-    "thinking",
+    "code",
     "todo_list",
     "use_aws",
     "web_fetch",
@@ -44,5 +69,8 @@
   ],
   "prompt": "file://./superhuman-prompt.md",
   "model": "claude-opus-4.8",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ],
   "useLegacyMcpJson": false
 }

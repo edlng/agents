@@ -4,5 +4,13 @@
   "prompt": "file://./documenter-prompt.md",
   "tools": ["read", "write"],
   "allowedTools": ["read", "write"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "app_docs/**",
+        "docs/**"
+      ]
+    }
+  },
   "model": "claude-haiku-4.5"
 }

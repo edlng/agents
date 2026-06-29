@@ -1,0 +1,44 @@
+{
+  "name": "explore",
+  "description": "Read-only codebase exploration agent. Surveys files, searches symbols, and maps relevant code for the team-lead to plan against. Never modifies files.",
+  "prompt": "file://./explore-prompt.md",
+  "tools": [
+    "read",
+    "shell",
+    "glob",
+    "grep",
+    "code"
+  ],
+  "allowedTools": [
+    "read",
+    "shell",
+    "glob",
+    "grep",
+    "code"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "timeout": 60000,
+      "autoAllowReadonly": true,
+      "allowedCommands": [
+        "find *",
+        "grep *",
+        "rg *",
+        "cat *",
+        "head *",
+        "tail *",
+        "wc *",
+        "ls *",
+        "tree *",
+        "git log *",
+        "git show *",
+        "git diff *",
+        "git ls-files *"
+      ]
+    }
+  },
+  "model": "claude-haiku-4.5",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ]
+}

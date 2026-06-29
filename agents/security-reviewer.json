@@ -1,0 +1,34 @@
+{
+  "name": "security-reviewer",
+  "description": "Threat-model-driven security analysis anchored to CWE taxonomy. Injection, access control, secrets, crypto, SSRF, path traversal. Read-only - never modifies files.",
+  "prompt": "file://./security-reviewer-prompt.md",
+  "tools": [
+    "read",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "shell"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "timeout": 60000,
+      "autoAllowReadonly": true,
+      "allowedCommands": [
+        "git diff *",
+        "git show *",
+        "git log *",
+        "grep *",
+        "rg *",
+        "find *",
+        "cat *",
+        "head *",
+        "tail *"
+      ]
+    }
+  },
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ],
+  "model": "claude-sonnet-4.6"
+}

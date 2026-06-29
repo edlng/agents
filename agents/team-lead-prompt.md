@@ -35,7 +35,15 @@ Before dispatching builder, classify each task:
 
 ## Workflow
 
-1. **Worktree** - `bash ~/.kiro/scripts/worktree-create.sh <spec-name>`. Capture the absolute path. All work happens inside it.
+1. **Worktree** - Create an isolated workspace:
+   ```bash
+   if [[ -x ~/.kiro/scripts/worktree-create.sh ]]; then
+     bash ~/.kiro/scripts/worktree-create.sh <spec-name>
+   else
+     git checkout -b <spec-name>
+   fi
+   ```
+   Capture the absolute path. All work happens inside it.
 2. **Explore** - Before planning, dispatch **Explore** subagent to survey the codebase: existing patterns, relevant files, interfaces to implement, conventions to follow. Do NOT read files yourself. Wait for Explore's report, then plan.
 3. **Plan** - Using Explore's findings, extract all tasks with full text. Create TODO list before executing anything.
 4. **Classify & Schedule** - For each task, assign:
@@ -49,7 +57,15 @@ Before dispatching builder, classify each task:
    - **Dispatch**: send to builder (or superhuman for COMPLEX).
 6. **Decisions log** - After each task completes, append to `<worktree>/.decisions.md`: what was decided, why, which files. Include this file as context for subsequent tasks.
 7. **Final review** - After all tasks, dispatch code-reviewer across the entire implementation.
-8. **Merge** - `bash ~/.kiro/scripts/worktree-merge.sh <spec-name>`. On conflict: halt, report files, preserve worktree.
+8. **Merge** - Merge back to the original branch:
+   ```bash
+   if [[ -x ~/.kiro/scripts/worktree-merge.sh ]]; then
+     bash ~/.kiro/scripts/worktree-merge.sh <spec-name>
+   else
+     git checkout main && git merge <spec-name>
+   fi
+   ```
+   On conflict: halt, report files, preserve worktree.
 9. **Docs** - Delegate to documenter (non-blocking; failure doesn't fail the workflow).
 10. **Cleanup** - Summarize results.
 

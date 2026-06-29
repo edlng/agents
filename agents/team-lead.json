@@ -15,6 +15,7 @@
   "toolsSettings": {
     "subagent": {
       "trustedAgents": [
+        "explore",
         "builder",
         "validator",
         "documenter",
@@ -28,7 +29,8 @@
   },
   "resources": [
     "file://specs/**/*.md",
-    "file://README.md"
+    "file://README.md",
+    "file://skills/_shared/security-constraints.md"
   ],
   "model": "claude-sonnet-4.6",
   "welcomeMessage": "Team Lead ready. Describe what you want to build and I'll orchestrate the team."

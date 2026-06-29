@@ -27,6 +27,11 @@
     "@github/list_issues"
   ],
   "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "/tmp/**"
+      ]
+    },
     "shell": {
       "timeout": 60000,
       "autoAllowReadonly": true

@@ -51,7 +51,7 @@
         "firecrawl-mcp"
       ],
       "env": {
-        "FIRECRAWL_API_URL": "http://localhost:3002"
+        "FIRECRAWL_API_URL": "${FIRECRAWL_API_URL:-http://localhost:3002}"
       },
       "autoApprove": [
         "firecrawl_scrape",
@@ -83,5 +83,8 @@
       ]
     }
   },
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-4.6",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ]
 }

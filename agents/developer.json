@@ -12,8 +12,8 @@
   ],
   "useLegacyMcpJson": false,
   "resources": [
-    "file:///Users/liawedwa/.aws/cli-agent-orchestrator/agent-context/developer.md",
-    "skill:///Users/liawedwa/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
+    "file://~/.aws/cli-agent-orchestrator/agent-context/developer.md",
+    "skill://~/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
   ],
   "mcpServers": {
     "cao-mcp-server": {

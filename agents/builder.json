@@ -12,6 +12,14 @@
     "write",
     "shell"
   ],
+  "toolsSettings": {
+    "shell": {
+      "timeout": 120000
+    }
+  },
   "model": "claude-sonnet-4.6",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ],
   "welcomeMessage": "Builder ready. What task should I execute?"
 }

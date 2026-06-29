@@ -56,14 +56,26 @@ else
   RAW_MODEL="claude-sonnet-4.6"
 fi
 
-# Normalize to short aliases that claude CLI accepts in this environment.
-# Agent configs use dot-notation (claude-sonnet-4.6) which the CLI rejects; use short aliases.
-case "$RAW_MODEL" in
-  claude-sonnet-4.6|claude-sonnet-4-6|sonnet) MODEL="sonnet" ;;
-  claude-haiku-4.5|claude-haiku-4-5|haiku)    MODEL="haiku" ;;
-  claude-opus-4.8|claude-opus-4-8|opus)        MODEL="opus" ;;
-  *)                                            MODEL="$RAW_MODEL" ;;
-esac
+# Normalize to short aliases that claude CLI accepts.
+# Agent configs use full names (claude-sonnet-4.6, claude-opus-4.8) which the CLI may reject.
+# Pattern: strip "claude-" prefix, then match the family name before the version number.
+# This handles current and future versions (e.g., claude-sonnet-5.0 → sonnet).
+normalize_model() {
+  local raw="$1"
+  # Already a short alias
+  case "$raw" in
+    sonnet|haiku|opus) echo "$raw"; return ;;
+  esac
+  # Strip "claude-" prefix if present, then extract family name
+  local stripped="${raw#claude-}"
+  case "$stripped" in
+    sonnet*) echo "sonnet" ;;
+    haiku*)  echo "haiku" ;;
+    opus*)   echo "opus" ;;
+    *)       echo "$raw" ;;  # Unknown model, pass through
+  esac
+}
+MODEL=$(normalize_model "$RAW_MODEL")
 
 # For researcher/research-validator: inject stub fixture so no live network calls needed
 if [[ "$AGENT_NAME" == "researcher" || "$AGENT_NAME" == "research-validator" ]]; then

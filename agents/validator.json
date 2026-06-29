@@ -13,7 +13,13 @@
     "shell"
   ],
   "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "/tmp/**"
+      ]
+    },
     "shell": {
+      "timeout": 120000,
       "autoAllowReadonly": true
     }
   },
