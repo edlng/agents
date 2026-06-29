@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // SPA redirect for GitHub Pages
+      // Converts path to query param so index.html can handle it
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      window.location.replace(
+        window.location.origin + '/agents/?p=' + encodeURIComponent(path.replace('/agents/', '/')) + search + hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

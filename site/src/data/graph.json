@@ -1,0 +1,1661 @@
+{
+  "nodes": [
+    {
+      "id": "agent:builder",
+      "type": "agent",
+      "name": "builder",
+      "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
+      "category": "Implementation",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "write",
+        "shell"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/builder.json"
+    },
+    {
+      "id": "agent:code-reviewer",
+      "type": "agent",
+      "name": "code-reviewer",
+      "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
+      "category": "Quality Assurance",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "write",
+        "shell",
+        "@sequential-thinking/sequentialthinking",
+        "@github/get_file_contents",
+        "@github/pull_request_read",
+        "@github/search_pull_requests",
+        "@github/get_me",
+        "@github/list_pull_requests",
+        "@github/get_commit",
+        "@github/list_commits",
+        "@github/search_code",
+        "@github/search_issues",
+        "@github/issue_read",
+        "@github/list_issues"
+      ],
+      "mcpServers": [
+        "github"
+      ],
+      "resources": [
+        "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
+      ],
+      "sourcePath": "agents/code-reviewer.json"
+    },
+    {
+      "id": "agent:context-curator",
+      "type": "agent",
+      "name": "context-curator",
+      "description": "Curates memory context for worker agents. Given a task description, selects relevant memories from Valkey and Obsidian and returns a <context-memory> block. Does NOT perform tasks.",
+      "category": "Orchestration",
+      "model": "claude-haiku-4.5",
+      "tools": [
+        "read",
+        "shell",
+        "@obsidian/search_notes",
+        "@obsidian/read_note",
+        "@obsidian/list_directory"
+      ],
+      "mcpServers": [
+        "obsidian"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/context-curator.json"
+    },
+    {
+      "id": "agent:developer",
+      "type": "agent",
+      "name": "developer",
+      "description": "Developer Agent in a multi-agent system",
+      "category": "Implementation",
+      "tools": [
+        "@builtin",
+        "fs_*",
+        "execute_bash",
+        "@cao-mcp-server"
+      ],
+      "mcpServers": [
+        "cao-mcp-server"
+      ],
+      "resources": [
+        "file://~/.aws/cli-agent-orchestrator/agent-context/developer.md",
+        "skill://~/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
+      ],
+      "sourcePath": "agents/developer.json"
+    },
+    {
+      "id": "agent:documenter",
+      "type": "agent",
+      "name": "documenter",
+      "description": "Generates documentation for completed and validated features.",
+      "category": "Documentation",
+      "model": "claude-haiku-4.5",
+      "tools": [
+        "read",
+        "write"
+      ],
+      "sourcePath": "agents/documenter.json"
+    },
+    {
+      "id": "agent:explore",
+      "type": "agent",
+      "name": "explore",
+      "description": "Read-only codebase exploration agent. Surveys files, searches symbols, and maps relevant code for the team-lead to plan against. Never modifies files.",
+      "category": "Research",
+      "model": "claude-haiku-4.5",
+      "tools": [
+        "read",
+        "shell",
+        "glob",
+        "grep",
+        "code"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/explore.json"
+    },
+    {
+      "id": "agent:glide-code-reviewer",
+      "type": "agent",
+      "name": "glide-code-reviewer",
+      "description": "Specialized GLIDE code reviewer. Reviews Valkey GLIDE client code for correctness, anti-patterns, resource leaks, and cluster-awareness using the glide skill references. Invoked as a subagent of code-reviewer when GLIDE code is in the diff.",
+      "category": "Quality Assurance",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "shell"
+      ],
+      "resources": [
+        "skill://~/.kiro/skills/glide-skill/SKILL.md"
+      ],
+      "sourcePath": "agents/glide-code-reviewer.json"
+    },
+    {
+      "id": "agent:research-summarizer",
+      "type": "agent",
+      "name": "research-summarizer",
+      "description": "Orchestrates research, validation, and produces a final summary",
+      "category": "Research",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "subagent",
+        "read",
+        "write"
+      ],
+      "sourcePath": "agents/research-summarizer.json"
+    },
+    {
+      "id": "agent:research-validator",
+      "type": "agent",
+      "name": "research-validator",
+      "description": "Adversarial verification agent. Cross-checks researcher findings against cited source URLs using firecrawl. Classifies each claim as CONFIRMED, UNVERIFIED, or CONTRADICTED. Use after the researcher agent to validate accuracy before passing findings to the caller.",
+      "category": "Research",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "shell",
+        "@firecrawl/firecrawl_scrape",
+        "@firecrawl/firecrawl_search",
+        "@firecrawl/firecrawl_map",
+        "@firecrawl/firecrawl_extract",
+        "@firecrawl/firecrawl_crawl",
+        "@firecrawl/firecrawl_check_crawl_status",
+        "@firecrawl/firecrawl_agent",
+        "@firecrawl/firecrawl_agent_status",
+        "@sequential-thinking/sequentialthinking"
+      ],
+      "mcpServers": [
+        "obsidian",
+        "firecrawl"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/research-validator.json"
+    },
+    {
+      "id": "agent:researcher",
+      "type": "agent",
+      "name": "researcher",
+      "description": "Search external documentation, APIs, and libraries to answer a specific question. Use proactively when a caller needs citable external knowledge before implementing or deciding. Returns concise findings with source URLs, tradeoffs, and a concrete recommendation.",
+      "category": "Research",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "shell",
+        "@firecrawl/firecrawl_scrape",
+        "@firecrawl/firecrawl_search",
+        "@firecrawl/firecrawl_map",
+        "@firecrawl/firecrawl_extract",
+        "@firecrawl/firecrawl_crawl",
+        "@firecrawl/firecrawl_check_crawl_status",
+        "@firecrawl/firecrawl_agent",
+        "@firecrawl/firecrawl_agent_status",
+        "@sequential-thinking/sequentialthinking"
+      ],
+      "mcpServers": [
+        "obsidian",
+        "firecrawl"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/researcher.json"
+    },
+    {
+      "id": "agent:security-reviewer",
+      "type": "agent",
+      "name": "security-reviewer",
+      "description": "Threat-model-driven security analysis anchored to CWE taxonomy. Injection, access control, secrets, crypto, SSRF, path traversal. Read-only - never modifies files.",
+      "category": "Quality Assurance",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "shell"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/security-reviewer.json"
+    },
+    {
+      "id": "agent:superhuman",
+      "type": "agent",
+      "name": "superhuman",
+      "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use proactively for complex, multi-step engineering tasks requiring deep reasoning. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
+      "category": "Implementation",
+      "model": "claude-opus-4.8",
+      "tools": [
+        "read",
+        "write",
+        "shell",
+        "glob",
+        "grep",
+        "code",
+        "todo_list",
+        "use_aws",
+        "web_fetch",
+        "web_search",
+        "@firecrawl/firecrawl_scrape",
+        "@firecrawl/firecrawl_search",
+        "@firecrawl/firecrawl_map",
+        "@firecrawl/firecrawl_extract",
+        "@firecrawl/firecrawl_crawl",
+        "@firecrawl/firecrawl_check_crawl_status",
+        "@firecrawl/firecrawl_agent",
+        "@firecrawl/firecrawl_agent_status",
+        "@sequential-thinking/sequentialthinking"
+      ],
+      "mcpServers": [
+        "firecrawl",
+        "sequential-thinking"
+      ],
+      "resources": [
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/superhuman.json"
+    },
+    {
+      "id": "agent:team-lead",
+      "type": "agent",
+      "name": "team-lead",
+      "description": "Team orchestrator that creates plans and delegates work to specialized subagents (builder, validator).",
+      "category": "Orchestration",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "subagent",
+        "todo"
+      ],
+      "trustedAgents": [
+        "explore",
+        "builder",
+        "validator",
+        "documenter",
+        "researcher",
+        "context-curator",
+        "code-reviewer",
+        "tester",
+        "superhuman"
+      ],
+      "resources": [
+        "file://specs/**/*.md",
+        "file://README.md",
+        "file://skills/_shared/security-constraints.md"
+      ],
+      "sourcePath": "agents/team-lead.json"
+    },
+    {
+      "id": "agent:team-leader",
+      "type": "agent",
+      "name": "team-leader",
+      "description": "Orchestrator. Delegates tasks, tracks TODO. Does NOT write code or run commands.",
+      "category": "Orchestration",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "subagent",
+        "todo",
+        "@sequential-thinking/sequentialthinking"
+      ],
+      "trustedAgents": [
+        "researcher",
+        "developer",
+        "tester",
+        "code-reviewer"
+      ],
+      "sourcePath": "agents/team-leader.json"
+    },
+    {
+      "id": "agent:tester",
+      "type": "agent",
+      "name": "tester",
+      "description": "Test and verification agent. Runs tests, linters, and security scans. Reports commands, pass/fail status, and repro steps for failures. Writes new tests when coverage is missing. Recommends merge only when all quality gates pass.",
+      "category": "Quality Assurance",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read",
+        "write",
+        "shell",
+        "@sequential-thinking/sequentialthinking"
+      ],
+      "sourcePath": "agents/tester.json"
+    },
+    {
+      "id": "agent:validator",
+      "type": "agent",
+      "name": "validator",
+      "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only — inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
+      "category": "Quality Assurance",
+      "model": "claude-opus-4.8",
+      "tools": [
+        "read",
+        "write",
+        "shell"
+      ],
+      "sourcePath": "agents/validator.json"
+    },
+    {
+      "id": "agent:valkey-glide-implementor",
+      "type": "agent",
+      "name": "valkey-glide-implementor",
+      "description": "Generates production-ready Valkey GLIDE code snippets. Uses the glide skill to produce accurate, working code for client setup, vector search, batch operations, caching, and session management across all 6 supported languages.",
+      "category": "Valkey & GLIDE",
+      "model": "claude-sonnet-4.6",
+      "tools": [
+        "read"
+      ],
+      "resources": [
+        "skill://~/.kiro/skills/glide-skill/SKILL.md"
+      ],
+      "sourcePath": "agents/valkey-glide-implementor.json"
+    },
+    {
+      "id": "skill:brainstorming",
+      "type": "skill",
+      "name": "brainstorming",
+      "description": "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
+      "category": "Development Workflows",
+      "sourcePath": "skills/brainstorming/SKILL.md",
+      "excerpt": "Brainstorming Ideas Into Designs Help turn ideas into fully formed designs and specs through natural collaborative dialogue. Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get u"
+    },
+    {
+      "id": "skill:code-review-excellence",
+      "type": "skill",
+      "name": "code-review-excellence",
+      "description": "Reasoning framework for systematic code review. Provides lenses (correctness, security, design fit, testability), self-challenge rubrics, and severity differentiation. Use as the reasoning frame when a reviewer subagent applies multi-lens analysis to a diff or PR. Reports only findings affecting correctness or stated requirements — explicitly excludes style.",
+      "category": "Code Review",
+      "sourcePath": "skills/code-review-excellence/SKILL.md",
+      "excerpt": "Code Review Excellence Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative improvement. When to Use This Skill - Reviewing pull requests and code changes - Establishing code review standards for teams - Mentoring junior d"
+    },
+    {
+      "id": "skill:create-skill",
+      "type": "skill",
+      "name": "create-skill",
+      "description": "Use when the user wants to create a new skill for their AI agents",
+      "category": "Meta",
+      "sourcePath": "skills/create-skill/SKILL.md",
+      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all three directories before writi"
+    },
+    {
+      "id": "skill:diagram-valkey-flow",
+      "type": "skill",
+      "name": "diagram-valkey-flow",
+      "description": "Analyze a project and generate a Mermaid sequence diagram showing the full data flow from the application layer through any framework/middleware down to Valkey operations. Works for any language or framework.",
+      "category": "Valkey & GLIDE",
+      "sourcePath": "skills/diagram-valkey-flow/skill.md",
+      "excerpt": "Diagram Valkey Flow Analyze the project at `$ARGUMENTS` (or the current working directory if blank) and produce a Mermaid sequence diagram showing how data flows from the application entry point through to Valkey. Run all phases in order. Do not skip phases. --- Phase 1: Discover Entry Points and Fr"
+    },
+    {
+      "id": "skill:dispatching-parallel-agents",
+      "type": "skill",
+      "name": "dispatching-parallel-agents",
+      "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
+      "category": "Planning & Orchestration",
+      "sourcePath": "skills/dispatching-parallel-agents/SKILL.md",
+      "excerpt": "Dispatching Parallel Agents Overview You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what "
+    },
+    {
+      "id": "skill:executing-plans",
+      "type": "skill",
+      "name": "executing-plans",
+      "description": "Use when you have a written implementation plan to execute in a separate session with review checkpoints",
+      "category": "Planning & Orchestration",
+      "sourcePath": "skills/executing-plans/SKILL.md",
+      "excerpt": "Executing Plans Overview Load plan, review critically, execute all tasks, report when complete. **Announce at start:** \"I'm using the executing-plans skill to implement this plan.\" **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work "
+    },
+    {
+      "id": "skill:find-skills",
+      "type": "skill",
+      "name": "find-skills",
+      "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
+      "category": "Meta",
+      "sourcePath": "skills/find-skills/SKILL.md",
+      "excerpt": "Find Skills This skill helps you discover and install skills from the open agent skills ecosystem. When to Use This Skill Use this skill when the user: - Asks \"how do I do X\" where X might be a common task with an existing skill - Says \"find a skill for X\" or \"is there a skill for X\" - Asks \"can you"
+    },
+    {
+      "id": "skill:finishing-a-development-branch",
+      "type": "skill",
+      "name": "finishing-a-development-branch",
+      "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup",
+      "category": "Development Workflows",
+      "sourcePath": "skills/finishing-a-development-branch/SKILL.md",
+      "excerpt": "Finishing a Development Branch Overview Guide completion of development work by presenting clear options and handling chosen workflow. **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up. **Announce at start:** \"I'm using the finishing-a-development-br"
+    },
+    {
+      "id": "skill:glide-skill",
+      "type": "skill",
+      "name": "glide",
+      "description": "Production-ready patterns for Valkey GLIDE clients across 6 languages. Activate when generating, reviewing, or debugging Valkey GLIDE code including client creation, batch/pipeline/transaction operations, clustering, authentication, TLS, error handling, and timeout configuration.",
+      "category": "Valkey & GLIDE",
+      "sourcePath": "skills/glide-skill/SKILL.md",
+      "excerpt": "**Based on valkey-glide v2.4.0** ⚠️ CRITICAL: Version Verification **BEFORE writing or reviewing any GLIDE code, determine the target GLIDE version.** Detect version from: `package.json` (`@valkey/valkey-glide`), `requirements.txt`/`pyproject.toml` (`valkey-glide`), `pom.xml`/`build.gradle` (`io.val"
+    },
+    {
+      "id": "skill:humanizer",
+      "type": "skill",
+      "name": "humanizer",
+      "description": "Remove signs of AI-generated writing from text. Use when editing or reviewing\ntext to make it sound more natural and human-written. Based on Wikipedia's\ncomprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including:\ninflated symbolism, promotional language, superficial -ing analyses, vague\nattributions, em dash overuse, rule of three, AI vocabulary words, passive\nvoice, negative parallelisms, and filler phrases.\n",
+      "category": "Writing & Documentation",
+      "sourcePath": "skills/humanizer/SKILL.md",
+      "excerpt": "Humanizer: Remove AI Writing Patterns You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's \"Signs of AI writing\" page, maintained by WikiProject AI Cleanup. Your Task When given text to humani"
+    },
+    {
+      "id": "skill:implement-cookbook",
+      "type": "skill",
+      "name": "implement-cookbook",
+      "description": "Given a PR link containing a Valkey integration in a project, create a cookbook matching the style of valkey-io/Valkey-Samples (you can find it in ~/valkey/Valkey-Samples). Builds the cookbook locally in the project directory, verifies it runs, then copies to ~/valkey/valkey-samples/ and removes the local copy. Use when asked to create a cookbook, write a cookbook, or implement a cookbook from a PR. Also works from local git commits on the current branch.",
+      "category": "Valkey & GLIDE",
+      "sourcePath": "skills/implement-cookbook/SKILL.md",
+      "excerpt": "Implement Cookbook Produce a working cookbook that demonstrates the Valkey integration in the current project. --- Phase 1: Analyze the Integration Determine the input source: - If `$ARGUMENTS` is a PR link: fetch the PR diff and description using GitHub tools. - If `$ARGUMENTS` is empty or not a UR"
+    },
+    {
+      "id": "skill:implement-jira",
+      "type": "skill",
+      "name": "implement-jira",
+      "description": "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.",
+      "category": "Development Workflows",
+      "sourcePath": "skills/implement-jira/SKILL.md",
+      "excerpt": "Implement Jira Task Implement the Jira task `$ARGUMENTS` end-to-end using the workflow below. Follow each phase in order. Do not skip phases. This workflow assigns specific models to each subagent for cost efficiency, and uses a two-tier cache (Anthropic prompt caching + Valkey at `localhost:8888`) "
+    },
+    {
+      "id": "skill:multi-discipline-review",
+      "type": "skill",
+      "name": "multi-discipline-review",
+      "description": "Run a parallel multi-discipline review across codebase alignment, correctness, security, testability, and Valkey GLIDE using dedicated sub-agents (code-reviewer, security-reviewer, tester, glide-code-reviewer). Codebase alignment is the primary lens. Findings are merged and validated by an Opus validator. Use when a single-lens review is insufficient for a PR or diff.\n",
+      "category": "Code Review",
+      "sourcePath": "skills/multi-discipline-review/SKILL.md",
+      "excerpt": "Multi-Discipline Code Review `$ARGUMENTS`: diff, file path, branch name, or PR reference. Phase 1: Gather Context Read the code, language, framework, existing patterns, and any linked requirements. **Size gating — determine review depth:** - Count `additions + deletions` in the diff. - If `<= 150 li"
+    },
+    {
+      "id": "skill:pr-comment-humanizer",
+      "type": "skill",
+      "name": "pr-comment-humanizer",
+      "description": "Humanize PR review comments to match the author's terse, direct code review voice.\nStrips AI-isms and rewrites comments to sound like a real engineer: short imperatives,\nparenthetical precision, \"nit\" prefix for minor things, \"we should\" for collaborative\nframing, questions to verify rather than assert, links instead of explanations.\n",
+      "category": "Writing & Documentation",
+      "sourcePath": "skills/pr-comment-humanizer/SKILL.md",
+      "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
+    },
+    {
+      "id": "skill:receiving-code-review",
+      "type": "skill",
+      "name": "receiving-code-review",
+      "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
+      "category": "Code Review",
+      "sourcePath": "skills/receiving-code-review/SKILL.md",
+      "excerpt": "Code Review Reception Overview Code review requires technical evaluation, not emotional performance. **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort. The Response Pattern ``` WHEN receiving code review feedback: 1. READ: Complete feedbac"
+    },
+    {
+      "id": "skill:requesting-code-review",
+      "type": "skill",
+      "name": "requesting-code-review",
+      "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
+      "category": "Code Review",
+      "sourcePath": "skills/requesting-code-review/SKILL.md",
+      "excerpt": "Requesting Code Review Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for c"
+    },
+    {
+      "id": "skill:review-addressed-comments",
+      "type": "skill",
+      "name": "review-addressed-comments",
+      "description": "Given a PR link, reviews edlng's review comments, verifies each was addressed in the latest code, and provides a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence.",
+      "category": "Code Review",
+      "sourcePath": "skills/review-addressed-comments/SKILL.md",
+      "excerpt": "Review Addressed Comments Verify that all of edlng's review comments on a PR have been addressed in the current code, providing the new code snippets as evidence, and give a final recommendation. When to Use - When asked to check whether edlng's review feedback has been addressed on a PR - Before ap"
+    },
+    {
+      "id": "skill:review-code",
+      "type": "skill",
+      "name": "review-code",
+      "description": "Self-review uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, Valkey caching, a single Sonnet reviewer, an Opus validator skeptic pass, and auto-fix offer. Pass a branch name to review vs main, a Jira key to use as requirements source, or leave empty to review staged+unstaged changes.",
+      "category": "Code Review",
+      "sourcePath": "skills/review-code/SKILL.md",
+      "excerpt": "Review My Local Changes Self-review your own uncommitted or unpushed work before opening a PR. The goal is to catch your own mistakes — bugs, sloppy patterns, missed requirements — at the cheapest possible point. Optimized for speed and **fixing in place**: when a finding is unambiguous, this comman"
+    },
+    {
+      "id": "skill:review-cookbook-pr",
+      "type": "skill",
+      "name": "review-cookbook-pr",
+      "description": "Review a cookbook pull request. This is the standard PR review **plus** two cookbook-specific checks.",
+      "category": "Code Review",
+      "sourcePath": "skills/review-cookbook-pr/SKILL.md",
+      "excerpt": "Review Cookbook PR (senior-dev grade) Review a cookbook pull request. This is the standard PR review **plus** two cookbook-specific checks. Run the base workflow Follow `_shared/pr-review-base.md` (relative path: `../_shared/pr-review-base.md`) for cache setup, Phase 1 (context), Phase 2 (merged-len"
+    },
+    {
+      "id": "skill:review-pr",
+      "type": "skill",
+      "name": "review-pr",
+      "description": "Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.",
+      "category": "Code Review",
+      "sourcePath": "skills/review-pr/SKILL.md",
+      "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. This is the **standard** PR review. The full workflow is defined in the shared base file so it can be reused by specialized variants (e.g. `review-cookbook-pr`). Run the base wor"
+    },
+    {
+      "id": "skill:subagent-driven-development",
+      "type": "skill",
+      "name": "subagent-driven-development",
+      "description": "Use when executing implementation plans with independent tasks in the current session",
+      "category": "Development Workflows",
+      "sourcePath": "skills/subagent-driven-development/SKILL.md",
+      "excerpt": "Subagent-Driven Development Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review. **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and c"
+    },
+    {
+      "id": "skill:systematic-debugging",
+      "type": "skill",
+      "name": "systematic-debugging",
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+      "category": "Development Workflows",
+      "sourcePath": "skills/systematic-debugging/SKILL.md",
+      "excerpt": "Systematic Debugging Overview Random fixes waste time and create new bugs. Quick patches mask underlying issues. **Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure. **Violating the letter of this process is violating the spirit of debugging.** The Iron Law "
+    },
+    {
+      "id": "skill:test-driven-development",
+      "type": "skill",
+      "name": "test-driven-development",
+      "description": "Use when implementing any feature or bugfix, before writing implementation code",
+      "category": "Development Workflows",
+      "sourcePath": "skills/test-driven-development/SKILL.md",
+      "excerpt": "Test-Driven Development (TDD) Overview Write the test first. Watch it fail. Write minimal code to pass. **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing. **Violating the letter of the rules is violating the spirit of the rules.** When to Use **Always:"
+    },
+    {
+      "id": "skill:test-valkey",
+      "type": "skill",
+      "name": "test-valkey",
+      "description": "Test Valkey integration code against a live valkey-bundle container. Starts Valkey from a clean slate, exercises staged/unstaged git changes (cache backend, vector search provider, rate limiter, connection parsing), validates all configurations by tearing down and recreating the container as needed. Use when Valkey integration code has been written and needs end-to-end verification before commit.",
+      "category": "Valkey & GLIDE",
+      "sourcePath": "skills/test-valkey/SKILL.md",
+      "excerpt": "Test Valkey Run integration tests against the staged/unstaged Valkey changes in the current repository. Proves correctness by exercising the code against a real `valkey/valkey-bundle` container. --- Prerequisites Before starting, verify: ```bash Container runtime podman -v 2>/dev/null || docker -v 2"
+    },
+    {
+      "id": "skill:update-agent",
+      "type": "skill",
+      "name": "update-agent",
+      "description": "Use when the user wants to update or modify an existing agent definition for their AI agents",
+      "category": "Meta",
+      "sourcePath": "skills/update-agent/SKILL.md",
+      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The syn"
+    },
+    {
+      "id": "skill:update-skill",
+      "type": "skill",
+      "name": "update-skill",
+      "description": "Use when the user wants to update or modify an existing skill for their AI agents",
+      "category": "Meta",
+      "sourcePath": "skills/update-skill/SKILL.md",
+      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in "
+    },
+    {
+      "id": "skill:using-git-worktrees",
+      "type": "skill",
+      "name": "using-git-worktrees",
+      "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
+      "category": "Planning & Orchestration",
+      "sourcePath": "skills/using-git-worktrees/SKILL.md",
+      "excerpt": "Using Git Worktrees Overview Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available. **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never f"
+    },
+    {
+      "id": "skill:using-superpowers",
+      "type": "skill",
+      "name": "using-superpowers",
+      "description": "Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions",
+      "category": "Meta",
+      "sourcePath": "skills/using-superpowers/SKILL.md",
+      "excerpt": "<SUBAGENT-STOP> If you were dispatched as a subagent to execute a specific task, skip this skill. </SUBAGENT-STOP> <EXTREMELY-IMPORTANT> If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill. IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT"
+    },
+    {
+      "id": "skill:valkey-spike",
+      "type": "skill",
+      "name": "valkey-spike",
+      "description": "Analyze a repository for Valkey integration opportunities and empirically verify feasibility. Combines static codebase analysis (existing Redis/cache usage, command compatibility, vector search potential) with a live spike against a running Valkey instance to prove the riskiest assumptions before committing to a full implementation. Use when evaluating whether a project is a good candidate for Valkey integration.",
+      "category": "Valkey & GLIDE",
+      "sourcePath": "skills/valkey-spike/SKILL.md",
+      "excerpt": "Valkey Spike Analyze the repository `$ARGUMENTS` (or the current working directory if blank) for Valkey integration opportunities, then **prove the riskiest assumptions work** against a live Valkey instance. This is a four-phase workflow: 1. **Evidence Collection** - scan the codebase 2. **Compatibi"
+    },
+    {
+      "id": "skill:verification-before-completion",
+      "type": "skill",
+      "name": "verification-before-completion",
+      "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
+      "category": "Development Workflows",
+      "sourcePath": "skills/verification-before-completion/SKILL.md",
+      "excerpt": "Verification Before Completion Overview Claiming work is complete without verification is dishonesty, not efficiency. **Core principle:** Evidence before claims, always. **Violating the letter of this rule is violating the spirit of this rule.** The Iron Law ``` NO COMPLETION CLAIMS WITHOUT FRESH VE"
+    },
+    {
+      "id": "skill:write-narrative",
+      "type": "skill",
+      "name": "write-narrative",
+      "description": "Given a Jira issue key, fetch the issue, research the topic with a research subagent, and draft a humanized technical narrative. Saves to ~/Documents/work/narratives/ and outputs in chat. Use when asked to write a narrative, technical assessment, or compatibility analysis for a Jira ticket. Do NOT use for PR descriptions (use write-pr), code reviews, or general documentation.",
+      "category": "Writing & Documentation",
+      "sourcePath": "skills/write-narrative/SKILL.md",
+      "excerpt": "Write Narrative Given a Jira issue key in `$ARGUMENTS` (e.g. `AEA-468`), fetch the issue, research the topic, and draft a Narrative for me and send it in the chat, and also create the file (see Phase 4). Follow each phase in order. Do not skip phases. --- Phase 1: Fetch Jira Issue Use `mcp__atlassia"
+    },
+    {
+      "id": "skill:write-pr",
+      "type": "skill",
+      "name": "write-pr",
+      "description": "Generate a polished, human-sounding PR description from the current git changes. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repo's PR template (or a default), verifies accuracy, then humanizes the output.",
+      "category": "Writing & Documentation",
+      "sourcePath": "skills/write-pr/SKILL.md",
+      "excerpt": "Write PR Description Generate a polished, human-sounding PR description for the current changes. Follow each phase in order. Do not skip phases. Input `$ARGUMENTS` is optional and may contain: 1. A **commit range** (e.g. `HEAD~3`, `main..HEAD`). Default: the last commit plus any staged/unstaged chan"
+    },
+    {
+      "id": "skill:write-pr-comments",
+      "type": "skill",
+      "name": "write-pr-comments",
+      "description": "Post inline PR review comments from an Obsidian review note as a pending review. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as a pending GitHub review (visible only to you until manually submitted).",
+      "category": "Writing & Documentation",
+      "sourcePath": "skills/write-pr-comments/SKILL.md",
+      "excerpt": "Write PR Comments Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note. `$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/"
+    },
+    {
+      "id": "skill:writing-plans",
+      "type": "skill",
+      "name": "writing-plans",
+      "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
+      "category": "Planning & Orchestration",
+      "sourcePath": "skills/writing-plans/SKILL.md",
+      "excerpt": "Writing Plans Overview Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole"
+    },
+    {
+      "id": "skill:writing-skills",
+      "type": "skill",
+      "name": "writing-skills",
+      "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
+      "category": "Meta",
+      "sourcePath": "skills/writing-skills/SKILL.md",
+      "excerpt": "Writing Skills Overview **Writing skills IS Test-Driven Development applied to process documentation.** **Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** You write test cases (pressure scenarios with subagents), watch them fail"
+    },
+    {
+      "id": "shared-ref:async-dispatch-protocols",
+      "type": "shared-ref",
+      "name": "async-dispatch-protocols",
+      "description": "Shared reference for agents that delegate work asynchronously (assign/fire-and-forget) and receive results via inbox delivery.",
+      "sourcePath": "skills/_shared/async-dispatch-protocols.md"
+    },
+    {
+      "id": "shared-ref:codebase-context-checklist",
+      "type": "shared-ref",
+      "name": "codebase-context-checklist",
+      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, `review-code`, and `implement-jira`. Not a standalone skill. Single source of truth for what to capture when scanning a codebase before reviewing or implementing.",
+      "sourcePath": "skills/_shared/codebase-context-checklist.md"
+    },
+    {
+      "id": "shared-ref:humanizer-rules",
+      "type": "shared-ref",
+      "name": "humanizer-rules",
+      "description": "Shared reference for humanizer-based skills. Contains the AI writing patterns to detect and strip. Not a standalone skill.",
+      "sourcePath": "skills/_shared/humanizer-rules.md"
+    },
+    {
+      "id": "shared-ref:memory-protocol",
+      "type": "shared-ref",
+      "name": "memory-protocol",
+      "description": "Shared reference for agents that store or consume persistent memory. Defines scopes, storage backends, injection format, and conventions.",
+      "sourcePath": "skills/_shared/memory-protocol.md"
+    },
+    {
+      "id": "shared-ref:no-github-writes",
+      "type": "shared-ref",
+      "name": "no-github-writes",
+      "description": "Shared reference used by the local-only review skills (`review-pr`, `review-cookbook-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.",
+      "sourcePath": "skills/_shared/no-github-writes.md"
+    },
+    {
+      "id": "shared-ref:pr-review-base",
+      "type": "shared-ref",
+      "name": "pr-review-base",
+      "description": "Shared reference used by `review-pr` and `review-cookbook-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report). Consuming skills invoke this base and add their own specialized phases (e.g. cookbook-specific checks).",
+      "sourcePath": "skills/_shared/pr-review-base.md"
+    },
+    {
+      "id": "shared-ref:review-findings-schema",
+      "type": "shared-ref",
+      "name": "review-findings-schema",
+      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.",
+      "sourcePath": "skills/_shared/review-findings-schema.md"
+    },
+    {
+      "id": "shared-ref:security-constraints",
+      "type": "shared-ref",
+      "name": "security-constraints",
+      "description": "Standardized security boundary for all agents. Reference from agent prompts with: \"See `_shared/security-constraints.md`.\"",
+      "sourcePath": "skills/_shared/security-constraints.md"
+    },
+    {
+      "id": "shared-ref:three-root-sync",
+      "type": "shared-ref",
+      "name": "three-root-sync",
+      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the three-location sync rule and the paths involved.",
+      "sourcePath": "skills/_shared/three-root-sync.md"
+    },
+    {
+      "id": "shared-ref:validator-skeptic-pass",
+      "type": "shared-ref",
+      "name": "validator-skeptic-pass",
+      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, `review-code`, and `multi-discipline-review`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.",
+      "sourcePath": "skills/_shared/validator-skeptic-pass.md"
+    },
+    {
+      "id": "shared-ref:valkey-cache-conventions",
+      "type": "shared-ref",
+      "name": "valkey-cache-conventions",
+      "description": "This is a shared reference file used by multiple skills (`review-pr`, `review-cookbook-pr`, `review-code`, `implement-jira`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.",
+      "sourcePath": "skills/_shared/valkey-cache-conventions.md"
+    },
+    {
+      "id": "mcp:github",
+      "type": "mcp-server",
+      "name": "github",
+      "description": "MCP server: github"
+    },
+    {
+      "id": "mcp:obsidian",
+      "type": "mcp-server",
+      "name": "obsidian",
+      "description": "MCP server: obsidian"
+    },
+    {
+      "id": "mcp:cao-mcp-server",
+      "type": "mcp-server",
+      "name": "cao-mcp-server",
+      "description": "MCP server: cao-mcp-server"
+    },
+    {
+      "id": "mcp:firecrawl",
+      "type": "mcp-server",
+      "name": "firecrawl",
+      "description": "MCP server: firecrawl"
+    },
+    {
+      "id": "mcp:sequential-thinking",
+      "type": "mcp-server",
+      "name": "sequential-thinking",
+      "description": "MCP server: sequential-thinking"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge:builder->shared-ref->security-constraints",
+      "source": "agent:builder",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:builder->shared-ref->security-constraints",
+      "source": "agent:builder",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:code-reviewer->mcp->github",
+      "source": "agent:code-reviewer",
+      "target": "mcp:github",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:code-reviewer->skill->code-review-excellence",
+      "source": "agent:code-reviewer",
+      "target": "skill:code-review-excellence",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:context-curator->mcp->obsidian",
+      "source": "agent:context-curator",
+      "target": "mcp:obsidian",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:context-curator->shared-ref->security-constraints",
+      "source": "agent:context-curator",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:context-curator->shared-ref->security-constraints",
+      "source": "agent:context-curator",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:developer->mcp->cao-mcp-server",
+      "source": "agent:developer",
+      "target": "mcp:cao-mcp-server",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:explore->shared-ref->security-constraints",
+      "source": "agent:explore",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:explore->shared-ref->security-constraints",
+      "source": "agent:explore",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:glide-code-reviewer->skill->glide-skill",
+      "source": "agent:glide-code-reviewer",
+      "target": "skill:glide-skill",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:research-validator->mcp->obsidian",
+      "source": "agent:research-validator",
+      "target": "mcp:obsidian",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:research-validator->mcp->firecrawl",
+      "source": "agent:research-validator",
+      "target": "mcp:firecrawl",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:research-validator->shared-ref->security-constraints",
+      "source": "agent:research-validator",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:research-validator->shared-ref->security-constraints",
+      "source": "agent:research-validator",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:researcher->mcp->obsidian",
+      "source": "agent:researcher",
+      "target": "mcp:obsidian",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:researcher->mcp->firecrawl",
+      "source": "agent:researcher",
+      "target": "mcp:firecrawl",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:researcher->shared-ref->security-constraints",
+      "source": "agent:researcher",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:researcher->shared-ref->security-constraints",
+      "source": "agent:researcher",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:security-reviewer->shared-ref->security-constraints",
+      "source": "agent:security-reviewer",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:security-reviewer->shared-ref->security-constraints",
+      "source": "agent:security-reviewer",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:superhuman->mcp->firecrawl",
+      "source": "agent:superhuman",
+      "target": "mcp:firecrawl",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:superhuman->mcp->sequential-thinking",
+      "source": "agent:superhuman",
+      "target": "mcp:sequential-thinking",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:superhuman->shared-ref->security-constraints",
+      "source": "agent:superhuman",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:superhuman->shared-ref->security-constraints",
+      "source": "agent:superhuman",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:team-lead->delegates->explore",
+      "source": "agent:team-lead",
+      "target": "agent:explore",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->builder",
+      "source": "agent:team-lead",
+      "target": "agent:builder",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->validator",
+      "source": "agent:team-lead",
+      "target": "agent:validator",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->documenter",
+      "source": "agent:team-lead",
+      "target": "agent:documenter",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->researcher",
+      "source": "agent:team-lead",
+      "target": "agent:researcher",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->context-curator",
+      "source": "agent:team-lead",
+      "target": "agent:context-curator",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->code-reviewer",
+      "source": "agent:team-lead",
+      "target": "agent:code-reviewer",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->tester",
+      "source": "agent:team-lead",
+      "target": "agent:tester",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->delegates->superhuman",
+      "source": "agent:team-lead",
+      "target": "agent:superhuman",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-lead->shared-ref->security-constraints",
+      "source": "agent:team-lead",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:team-lead->shared-ref->security-constraints",
+      "source": "agent:team-lead",
+      "target": "shared-ref:security-constraints",
+      "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:team-leader->delegates->researcher",
+      "source": "agent:team-leader",
+      "target": "agent:researcher",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-leader->delegates->developer",
+      "source": "agent:team-leader",
+      "target": "agent:developer",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-leader->delegates->tester",
+      "source": "agent:team-leader",
+      "target": "agent:tester",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:team-leader->delegates->code-reviewer",
+      "source": "agent:team-leader",
+      "target": "agent:code-reviewer",
+      "type": "delegates-to"
+    },
+    {
+      "id": "edge:valkey-glide-implementor->skill->glide-skill",
+      "source": "agent:valkey-glide-implementor",
+      "target": "skill:glide-skill",
+      "type": "uses-skill"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "workflow:team-lead",
+      "name": "Team Lead Pipeline",
+      "description": "Full implementation workflow from spec to merged code. Context and research run in parallel before each build; both review stages can loop back.",
+      "orchestrator": "team-lead",
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "label": "Start"
+        },
+        {
+          "id": "explore",
+          "type": "process",
+          "label": "Explore",
+          "agent": "explore",
+          "description": "Survey codebase: existing patterns, relevant files, interfaces, conventions"
+        },
+        {
+          "id": "plan",
+          "type": "process",
+          "label": "Plan",
+          "agent": "team-lead",
+          "description": "Extract all tasks from spec findings, create TODO, classify complexity"
+        },
+        {
+          "id": "context",
+          "type": "process",
+          "label": "Gather Context",
+          "agent": "context-curator",
+          "description": "Fetch relevant memories from Valkey + Obsidian for the builder"
+        },
+        {
+          "id": "research",
+          "type": "process",
+          "label": "Research",
+          "agent": "researcher",
+          "description": "Investigate unfamiliar APIs/libraries before implementation",
+          "optional": true
+        },
+        {
+          "id": "build",
+          "type": "process",
+          "label": "Build",
+          "agent": "builder",
+          "description": "Implement the task (or superhuman for complex tasks)"
+        },
+        {
+          "id": "validate",
+          "type": "process",
+          "label": "Validate Spec",
+          "agent": "validator",
+          "description": "Verify requirements are met - nothing missing, nothing extra"
+        },
+        {
+          "id": "d1",
+          "type": "decision",
+          "label": "Spec met?",
+          "description": "Did the builder satisfy every requirement?"
+        },
+        {
+          "id": "review",
+          "type": "process",
+          "label": "Review Quality",
+          "agent": "code-reviewer",
+          "description": "Check correctness, codebase alignment, maintainability"
+        },
+        {
+          "id": "d2",
+          "type": "decision",
+          "label": "Approved?",
+          "description": "Is the code correct and well-built?"
+        },
+        {
+          "id": "document",
+          "type": "process",
+          "label": "Document",
+          "agent": "documenter",
+          "description": "Generate documentation for completed features",
+          "optional": true
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "label": "Done"
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "explore"
+        },
+        {
+          "from": "explore",
+          "to": "plan"
+        },
+        {
+          "from": "plan",
+          "to": "context"
+        },
+        {
+          "from": "plan",
+          "to": "research"
+        },
+        {
+          "from": "context",
+          "to": "build"
+        },
+        {
+          "from": "research",
+          "to": "build"
+        },
+        {
+          "from": "build",
+          "to": "validate"
+        },
+        {
+          "from": "validate",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "build",
+          "label": "no",
+          "loop": true
+        },
+        {
+          "from": "d1",
+          "to": "review",
+          "label": "yes"
+        },
+        {
+          "from": "review",
+          "to": "d2"
+        },
+        {
+          "from": "d2",
+          "to": "build",
+          "label": "no",
+          "loop": true
+        },
+        {
+          "from": "d2",
+          "to": "document",
+          "label": "yes"
+        },
+        {
+          "from": "document",
+          "to": "end"
+        }
+      ]
+    },
+    {
+      "id": "workflow:research",
+      "name": "Research Pipeline",
+      "description": "Research a topic with adversarial validation. Unverified findings loop back for another pass; only confirmed findings reach the summary.",
+      "orchestrator": "research-summarizer",
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "label": "Start"
+        },
+        {
+          "id": "research",
+          "type": "process",
+          "label": "Research",
+          "agent": "researcher",
+          "description": "Search external docs, APIs, libraries. Returns findings with source URLs."
+        },
+        {
+          "id": "validate",
+          "type": "process",
+          "label": "Validate",
+          "agent": "research-validator",
+          "description": "Cross-check cited sources. Classify each claim as CONFIRMED/UNVERIFIED/CONTRADICTED."
+        },
+        {
+          "id": "d1",
+          "type": "decision",
+          "label": "Confirmed?",
+          "description": "Are the findings backed by their cited sources?"
+        },
+        {
+          "id": "synthesize",
+          "type": "process",
+          "label": "Synthesize",
+          "agent": "research-summarizer",
+          "description": "Produce final summary using only CONFIRMED findings with citations."
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "label": "Done"
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "research"
+        },
+        {
+          "from": "research",
+          "to": "validate"
+        },
+        {
+          "from": "validate",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "research",
+          "label": "unverified",
+          "loop": true
+        },
+        {
+          "from": "d1",
+          "to": "synthesize",
+          "label": "confirmed"
+        },
+        {
+          "from": "synthesize",
+          "to": "end"
+        }
+      ]
+    },
+    {
+      "id": "workflow:code-review",
+      "name": "Code Review Pipeline",
+      "description": "Multi-phase review with a skeptic validator pass, branching to an APPROVE or BLOCK verdict.",
+      "orchestrator": "code-reviewer",
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "label": "Start"
+        },
+        {
+          "id": "diff",
+          "type": "process",
+          "label": "Gather Diff",
+          "agent": "code-reviewer",
+          "description": "Collect uncommitted/unpushed changes or PR diff"
+        },
+        {
+          "id": "multi",
+          "type": "process",
+          "label": "Multi-lens Review",
+          "agent": "code-reviewer",
+          "description": "Review for correctness, security, design fit, testability, performance"
+        },
+        {
+          "id": "skeptic",
+          "type": "process",
+          "label": "Skeptic Pass",
+          "agent": "validator",
+          "description": "Challenge review findings - are they real issues or false positives?"
+        },
+        {
+          "id": "d1",
+          "type": "decision",
+          "label": "Issues found?",
+          "description": "Did the skeptic pass confirm real blocking issues?"
+        },
+        {
+          "id": "block",
+          "type": "process",
+          "label": "Report BLOCK",
+          "agent": "code-reviewer",
+          "description": "Issue BLOCK verdict with evidence-backed findings grouped by severity"
+        },
+        {
+          "id": "approve",
+          "type": "process",
+          "label": "Report APPROVE",
+          "agent": "code-reviewer",
+          "description": "Issue APPROVE verdict - code is correct and meets requirements"
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "label": "Done"
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "diff"
+        },
+        {
+          "from": "diff",
+          "to": "multi"
+        },
+        {
+          "from": "multi",
+          "to": "skeptic"
+        },
+        {
+          "from": "skeptic",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "block",
+          "label": "yes"
+        },
+        {
+          "from": "d1",
+          "to": "approve",
+          "label": "no"
+        },
+        {
+          "from": "block",
+          "to": "end"
+        },
+        {
+          "from": "approve",
+          "to": "end"
+        }
+      ]
+    },
+    {
+      "id": "workflow:implement-jira",
+      "name": "Jira Implementation",
+      "description": "End-to-end implementation from a Jira ticket. Tests loop back to implementation until green.",
+      "orchestrator": "team-lead",
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "label": "Start"
+        },
+        {
+          "id": "fetch",
+          "type": "process",
+          "label": "Fetch Requirements",
+          "agent": "team-lead",
+          "description": "Read Jira ticket, extract acceptance criteria and constraints"
+        },
+        {
+          "id": "scan",
+          "type": "process",
+          "label": "Scan Codebase",
+          "agent": "explore",
+          "description": "Find relevant files, existing patterns, interfaces to implement"
+        },
+        {
+          "id": "plan",
+          "type": "process",
+          "label": "Plan",
+          "agent": "team-lead",
+          "description": "Break requirements into implementation tasks with dependency ordering"
+        },
+        {
+          "id": "context",
+          "type": "process",
+          "label": "Gather Context",
+          "agent": "context-curator",
+          "description": "Load relevant memories and prior decisions"
+        },
+        {
+          "id": "implement",
+          "type": "process",
+          "label": "Implement",
+          "agent": "builder",
+          "description": "Execute each task (with complexity routing to superhuman if needed)"
+        },
+        {
+          "id": "test",
+          "type": "process",
+          "label": "Test",
+          "agent": "tester",
+          "description": "Run tests and write missing tests"
+        },
+        {
+          "id": "d1",
+          "type": "decision",
+          "label": "Tests pass?",
+          "description": "Are all tests green?"
+        },
+        {
+          "id": "review",
+          "type": "process",
+          "label": "Review",
+          "agent": "code-reviewer",
+          "description": "Merged code review across the full implementation"
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "label": "Done"
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "fetch"
+        },
+        {
+          "from": "fetch",
+          "to": "scan"
+        },
+        {
+          "from": "scan",
+          "to": "plan"
+        },
+        {
+          "from": "plan",
+          "to": "context"
+        },
+        {
+          "from": "context",
+          "to": "implement"
+        },
+        {
+          "from": "implement",
+          "to": "test"
+        },
+        {
+          "from": "test",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "implement",
+          "label": "no",
+          "loop": true
+        },
+        {
+          "from": "d1",
+          "to": "review",
+          "label": "yes"
+        },
+        {
+          "from": "review",
+          "to": "end"
+        }
+      ]
+    },
+    {
+      "id": "workflow:security-review",
+      "name": "Security Review",
+      "description": "Threat-model-driven security analysis anchored to CWE taxonomy.",
+      "orchestrator": "security-reviewer",
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "label": "Start"
+        },
+        {
+          "id": "threat",
+          "type": "process",
+          "label": "Threat Model",
+          "agent": "security-reviewer",
+          "description": "Identify attack surface: inputs, boundaries, data flows"
+        },
+        {
+          "id": "cwe",
+          "type": "process",
+          "label": "CWE Analysis",
+          "agent": "security-reviewer",
+          "description": "Check for injection, access control, secrets, crypto, SSRF, path traversal"
+        },
+        {
+          "id": "d1",
+          "type": "decision",
+          "label": "Vulns found?",
+          "description": "Did analysis surface any vulnerabilities?"
+        },
+        {
+          "id": "report",
+          "type": "process",
+          "label": "Report Findings",
+          "agent": "security-reviewer",
+          "description": "Report vulnerabilities with CWE IDs, severity, and remediation guidance"
+        },
+        {
+          "id": "clear",
+          "type": "process",
+          "label": "Report Clear",
+          "agent": "security-reviewer",
+          "description": "No blocking vulnerabilities found"
+        },
+        {
+          "id": "end",
+          "type": "end",
+          "label": "Done"
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "threat"
+        },
+        {
+          "from": "threat",
+          "to": "cwe"
+        },
+        {
+          "from": "cwe",
+          "to": "d1"
+        },
+        {
+          "from": "d1",
+          "to": "report",
+          "label": "yes"
+        },
+        {
+          "from": "d1",
+          "to": "clear",
+          "label": "no"
+        },
+        {
+          "from": "report",
+          "to": "end"
+        },
+        {
+          "from": "clear",
+          "to": "end"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "counts": {
+      "agents": 17,
+      "skills": 35,
+      "sharedRefs": 11,
+      "mcpServers": 5,
+      "workflows": 5
+    },
+    "modelDistribution": {
+      "claude-sonnet-4.6": 11,
+      "claude-haiku-4.5": 3,
+      "unspecified": 1,
+      "claude-opus-4.8": 2
+    },
+    "agentCategories": {
+      "Implementation": 3,
+      "Quality Assurance": 5,
+      "Orchestration": 3,
+      "Documentation": 1,
+      "Research": 4,
+      "Valkey & GLIDE": 1
+    },
+    "skillCategories": {
+      "Development Workflows": 7,
+      "Code Review": 8,
+      "Meta": 6,
+      "Valkey & GLIDE": 5,
+      "Planning & Orchestration": 4,
+      "Writing & Documentation": 5
+    },
+    "evals": {
+      "fullTestCount": 20,
+      "smokeTestCount": 8,
+      "byAgent": [
+        {
+          "agent": "builder",
+          "model": "sonnet",
+          "runs": 2,
+          "avgIn": 3,
+          "avgOut": 575,
+          "avgDurationS": 20,
+          "totalCostUsd": 0.14960805
+        },
+        {
+          "agent": "code-reviewer",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 8,
+          "avgOut": 1540,
+          "avgDurationS": 55,
+          "totalCostUsd": 0.15169695000000002
+        },
+        {
+          "agent": "context-curator",
+          "model": "haiku",
+          "runs": 1,
+          "avgIn": 2,
+          "avgOut": 71,
+          "avgDurationS": 7,
+          "totalCostUsd": 0.06694875
+        },
+        {
+          "agent": "security-reviewer",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 2,
+          "avgOut": 661,
+          "avgDurationS": 20,
+          "totalCostUsd": 0.07173
+        },
+        {
+          "agent": "tester",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 14,
+          "avgOut": 3414,
+          "avgDurationS": 82,
+          "totalCostUsd": 0.24845145
+        },
+        {
+          "agent": "validator",
+          "model": "opus",
+          "runs": 1,
+          "avgIn": 6,
+          "avgOut": 1863,
+          "avgDurationS": 49,
+          "totalCostUsd": 0.22659274999999995
+        },
+        {
+          "agent": "valkey-glide-implementor",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 6,
+          "avgOut": 559,
+          "avgDurationS": 20,
+          "totalCostUsd": 0.11364465
+        }
+      ],
+      "grandRuns": 8,
+      "grandTotalCostUsd": 1.0286726
+    }
+  }
+}
