@@ -6,6 +6,9 @@ output/
 skills/humanizer/.git/
 evals/metrics/*.jsonl
 
+# Site (visualizer)
+site/dist/
+
 # Python / LangGraph
 __pycache__/
 *.pyc
