@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SITE_DIR="$(git rev-parse --show-toplevel)/site"
+STAGED=$(git diff --cached --name-only)
+
+# 1. Validate all staged JSON files parse correctly
+JSON_FILES=$(echo "$STAGED" | grep '\.json$' | grep -v 'node_modules' | grep -v 'dist/' || true)
+if [ -n "$JSON_FILES" ]; then
+  echo "Checking JSON syntax..."
+  while IFS= read -r file; do
+    if [ -f "$file" ]; then
+      jq empty "$file" 2>/dev/null || { echo "  Invalid JSON: $file"; exit 1; }
+    fi
+  done <<< "$JSON_FILES"
+fi
+
+# 2. If extract-data.ts or any agent/skill source is staged, verify graph.json is up to date
+TRIGGERS=$(echo "$STAGED" | grep -E '^(agents/|skills/|site/scripts/extract-data\.ts)' || true)
+if [ -n "$TRIGGERS" ]; then
+  if [ ! -f "$SITE_DIR/package.json" ]; then
+    echo "  Skipping graph.json regeneration (site/package.json missing — run: cd site && npm install)"
+  else
+    echo "Regenerating graph.json..."
+    (cd "$SITE_DIR" && npm run extract --silent 2>&1)
+    git add site/src/data/graph.json
+  fi
+fi
+
+# 3. Run oxlint on staged site source files
+SITE_TS=$(echo "$STAGED" | grep -E '^site/src/.*\.(ts|tsx)$' || true)
+if [ -n "$SITE_TS" ]; then
+  echo "Linting site source..."
+  (cd "$SITE_DIR" && npx oxlint $SITE_TS 2>&1) || { echo "  Lint failed. Run: cd site && npm run lint"; exit 1; }
+fi
+
+exit 0

@@ -109,7 +109,7 @@
       "id": "agent:explore",
       "type": "agent",
       "name": "explore",
-      "description": "Read-only codebase exploration agent. Surveys files, searches symbols, and maps relevant code for the team-lead to plan against. Never modifies files.",
+      "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence docs to build context for planning. Never modifies files.",
       "category": "Research",
       "model": "claude-haiku-4.5",
       "tools": [
@@ -117,7 +117,18 @@
         "shell",
         "glob",
         "grep",
-        "code"
+        "code",
+        "mcp__atlassian__getJiraIssue",
+        "mcp__atlassian__searchJiraIssuesUsingJql",
+        "mcp__atlassian__getJiraIssueRemoteIssueLinks",
+        "mcp__atlassian__getVisibleJiraProjects",
+        "mcp__atlassian__getConfluencePage",
+        "mcp__atlassian__getConfluencePageDescendants",
+        "mcp__atlassian__getPagesInConfluenceSpace",
+        "mcp__atlassian__getConfluenceSpaces",
+        "mcp__atlassian__searchConfluenceUsingCql",
+        "mcp__atlassian__search",
+        "mcp__atlassian__fetch"
       ],
       "resources": [
         "file://skills/_shared/security-constraints.md"
@@ -1300,15 +1311,15 @@
           "id": "block",
           "type": "process",
           "label": "Report BLOCK",
-          "agent": "code-reviewer",
-          "description": "Issue BLOCK verdict with evidence-backed findings grouped by severity"
+          "agent": "documenter",
+          "description": "Aggregate and format findings into BLOCK verdict report"
         },
         {
           "id": "approve",
           "type": "process",
           "label": "Report APPROVE",
-          "agent": "code-reviewer",
-          "description": "Issue APPROVE verdict - code is correct and meets requirements"
+          "agent": "documenter",
+          "description": "Aggregate and format findings into APPROVE verdict report"
         },
         {
           "id": "end",
@@ -1357,7 +1368,7 @@
       "id": "workflow:implement-jira",
       "name": "Jira Implementation",
       "description": "End-to-end implementation from a Jira ticket. Tests loop back to implementation until green.",
-      "orchestrator": "team-lead",
+      "orchestrator": "implement-jira",
       "nodes": [
         {
           "id": "start",
@@ -1367,22 +1378,15 @@
         {
           "id": "fetch",
           "type": "process",
-          "label": "Fetch Requirements",
-          "agent": "team-lead",
-          "description": "Read Jira ticket, extract acceptance criteria and constraints"
-        },
-        {
-          "id": "scan",
-          "type": "process",
-          "label": "Scan Codebase",
+          "label": "Fetch Requirements + Scan",
           "agent": "explore",
-          "description": "Find relevant files, existing patterns, interfaces to implement"
+          "description": "Read Jira ticket and survey codebase in one pass"
         },
         {
           "id": "plan",
           "type": "process",
           "label": "Plan",
-          "agent": "team-lead",
+          "agent": "superhuman",
           "description": "Break requirements into implementation tasks with dependency ordering"
         },
         {
@@ -1432,10 +1436,6 @@
         },
         {
           "from": "fetch",
-          "to": "scan"
-        },
-        {
-          "from": "scan",
           "to": "plan"
         },
         {

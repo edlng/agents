@@ -7,13 +7,15 @@
     "eval": "promptfoo eval",
     "eval:view": "promptfoo view",
     "eval:reset": "rm -rf ~/.promptfoo && echo 'Reset complete. Run: make eval'",
-    "eval:cost": "node evals/scripts/cost-summary.js"
+    "eval:cost": "node evals/scripts/cost-summary.js",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "husky": "^9.1.7",
     "promptfoo": "^0.121.12"
   }
 }

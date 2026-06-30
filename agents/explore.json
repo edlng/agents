@@ -1,20 +1,42 @@
 {
   "name": "explore",
-  "description": "Read-only codebase exploration agent. Surveys files, searches symbols, and maps relevant code for the team-lead to plan against. Never modifies files.",
+  "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence docs to build context for planning. Never modifies files.",
   "prompt": "file://./explore-prompt.md",
   "tools": [
     "read",
     "shell",
     "glob",
     "grep",
-    "code"
+    "code",
+    "mcp__atlassian__getJiraIssue",
+    "mcp__atlassian__searchJiraIssuesUsingJql",
+    "mcp__atlassian__getJiraIssueRemoteIssueLinks",
+    "mcp__atlassian__getVisibleJiraProjects",
+    "mcp__atlassian__getConfluencePage",
+    "mcp__atlassian__getConfluencePageDescendants",
+    "mcp__atlassian__getPagesInConfluenceSpace",
+    "mcp__atlassian__getConfluenceSpaces",
+    "mcp__atlassian__searchConfluenceUsingCql",
+    "mcp__atlassian__search",
+    "mcp__atlassian__fetch"
   ],
   "allowedTools": [
     "read",
     "shell",
     "glob",
     "grep",
-    "code"
+    "code",
+    "mcp__atlassian__getJiraIssue",
+    "mcp__atlassian__searchJiraIssuesUsingJql",
+    "mcp__atlassian__getJiraIssueRemoteIssueLinks",
+    "mcp__atlassian__getVisibleJiraProjects",
+    "mcp__atlassian__getConfluencePage",
+    "mcp__atlassian__getConfluencePageDescendants",
+    "mcp__atlassian__getPagesInConfluenceSpace",
+    "mcp__atlassian__getConfluenceSpaces",
+    "mcp__atlassian__searchConfluenceUsingCql",
+    "mcp__atlassian__search",
+    "mcp__atlassian__fetch"
   ],
   "toolsSettings": {
     "shell": {
