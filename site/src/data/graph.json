@@ -390,13 +390,22 @@
       "excerpt": "Code Review Excellence Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative improvement. When to Use This Skill - Reviewing pull requests and code changes - Establishing code review standards for teams - Mentoring junior d"
     },
     {
+      "id": "skill:crash-course",
+      "type": "skill",
+      "name": "crash-course",
+      "description": "Research any topic and produce a structured crash course saved to Obsidian. Takes a topic as input, dispatches a researcher subagent with a bounded effort budget, optionally validates findings, formats output as a consistent crash course document, saves to the Obsidian vault, and outputs in chat. Use when asked to learn about, research, get a crash course on, or explore any technology, concept, framework, or project.",
+      "category": "Other",
+      "sourcePath": "skills/crash-course/SKILL.md",
+      "excerpt": "Crash Course Research `$ARGUMENTS` and produce a structured crash course. Save to Obsidian and output in chat. Follow each phase in order. Do not skip phases. --- Phase 1: Scope the Topic Parse `$ARGUMENTS` to determine: - **Topic**: the subject to research (e.g. \"DynamoDB DAX\", \"Kubernetes HPA\", \"R"
+    },
+    {
       "id": "skill:create-skill",
       "type": "skill",
       "name": "create-skill",
       "description": "Use when the user wants to create a new skill for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/create-skill/SKILL.md",
-      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all three directories before writi"
+      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all four directories before writing"
     },
     {
       "id": "skill:diagram-valkey-flow",
@@ -594,7 +603,7 @@
       "description": "Use when the user wants to update or modify an existing agent definition for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/update-agent/SKILL.md",
-      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The syn"
+      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The sync"
     },
     {
       "id": "skill:update-skill",
@@ -603,7 +612,7 @@
       "description": "Use when the user wants to update or modify an existing skill for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/update-skill/SKILL.md",
-      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in "
+      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in t"
     },
     {
       "id": "skill:using-git-worktrees",
@@ -701,6 +710,13 @@
       "sourcePath": "skills/_shared/codebase-context-checklist.md"
     },
     {
+      "id": "shared-ref:four-root-sync",
+      "type": "shared-ref",
+      "name": "four-root-sync",
+      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the four-location sync rule and the paths involved.",
+      "sourcePath": "skills/_shared/four-root-sync.md"
+    },
+    {
       "id": "shared-ref:humanizer-rules",
       "type": "shared-ref",
       "name": "humanizer-rules",
@@ -741,13 +757,6 @@
       "name": "security-constraints",
       "description": "Standardized security boundary for all agents. Reference from agent prompts with: \"See `_shared/security-constraints.md`.\"",
       "sourcePath": "skills/_shared/security-constraints.md"
-    },
-    {
-      "id": "shared-ref:three-root-sync",
-      "type": "shared-ref",
-      "name": "three-root-sync",
-      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the three-location sync rule and the paths involved.",
-      "sourcePath": "skills/_shared/three-root-sync.md"
     },
     {
       "id": "shared-ref:validator-skeptic-pass",
@@ -1559,7 +1568,7 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 35,
+      "skills": 36,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
@@ -1581,6 +1590,7 @@
     "skillCategories": {
       "Development Workflows": 7,
       "Code Review": 8,
+      "Other": 1,
       "Meta": 6,
       "Valkey & GLIDE": 5,
       "Planning & Orchestration": 4,

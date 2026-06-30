@@ -8,7 +8,7 @@ description: Use when the user wants to create a new skill for their AI agents
 Create a new skill across all synced roots.
 
 **Entity type:** Skill
-**Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type "Skill"). For create operations, also check for naming conflicts across all three directories before writing.
+**Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type "Skill"). For create operations, also check for naming conflicts across all four directories before writing.
 
 ## Additional guidance
 

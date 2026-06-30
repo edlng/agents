@@ -1,22 +1,32 @@
-# Sync skills and agents between agents/ and ~/.kiro
+# Sync skills and agents across four roots:
+#   Root 1 (canonical): ~/.kiro/
+#   Root 2:             ~/.claude/
+#   Root 3:             ~/agents/ (this repo)
+#   Root 4 (skills only): ~/.config/devin/skills/
 #
-# push: agents/ -> ~/.kiro  (promote local edits to installed)
-# pull: ~/.kiro  -> agents/ (pull in new skills/agents from installed)
+# push: agents/ -> ~/.kiro + ~/.claude + ~/.config/devin  (promote local edits)
+# pull: ~/.kiro  -> agents/ (pull in new skills/agents from canonical)
 #
-# ~/.claude/skills syncs automatically — it symlinks the two skills that
-# only exist in ~/.kiro, and the rest already point to ~/.agents/skills.
+# Agents skip Root 4 — devin-cli uses --agent-config instead of agent markdown files.
 
-KIRO_SKILLS  := $(HOME)/.kiro/skills
-KIRO_AGENTS  := $(HOME)/.kiro/agents
-LOCAL_SKILLS := skills
-LOCAL_AGENTS := agents
+KIRO_SKILLS   := $(HOME)/.kiro/skills
+KIRO_AGENTS   := $(HOME)/.kiro/agents
+CLAUDE_SKILLS := $(HOME)/.claude/skills
+CLAUDE_AGENTS := $(HOME)/.claude/agents
+DEVIN_SKILLS  := $(HOME)/.config/devin/skills
+LOCAL_SKILLS  := skills
+LOCAL_AGENTS  := agents
 
 .PHONY: push pull status eval eval-smoke eval-agent eval-view eval-reset eval-cost
 
-# Promote local changes to ~/.kiro (additive — never deletes from ~/.kiro)
+# Promote local changes to all roots (additive — never deletes from targets)
 push:
 	rsync -av $(LOCAL_SKILLS)/ $(KIRO_SKILLS)/
 	rsync -av $(LOCAL_AGENTS)/ $(KIRO_AGENTS)/
+	rsync -av $(LOCAL_SKILLS)/ $(CLAUDE_SKILLS)/
+	rsync -av $(LOCAL_AGENTS)/ $(CLAUDE_AGENTS)/
+	@mkdir -p $(DEVIN_SKILLS)
+	rsync -av $(LOCAL_SKILLS)/ $(DEVIN_SKILLS)/
 
 # Pull ~/.kiro changes into local repo (dry-run first; confirm with: make pull CONFIRM=1)
 pull:
@@ -31,14 +41,18 @@ endif
 
 # Show what's out of sync without changing anything
 status:
-	@echo "=== skills: agents/ -> ~/.kiro (would push) ==="
+	@echo "=== skills: agents/ vs ~/.kiro ==="
 	@rsync -avn $(LOCAL_SKILLS)/ $(KIRO_SKILLS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
-	@echo "=== skills: ~/.kiro -> agents/ (would pull) ==="
 	@rsync -avn $(KIRO_SKILLS)/ $(LOCAL_SKILLS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
-	@echo "=== agents: agents/ -> ~/.kiro (would push) ==="
+	@echo "=== agents: agents/ vs ~/.kiro ==="
 	@rsync -avn $(LOCAL_AGENTS)/ $(KIRO_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
-	@echo "=== agents: ~/.kiro -> agents/ (would pull) ==="
 	@rsync -avn $(KIRO_AGENTS)/ $(LOCAL_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
+	@echo "=== skills: agents/ vs ~/.claude ==="
+	@rsync -avn $(LOCAL_SKILLS)/ $(CLAUDE_SKILLS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
+	@echo "=== agents: agents/ vs ~/.claude ==="
+	@rsync -avn $(LOCAL_AGENTS)/ $(CLAUDE_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
+	@echo "=== skills: agents/ vs ~/.config/devin ==="
+	@rsync -avn $(LOCAL_SKILLS)/ $(DEVIN_SKILLS)/ 2>/dev/null | grep -v "/$\|^sending\|^sent\|^total" || true
 
 # ── Evals ────────────────────────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@ description: Use when the user wants to update or modify an existing skill for t
 Update a skill across all synced roots.
 
 **Entity type:** Skill
-**Sync convention:** Follow `_shared/three-root-sync.md` (paths, sync rules, and workflow pattern for entity type "Skill").
+**Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type "Skill").
 
 ## Additional guidance
 
