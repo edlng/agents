@@ -83,6 +83,7 @@ Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in 
 | Skill | Purpose |
 |---|---|
 | **implement-jira** | Fetch a Jira ticket, plan with Opus, implement with Sonnet, run tests, then review. |
+| **implement-task** | Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review. No Jira ticket needed. |
 | **subagent-driven-development** | Execute implementation plans with independent tasks via subagents. Two-stage review (spec then quality) per task. |
 | **systematic-debugging** | Structured debugging workflow before proposing any fix. |
 | **test-driven-development** | TDD workflow for features and bugfixes. |

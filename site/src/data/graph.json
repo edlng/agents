@@ -492,10 +492,19 @@
       "id": "skill:implement-jira",
       "type": "skill",
       "name": "implement-jira",
-      "description": "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.",
+      "description": "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, runs an Opus advisor loop over Sonnet's approach for medium-complexity subtasks before any code is written, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.",
       "category": "Development Workflows",
       "sourcePath": "skills/implement-jira/SKILL.md",
       "excerpt": "Implement Jira Task Implement the Jira task `$ARGUMENTS` end-to-end using the workflow below. Follow each phase in order. Do not skip phases. This workflow assigns specific models to each subagent for cost efficiency, and uses a two-tier cache (Anthropic prompt caching + Valkey at `localhost:8888`) "
+    },
+    {
+      "id": "skill:implement-task",
+      "type": "skill",
+      "name": "implement-task",
+      "description": "Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review using existing agents. Use when given a task description without a Jira ticket. Do NOT use for tasks that have a Jira ticket (use implement-jira), for quick one-file fixes, or when a plan already exists (use subagent-driven-development).",
+      "category": "Other",
+      "sourcePath": "skills/implement-task/SKILL.md",
+      "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. **Announce at start:** \"Implementing task: $ARGUMENTS\" **Continuous execution:** Do not pause between phases. The only reasons to stop are: a blocking review finding that needs human input, or ambiguity that genuinely prev"
     },
     {
       "id": "skill:multi-discipline-review",
@@ -1577,7 +1586,7 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 37,
+      "skills": 38,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
@@ -1599,7 +1608,7 @@
     "skillCategories": {
       "Development Workflows": 7,
       "Code Review": 8,
-      "Other": 2,
+      "Other": 3,
       "Meta": 6,
       "Valkey & GLIDE": 5,
       "Planning & Orchestration": 4,

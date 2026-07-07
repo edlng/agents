@@ -1,6 +1,6 @@
 ---
 name: implement-jira
-description: Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.
+description: Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, runs an Opus advisor loop over Sonnet's approach for medium-complexity subtasks before any code is written, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.
 ---
 
 # Implement Jira Task
@@ -19,6 +19,7 @@ Cache keys for this run:
 - `jira:$ARGUMENTS:requirements` — full Requirements Document (TTL 24h)
 - `jira:$ARGUMENTS:codebase_context` — Codebase Context note (TTL 24h)
 - `jira:$ARGUMENTS:plan` — Planning output (TTL 24h)
+- `jira:$ARGUMENTS:approach:{subtask_id}` — per-subtask approach note from the Phase 3.8 advisor loop (TTL 24h, one key per medium-complexity subtask)
 
 Before Phase 1, check if `jira:$ARGUMENTS:requirements` already exists in Valkey. If yes and the user has not asked to refresh, skip Phase 1 and reuse the cached Requirements.
 
@@ -106,6 +107,29 @@ If the context-curator returns an empty block, proceed without it.
 
 ---
 
+## Phase 3.8: Approach Advisor Loop (medium-complexity subtasks only)
+
+**Why:** Phase 6 review catches design drift only after the code exists, which means a wrong approach is discovered at the most expensive point. This phase catches it before implementation starts, while redirecting is still cheap.
+
+**Scope:** Applies only to subtasks tagged `complexity == medium` in the plan. Skip entirely for `low`-complexity subtasks — the mechanical/boilerplate work they cover doesn't carry enough design risk to justify the extra round trip.
+
+For each `medium` subtask, in dependency order:
+
+1. **Draft.** Spawn a `builder` subagent. Prompt: "Read `jira:$ARGUMENTS:requirements`, `jira:$ARGUMENTS:codebase_context`, and `jira:$ARGUMENTS:context_memory` (if it exists) from Valkey at localhost:8888. Subtask: {subtask description}. Files: {subtask files}. **Do not write code yet.** Produce a short approach note (under 200 words): (1) the concrete change you'll make, (2) which existing utilities/patterns you'll reuse, (3) any interface or data-shape decisions, (4) risks or ambiguities. Write it to `jira:$ARGUMENTS:approach:{subtask_id}` in Valkey."
+
+2. **Advise.** Spawn a `validator` subagent (opus). Prompt: "Read `jira:$ARGUMENTS:requirements`, `jira:$ARGUMENTS:codebase_context`, and `jira:$ARGUMENTS:approach:{subtask_id}` from Valkey at localhost:8888. This is a proposed approach, not finished code — do not review code that doesn't exist yet. Check only: (1) does the approach satisfy the subtask's slice of the acceptance criteria, (2) does it fit existing codebase patterns rather than inventing new ones, (3) is there a simpler way that avoids unnecessary abstraction. Respond with exactly one of:
+   - `APPROVED` — approach is sound, proceed to implementation.
+   - `REVISE: <specific, actionable feedback>` — approach has a real problem; state exactly what to change.
+
+   Do not nitpick style choices that don't affect correctness or fit. Do not block on a difference of taste."
+
+3. **Iterate.** If `REVISE`: re-dispatch the same `builder` subagent with the feedback appended, ask for a revised approach note (not code), and return to step 2. Cap at **3 rounds**. If still not `APPROVED` after 3 rounds, stop the loop, log the disagreement to `.decisions.md`, and proceed to implementation with the latest approach — do not block the whole ticket on an advisor disagreement. Flag this in the Phase 7 summary.
+4. If `APPROVED`: proceed to Phase 4 for this subtask's implementation, passing `jira:$ARGUMENTS:approach:{subtask_id}` to the implementor so it doesn't redo the thinking.
+
+**Cost control:** This loop adds one opus call per medium subtask (plus rare revise rounds). Skipping it for `low`-complexity subtasks and capping at 3 rounds keeps the added cost bounded to the subtasks where design risk is actually concentrated.
+
+---
+
 ## Phase 4: Implementation
 
 Spawn one `builder` subagent as the Implementor.
@@ -113,7 +137,7 @@ Spawn one `builder` subagent as the Implementor.
 Prompt: "You are the implementor. **Effort budget: 30-60 tool calls total across all subtasks.** Read `jira:$ARGUMENTS:plan`, `jira:$ARGUMENTS:requirements`, and `jira:$ARGUMENTS:codebase_context` from Valkey at localhost:8888. Also read `jira:$ARGUMENTS:context_memory` (prior decisions and project conventions) and `jira:$ARGUMENTS:research` (external API/library findings) if they exist — these provide additional context from earlier phases.
 
 For each subtask in the plan, in dependency order:
-- If `complexity == medium`: implement it yourself.
+- If `complexity == medium`: implement it yourself, following the approved approach in `jira:$ARGUMENTS:approach:{subtask_id}` (produced in Phase 3.8) rather than re-deriving the design from scratch.
 - If `complexity == low` AND its `files` do not overlap any other subtask currently in flight: spawn another `builder` subagent to handle it. Pass only the subtask description, the relevant files list, and the Codebase Context.
 - Otherwise: handle it yourself.
 
@@ -186,7 +210,7 @@ Detect the test runner from project config (`pytest.ini`, `pyproject.toml [tool.
 ### Fix loop (autonomous)
 If tests fail:
 - Analyze the failure output
-- If the failure suggests the **plan** was wrong (missing subtask, wrong partition, missed dependency): jump back to **Phase 3 Planning** with the failure context appended.
+- If the failure suggests the **plan** was wrong (missing subtask, wrong partition, missed dependency): jump back to **Phase 3 Planning** with the failure context appended. Since the subtask list will change, clear stale `jira:$ARGUMENTS:approach:*` keys for removed/altered subtasks before re-entering **Phase 3.8** for the revised plan.
 - Otherwise (implementation or test bug): fix the appropriate file(s) and re-run.
 - Repeat until all tests pass — no human approval needed.
 
@@ -254,6 +278,6 @@ Print the full Review Summary, then:
 > **Pausing for your approval before re-implementation.**
 > The blocking issues above must be resolved. Reply "yes" to loop back to **Phase 3 Planning** with the blocking issues appended to the Requirements (cache invalidated and rewritten), or "no" to stop here and handle them manually.
 
-If approved: append blocking issues to the cached Requirements (`valkey-cli -p 8888 APPEND` or re-`SET`), then restart from **Phase 3 Planning** so Opus can re-decompose with the new context. Do not re-run Phase 1 or Phase 2.
+If approved: append blocking issues to the cached Requirements (`valkey-cli -p 8888 APPEND` or re-`SET`), clear `jira:$ARGUMENTS:approach:*` keys (the subtask list is being redrawn, so prior approach notes no longer apply), then restart from **Phase 3 Planning** so Opus can re-decompose with the new context and Phase 3.8 re-runs the advisor loop for the new subtasks. Do not re-run Phase 1 or Phase 2.
 
 If denied: stop and summarize what was left unresolved.
