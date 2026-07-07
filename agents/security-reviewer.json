@@ -30,5 +30,5 @@
   "resources": [
     "file://skills/_shared/security-constraints.md"
   ],
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-5"
 }

@@ -51,13 +51,13 @@ fi
 
 # Resolve model from JSON config (default to sonnet)
 if [[ -f "$AGENTS_DIR/${AGENT_NAME}.json" ]]; then
-  RAW_MODEL=$(jq -r '.model // "claude-sonnet-4.6"' "$AGENTS_DIR/${AGENT_NAME}.json" 2>/dev/null || echo "claude-sonnet-4.6")
+  RAW_MODEL=$(jq -r '.model // "claude-sonnet-5"' "$AGENTS_DIR/${AGENT_NAME}.json" 2>/dev/null || echo "claude-sonnet-5")
 else
-  RAW_MODEL="claude-sonnet-4.6"
+  RAW_MODEL="claude-sonnet-5"
 fi
 
 # Normalize to short aliases that claude CLI accepts.
-# Agent configs use full names (claude-sonnet-4.6, claude-opus-4.8) which the CLI may reject.
+# Agent configs use full names (claude-sonnet-5, claude-opus-4.8) which the CLI may reject.
 # Pattern: strip "claude-" prefix, then match the family name before the version number.
 # This handles current and future versions (e.g., claude-sonnet-5.0 → sonnet).
 normalize_model() {

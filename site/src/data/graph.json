@@ -6,7 +6,7 @@
       "name": "builder",
       "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
       "category": "Implementation",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "write",
@@ -23,7 +23,7 @@
       "name": "code-reviewer",
       "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
       "category": "Quality Assurance",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "write",
@@ -141,7 +141,7 @@
       "name": "glide-code-reviewer",
       "description": "Specialized GLIDE code reviewer. Reviews Valkey GLIDE client code for correctness, anti-patterns, resource leaks, and cluster-awareness using the glide skill references. Invoked as a subagent of code-reviewer when GLIDE code is in the diff.",
       "category": "Quality Assurance",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "shell"
@@ -157,7 +157,7 @@
       "name": "research-summarizer",
       "description": "Orchestrates research, validation, and produces a final summary",
       "category": "Research",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "subagent",
         "read",
@@ -171,7 +171,7 @@
       "name": "research-validator",
       "description": "Adversarial verification agent. Cross-checks researcher findings against cited source URLs using firecrawl. Classifies each claim as CONFIRMED, UNVERIFIED, or CONTRADICTED. Use after the researcher agent to validate accuracy before passing findings to the caller.",
       "category": "Research",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "shell",
@@ -200,7 +200,7 @@
       "name": "researcher",
       "description": "Search external documentation, APIs, and libraries to answer a specific question. Use proactively when a caller needs citable external knowledge before implementing or deciding. Returns concise findings with source URLs, tradeoffs, and a concrete recommendation.",
       "category": "Research",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "shell",
@@ -229,7 +229,7 @@
       "name": "security-reviewer",
       "description": "Threat-model-driven security analysis anchored to CWE taxonomy. Injection, access control, secrets, crypto, SSRF, path traversal. Read-only - never modifies files.",
       "category": "Quality Assurance",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "shell"
@@ -282,7 +282,7 @@
       "name": "team-lead",
       "description": "Team orchestrator that creates plans and delegates work to specialized subagents (builder, validator).",
       "category": "Orchestration",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "subagent",
@@ -312,7 +312,7 @@
       "name": "team-leader",
       "description": "Orchestrator. Delegates tasks, tracks TODO. Does NOT write code or run commands.",
       "category": "Orchestration",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "subagent",
@@ -333,7 +333,7 @@
       "name": "tester",
       "description": "Test and verification agent. Runs tests, linters, and security scans. Reports commands, pass/fail status, and repro steps for failures. Writes new tests when coverage is missing. Recommends merge only when all quality gates pass.",
       "category": "Quality Assurance",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read",
         "write",
@@ -362,7 +362,7 @@
       "name": "valkey-glide-implementor",
       "description": "Generates production-ready Valkey GLIDE code snippets. Uses the glide skill to produce accurate, working code for client setup, vector search, batch operations, caching, and session management across all 6 supported languages.",
       "category": "Valkey & GLIDE",
-      "model": "claude-sonnet-4.6",
+      "model": "claude-sonnet-5",
       "tools": [
         "read"
       ],
@@ -1583,7 +1583,7 @@
       "workflows": 5
     },
     "modelDistribution": {
-      "claude-sonnet-4.6": 11,
+      "claude-sonnet-5": 11,
       "claude-haiku-4.5": 3,
       "unspecified": 1,
       "claude-opus-4.8": 2

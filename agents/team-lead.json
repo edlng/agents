@@ -32,6 +32,6 @@
     "file://README.md",
     "file://skills/_shared/security-constraints.md"
   ],
-  "model": "claude-sonnet-4.6",
+  "model": "claude-sonnet-5",
   "welcomeMessage": "Team Lead ready. Describe what you want to build and I'll orchestrate the team."
 }

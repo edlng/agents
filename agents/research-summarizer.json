@@ -4,5 +4,5 @@
   "prompt": "file://./research-summarizer-prompt.md",
   "tools": ["subagent", "read", "write"],
   "allowedTools": ["subagent", "read", "write"],
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-5"
 }

@@ -85,5 +85,5 @@
   "resources": [
     "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
   ],
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-5"
 }

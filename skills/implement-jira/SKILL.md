@@ -28,7 +28,7 @@ When spawning subagents in later phases, pass cache keys instead of full text wh
 
 ## Phase 1: Requirements
 
-**Model: sonnet-4-6**
+**Model: sonnet-5**
 
 Use `mcp__atlassian__getJiraIssue` to fetch the Jira issue `$ARGUMENTS`. Extract:
 - Summary (title)
@@ -48,7 +48,7 @@ Write the result to Valkey: `valkey-cli -p 8888 SET jira:$ARGUMENTS:requirements
 
 ## Phase 2: Codebase Scan
 
-**Model: sonnet-4-6** (same agent as Phase 1 — no spawn needed)
+**Model: sonnet-5** (same agent as Phase 1 — no spawn needed)
 
 Read the existing codebase following `_shared/codebase-context-checklist.md` (language/runtime, code style, patterns, existing utilities, test conventions, and the `valkey-glide` key/value standard). The checklist is written for both review and implementation — apply it to understand what the new code must match and reuse.
 
@@ -75,7 +75,7 @@ Write the resulting plan to `jira:$ARGUMENTS:plan` in Valkey."
 
 ## Phase 3.5: Research Gate
 
-**Model: sonnet-4-6** (same agent as Phases 1-2)
+**Model: sonnet-5** (same agent as Phases 1-2)
 
 Read the plan from Valkey (`jira:$ARGUMENTS:plan`). For each subtask, check whether it references an external API, library, or system not already present in the codebase (compare against the Codebase Context).
 

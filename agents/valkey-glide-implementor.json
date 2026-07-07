@@ -11,5 +11,5 @@
   "resources": [
     "skill://~/.kiro/skills/glide-skill/SKILL.md"
   ],
-  "model": "claude-sonnet-4.6"
+  "model": "claude-sonnet-5"
 }
