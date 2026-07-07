@@ -405,7 +405,16 @@
       "description": "Use when the user wants to create a new skill for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/create-skill/SKILL.md",
-      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all four directories before writing"
+      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all five directories before writing"
+    },
+    {
+      "id": "skill:daily-log",
+      "type": "skill",
+      "name": "daily-log",
+      "description": "Reads today's AI journal entry from Obsidian, then appends a concise daily log entry to the current month's Notes file matching the established format (bold day name, categorized bullet points). Use when asked to log today, write a daily log, update the monthly notes, or add today's entry.",
+      "category": "Other",
+      "sourcePath": "skills/daily-log/SKILL.md",
+      "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
     },
     {
       "id": "skill:diagram-valkey-flow",
@@ -603,7 +612,7 @@
       "description": "Use when the user wants to update or modify an existing agent definition for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/update-agent/SKILL.md",
-      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The sync"
+      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The sync"
     },
     {
       "id": "skill:update-skill",
@@ -612,7 +621,7 @@
       "description": "Use when the user wants to update or modify an existing skill for their AI agents",
       "category": "Meta",
       "sourcePath": "skills/update-skill/SKILL.md",
-      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/four-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in t"
+      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in t"
     },
     {
       "id": "skill:using-git-worktrees",
@@ -710,11 +719,11 @@
       "sourcePath": "skills/_shared/codebase-context-checklist.md"
     },
     {
-      "id": "shared-ref:four-root-sync",
+      "id": "shared-ref:five-root-sync",
       "type": "shared-ref",
-      "name": "four-root-sync",
-      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the four-location sync rule and the paths involved.",
-      "sourcePath": "skills/_shared/four-root-sync.md"
+      "name": "five-root-sync",
+      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the five-location sync rule and the paths involved.",
+      "sourcePath": "skills/_shared/five-root-sync.md"
     },
     {
       "id": "shared-ref:humanizer-rules",
@@ -1568,7 +1577,7 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 36,
+      "skills": 37,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
@@ -1590,7 +1599,7 @@
     "skillCategories": {
       "Development Workflows": 7,
       "Code Review": 8,
-      "Other": 1,
+      "Other": 2,
       "Meta": 6,
       "Valkey & GLIDE": 5,
       "Planning & Orchestration": 4,
