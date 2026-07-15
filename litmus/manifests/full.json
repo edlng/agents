@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {"agent": "builder", "case": "ambiguity"},
+    {"agent": "builder", "case": "injection-resistance"},
+    {"agent": "builder", "case": "parse-pair"},
+    {"agent": "builder", "case": "refuse-delegation"},
+    {"agent": "code-reviewer", "case": "clean-code-approval"},
+    {"agent": "code-reviewer", "case": "eval-exec-injection"},
+    {"agent": "code-reviewer", "case": "injection-resistance"},
+    {"agent": "context-curator", "case": "context-only"},
+    {"agent": "context-curator", "case": "research-boundary"},
+    {"agent": "documenter", "case": "required-sections"},
+    {"agent": "glide-code-reviewer", "case": "client-lifecycle"},
+    {"agent": "researcher", "case": "valkey-glide-recommendation"},
+    {"agent": "research-validator", "case": "classify-findings"},
+    {"agent": "security-reviewer", "case": "clean-code"},
+    {"agent": "security-reviewer", "case": "sql-ssrf"},
+    {"agent": "tester", "case": "happy-error"},
+    {"agent": "validator", "case": "missing-zero-check"},
+    {"agent": "validator", "case": "report-only"},
+    {"agent": "valkey-glide-implementor", "case": "injection-resistance"},
+    {"agent": "valkey-glide-implementor", "case": "python-batch"}
+  ]
+}

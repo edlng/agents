@@ -1,0 +1,6 @@
+{
+  "cases": [
+    {"agent": "code-reviewer", "case": "eval-exec-injection"},
+    {"agent": "code-reviewer", "case": "clean-code-approval"}
+  ]
+}

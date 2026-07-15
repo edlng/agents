@@ -7,9 +7,7 @@ const AGENTS_DIR = join(ROOT, 'agents');
 const SKILLS_DIR = join(ROOT, 'skills');
 const SHARED_DIR = join(SKILLS_DIR, '_shared');
 const OUTPUT = join(import.meta.dirname, '..', 'src', 'data', 'graph.json');
-const TOKEN_USAGE_FILE = join(ROOT, 'evals', 'metrics', 'token_usage.jsonl');
-const PROMPTFOO_FULL = join(ROOT, 'promptfooconfig.yaml');
-const PROMPTFOO_SMOKE = join(ROOT, 'promptfooconfig.smoke.yaml');
+const LITMUS_RESULTS_DIR = join(ROOT, 'litmus', 'results');
 
 // Category mappings from README
 const AGENT_CATEGORIES: Record<string, string> = {
@@ -131,8 +129,8 @@ interface EvalAgentSummary {
 }
 
 interface EvalStats {
-  fullTestCount: number;
-  smokeTestCount: number;
+  caseCount: number;
+  runCount: number;
   byAgent: EvalAgentSummary[];
   grandRuns: number;
   grandTotalCostUsd: number;
@@ -413,48 +411,49 @@ function extractMcpServers(agentNodes: GraphNode[]): GraphNode[] {
   }));
 }
 
-interface TokenUsageEntry {
+interface LitmusCase {
   agent: string;
+  case_id: string;
   model: string;
   input_tokens: number;
   output_tokens: number;
-  total_cost_usd: number;
-  duration_s?: number;
+  cost_usd: number;
+  duration_ms: number;
+  detail_path?: string;
 }
 
-// Count `description:` lines in a promptfoo config (matches `grep -c description:`).
-// Missing file -> 0.
-function countDescriptions(file: string): number {
-  if (!existsSync(file)) return 0;
-  const content = readFileSync(file, 'utf-8');
-  return content.split('\n').filter(line => line.includes('description:')).length;
+interface LitmusSummary {
+  cases: LitmusCase[];
 }
 
-// Aggregate per-agent eval metrics from token_usage.jsonl.
-// Logic ported from evals/scripts/cost-summary.js. Missing/empty -> zeroed.
 function buildEvalStats(): EvalStats {
-  const fullTestCount = countDescriptions(PROMPTFOO_FULL);
-  const smokeTestCount = countDescriptions(PROMPTFOO_SMOKE);
-
-  if (!existsSync(TOKEN_USAGE_FILE)) {
-    return { fullTestCount, smokeTestCount, byAgent: [], grandRuns: 0, grandTotalCostUsd: 0 };
+  if (!existsSync(LITMUS_RESULTS_DIR)) {
+    return { caseCount: 0, runCount: 0, byAgent: [], grandRuns: 0, grandTotalCostUsd: 0 };
   }
 
-  const content = readFileSync(TOKEN_USAGE_FILE, 'utf-8').trim();
-  if (!content) {
-    return { fullTestCount, smokeTestCount, byAgent: [], grandRuns: 0, grandTotalCostUsd: 0 };
-  }
-
-  const entries: TokenUsageEntry[] = content
-    .split('\n')
-    .filter(Boolean)
-    .map(line => JSON.parse(line) as TokenUsageEntry);
-
-  // Group by agent
-  const grouped: Record<string, TokenUsageEntry[]> = {};
-  for (const entry of entries) {
-    if (!grouped[entry.agent]) grouped[entry.agent] = [];
-    grouped[entry.agent].push(entry);
+  const grouped: Record<string, LitmusCase[]> = {};
+  const caseIDs = new Set<string>();
+  let runCount = 0;
+  for (const entry of readdirSync(LITMUS_RESULTS_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const summaryPath = join(LITMUS_RESULTS_DIR, entry.name, 'summary.json');
+    if (!existsSync(summaryPath)) continue;
+    try {
+      const summary = JSON.parse(readFileSync(summaryPath, 'utf-8')) as LitmusSummary;
+      runCount++;
+      for (const result of summary.cases || []) {
+        const detailPath = result.detail_path && join(LITMUS_RESULTS_DIR, entry.name, result.detail_path);
+        const detail = detailPath && existsSync(detailPath)
+          ? JSON.parse(readFileSync(detailPath, 'utf-8')) as Partial<LitmusCase>
+          : {};
+        const complete = { ...result, ...detail, model: detail.model || result.model || 'unknown' };
+        if (!grouped[complete.agent]) grouped[complete.agent] = [];
+        grouped[complete.agent].push(complete as LitmusCase);
+        caseIDs.add(`${complete.agent}/${complete.case_id}`);
+      }
+    } catch {
+      continue;
+    }
   }
 
   let grandRuns = 0;
@@ -464,13 +463,13 @@ function buildEvalStats(): EvalStats {
   for (const [agent, runs] of Object.entries(grouped).sort()) {
     const avgIn = Math.round(runs.reduce((s, r) => s + r.input_tokens, 0) / runs.length);
     const avgOut = Math.round(runs.reduce((s, r) => s + r.output_tokens, 0) / runs.length);
-    const avgDurationS = Math.round(runs.reduce((s, r) => s + (r.duration_s || 0), 0) / runs.length);
-    const totalCostUsd = runs.reduce((s, r) => s + r.total_cost_usd, 0);
+    const avgDurationS = Math.round(runs.reduce((s, r) => s + r.duration_ms / 1000, 0) / runs.length);
+    const totalCostUsd = runs.reduce((s, r) => s + r.cost_usd, 0);
     grandRuns += runs.length;
     grandTotalCostUsd += totalCostUsd;
     byAgent.push({
       agent,
-      model: runs[0].model,
+      model: runs.find(run => run.model !== 'unknown')?.model || 'unknown',
       runs: runs.length,
       avgIn,
       avgOut,
@@ -479,7 +478,7 @@ function buildEvalStats(): EvalStats {
     });
   }
 
-  return { fullTestCount, smokeTestCount, byAgent, grandRuns, grandTotalCostUsd };
+  return { caseCount: caseIDs.size, runCount, byAgent, grandRuns, grandTotalCostUsd };
 }
 
 function buildStats(

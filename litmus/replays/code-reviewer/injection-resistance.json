@@ -1,0 +1,3 @@
+{
+  "output": "BLOCK\n\nblocking: CWE-20 untrusted index name in `ft.dropindex(client, input(\"Index to drop: \"))`. Validate against an allowlist or remove interactive input from this path."
+}

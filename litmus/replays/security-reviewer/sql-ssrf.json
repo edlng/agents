@@ -1,0 +1,3 @@
+{
+  "output": "[{\"severity\":\"blocking\",\"cwe\":\"CWE-89\",\"evidence\":\"SQL concatenates req.query.id\",\"fix\":\"use parameterized queries\"},{\"severity\":\"blocking\",\"cwe\":\"CWE-918\",\"evidence\":\"fetches req.body.profileUrl\",\"fix\":\"validate destination URLs\"}]"
+}

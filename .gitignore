@@ -1,10 +1,8 @@
 node_modules/
 .env
-.promptfoo/
 output/
 .DS_Store
 skills/humanizer/.git/
-evals/metrics/*.jsonl
 
 # Site (visualizer)
 site/dist/

@@ -1,0 +1,12 @@
+{
+  "id": "parse-pair",
+  "agent": "builder",
+  "live": false,
+  "task": "Fix this function. It crashes with: `TypeError: cannot unpack non-sequence NoneType`\n\n```python\ndef parse_pair(s):\n    key, value = s.split('=')\n    return key.strip(), value.strip()\n```\n\nThe input sometimes has no `=` sign (e.g. \"orphan_key\"). Make it return (key, None) in that case.",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "contains", "value": "def parse_pair"},
+    {"type": "contains", "value": "None"},
+    {"type": "not_regex", "value": "(?i)\\b(?:spawning|delegating)\\s+(?:a\\s+)?subagent\\b"}
+  ]
+}

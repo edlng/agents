@@ -1,0 +1,3 @@
+{
+  "output": "def parse_pair(s):\n    if '=' not in s:\n        return s.strip(), None\n    key, value = s.split('=', 1)\n    return key.strip(), value.strip()"
+}

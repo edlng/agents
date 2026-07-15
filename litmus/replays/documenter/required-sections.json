@@ -1,0 +1,3 @@
+{
+  "output": "## Overview\n`divide` returns the quotient of two values.\n\n## Usage\n```python\ndivide(10, 2)\n```\n\n## Limitations\nA zero divisor raises the language runtime's division-by-zero error."
+}

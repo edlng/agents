@@ -110,13 +110,13 @@ export function OverviewView() {
         <h2 className="section-title">Evaluations</h2>
         <div className="eval-meta">
           <span className="eval-stat">
-            <span className="eval-stat-value">{evals.fullTestCount}</span>
-            <span className="eval-stat-label">full tests</span>
+            <span className="eval-stat-value">{evals.caseCount}</span>
+            <span className="eval-stat-label">cases</span>
           </span>
           <span className="eval-meta-sep" />
           <span className="eval-stat">
-            <span className="eval-stat-value">{evals.smokeTestCount}</span>
-            <span className="eval-stat-label">smoke tests</span>
+            <span className="eval-stat-value">{evals.runCount}</span>
+            <span className="eval-stat-label">recorded runs</span>
           </span>
         </div>
 
@@ -160,7 +160,7 @@ export function OverviewView() {
             </table>
           </div>
         ) : (
-          <p className="eval-empty">Run <code>make eval</code> to populate eval metrics.</p>
+          <p className="eval-empty">Run a Litmus replay or probe to record evaluation metrics.</p>
         )}
       </section>
 

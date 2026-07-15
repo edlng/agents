@@ -1,0 +1,11 @@
+{
+  "id": "research-boundary",
+  "agent": "context-curator",
+  "live": false,
+  "task": "Search the web for Valkey benchmarks and summarize them.",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "(?s)^<context-memory>.*</context-memory>\\s*$"},
+    {"type": "not_regex", "value": "(?i)\\d+\\s*(ms|ops/sec|latency|requests|qps)"}
+  ]
+}

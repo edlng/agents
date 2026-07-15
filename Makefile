@@ -1,23 +1,26 @@
-# Sync skills and agents across four roots:
+# Sync skills and agents across five roots:
 #   Root 1 (canonical): ~/.kiro/
 #   Root 2:             ~/.claude/
 #   Root 3:             ~/agents/ (this repo)
 #   Root 4 (skills only): ~/.config/devin/skills/
+#   Root 5 (skills only): ~/.codex/skills/
 #
-# push: agents/ -> ~/.kiro + ~/.claude + ~/.config/devin  (promote local edits)
+# push: agents/ -> ~/.kiro + ~/.claude + ~/.config/devin + ~/.codex  (promote local edits)
 # pull: ~/.kiro  -> agents/ (pull in new skills/agents from canonical)
 #
-# Agents skip Root 4 — devin-cli uses --agent-config instead of agent markdown files.
+# Agents skip Root 4 and Root 5 — devin-cli uses --agent-config and Codex does
+# not use agent markdown files.
 
 KIRO_SKILLS   := $(HOME)/.kiro/skills
 KIRO_AGENTS   := $(HOME)/.kiro/agents
 CLAUDE_SKILLS := $(HOME)/.claude/skills
 CLAUDE_AGENTS := $(HOME)/.claude/agents
 DEVIN_SKILLS  := $(HOME)/.config/devin/skills
+CODEX_SKILLS  := $(HOME)/.codex/skills
 LOCAL_SKILLS  := skills
 LOCAL_AGENTS  := agents
 
-.PHONY: push pull status eval eval-smoke eval-agent eval-view eval-reset eval-cost
+.PHONY: push pull status litmus-list litmus-replay litmus-probe litmus-batch litmus-compare
 
 # Promote local changes to all roots (additive — never deletes from targets)
 push:
@@ -27,6 +30,8 @@ push:
 	rsync -av $(LOCAL_AGENTS)/ $(CLAUDE_AGENTS)/
 	@mkdir -p $(DEVIN_SKILLS)
 	rsync -av $(LOCAL_SKILLS)/ $(DEVIN_SKILLS)/
+	@mkdir -p $(CODEX_SKILLS)
+	rsync -av $(LOCAL_SKILLS)/ $(CODEX_SKILLS)/
 
 # Pull ~/.kiro changes into local repo (dry-run first; confirm with: make pull CONFIRM=1)
 pull:
@@ -53,38 +58,26 @@ status:
 	@rsync -avn $(LOCAL_AGENTS)/ $(CLAUDE_AGENTS)/ | grep -v "/$\|^sending\|^sent\|^total" || true
 	@echo "=== skills: agents/ vs ~/.config/devin ==="
 	@rsync -avn $(LOCAL_SKILLS)/ $(DEVIN_SKILLS)/ 2>/dev/null | grep -v "/$\|^sending\|^sent\|^total" || true
+	@echo "=== skills: agents/ vs ~/.codex ==="
+	@rsync -avn $(LOCAL_SKILLS)/ $(CODEX_SKILLS)/ 2>/dev/null | grep -v "/$\|^sending\|^sent\|^total" || true
 
-# ── Evals ────────────────────────────────────────────────────────────────────
+# ── Litmus evals ─────────────────────────────────────────────────────────────
 
-# Run the full eval suite and print a cost summary when done.
-eval:
-	@mkdir -p evals/metrics
-	@rm -f evals/metrics/token_usage.jsonl
-	./run-eval.sh; EXIT=$$?; node evals/scripts/cost-summary.js; exit $$EXIT
+litmus-list:
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval list
 
-# Run the cost-efficient smoke suite (fewer tests, smaller tasks, same behavioral checks).
-eval-smoke:
-	@mkdir -p evals/metrics
-	@rm -f evals/metrics/token_usage.jsonl
-	EVAL_MAX_BUDGET=0.15 npx promptfoo eval -c promptfooconfig.smoke.yaml --no-cache; EXIT=$$?; node evals/scripts/cost-summary.js; exit $$EXIT
+litmus-replay:
+	@if [ -z "$(AGENT)" ] || [ -z "$(CASE)" ]; then echo "Usage: make litmus-replay AGENT=<agent> CASE=<case>"; exit 1; fi
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval replay "$(AGENT)" "$(CASE)"
 
-# Run tests for a single agent. Usage: make eval-agent AGENT=code-reviewer
-eval-agent:
-	@if [ -z "$(AGENT)" ]; then echo "Usage: make eval-agent AGENT=<agent-name>"; exit 1; fi
-	@mkdir -p evals/metrics
-	@rm -f evals/metrics/token_usage.jsonl
-	npx promptfoo eval --filter-pattern "$(AGENT)"
-	@node evals/scripts/cost-summary.js
+litmus-probe:
+	@if [ -z "$(AGENT)" ] || [ -z "$(CASE)" ] || [ -z "$(BUDGET)" ]; then echo "Usage: make litmus-probe AGENT=<agent> CASE=<case> BUDGET=<usd>"; exit 1; fi
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval probe "$(AGENT)" "$(CASE)" --budget "$(BUDGET)"
 
-# Open the promptfoo results UI in a browser.
-eval-view:
-	npm run eval:view
+litmus-batch:
+	@if [ -z "$(MANIFEST)" ] || [ -z "$(BUDGET)" ]; then echo "Usage: make litmus-batch MANIFEST=<manifest> BUDGET=<usd>"; exit 1; fi
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval batch "$(MANIFEST)" --budget "$(BUDGET)" $(BATCH_ARGS)
 
-# Clear promptfoo state and re-run.
-eval-reset:
-	npm run eval:reset
-	$(MAKE) eval
-
-# Print cost summary from the last run without re-running evals.
-eval-cost:
-	@node evals/scripts/cost-summary.js
+litmus-compare:
+	@if [ -z "$(BASELINE)" ] || [ -z "$(CURRENT)" ]; then echo "Usage: make litmus-compare BASELINE=<run-dir> CURRENT=<run-dir>"; exit 1; fi
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval compare "$(BASELINE)" "$(CURRENT)"

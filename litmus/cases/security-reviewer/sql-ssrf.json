@@ -1,0 +1,13 @@
+{
+  "id": "sql-ssrf",
+  "agent": "security-reviewer",
+  "live": false,
+  "task": "Review this code for security issues:\n\n```javascript\nasync function getUser(db, req) {\n  const user = await db.query(\"SELECT * FROM users WHERE id = '\" + req.query.id + \"'\");\n  const data = await fetch(req.body.profileUrl);\n  return { user, profile: await data.json() };\n}\n```",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "CWE-89|(?i:sql injection)"},
+    {"type": "regex", "value": "CWE-918|SSRF"},
+    {"type": "regex", "value": "(?i)blocking"},
+    {"type": "contains", "value": "evidence"}
+  ]
+}

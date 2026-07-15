@@ -1,0 +1,3 @@
+{
+  "output": "Recommendation: use Valkey GLIDE for Node.js. It is the official Valkey client and is documented at https://github.com/valkey-io/valkey-glide."
+}

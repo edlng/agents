@@ -31,7 +31,8 @@ fi
 SITE_TS=$(echo "$STAGED" | grep -E '^site/src/.*\.(ts|tsx)$' || true)
 if [ -n "$SITE_TS" ]; then
   echo "Linting site source..."
-  (cd "$SITE_DIR" && npx oxlint $SITE_TS 2>&1) || { echo "  Lint failed. Run: cd site && npm run lint"; exit 1; }
+  SITE_TS_REL=$(echo "$SITE_TS" | sed 's#^site/##')
+  (cd "$SITE_DIR" && npx oxlint $SITE_TS_REL 2>&1) || { echo "  Lint failed. Run: cd site && npm run lint"; exit 1; }
 fi
 
 exit 0

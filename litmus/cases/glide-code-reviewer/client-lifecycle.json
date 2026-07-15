@@ -1,0 +1,12 @@
+{
+  "id": "client-lifecycle",
+  "agent": "glide-code-reviewer",
+  "live": false,
+  "task": "Review this Valkey GLIDE code for correctness:\n\n```python\nasync def get_user(user_id):\n    client = await GlideClient.create(config)\n    return await client.get(user_id)\n```",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "contains", "value": "BLOCK"},
+    {"type": "contains", "value": "GlideClient.create"},
+    {"type": "regex", "value": "(?i)per-request|per request|singleton|client lifecycle"}
+  ]
+}

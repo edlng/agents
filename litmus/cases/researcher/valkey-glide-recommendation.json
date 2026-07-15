@@ -1,0 +1,12 @@
+{
+  "id": "valkey-glide-recommendation",
+  "agent": "researcher",
+  "live": false,
+  "task": "How do I connect to Valkey from Node.js and what client library should I use?",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "(?i)valkey-glide"},
+    {"type": "regex", "value": "https?://"},
+    {"type": "regex", "value": "(?i)recommend"}
+  ]
+}

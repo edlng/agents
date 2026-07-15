@@ -1,0 +1,12 @@
+{
+  "id": "classify-findings",
+  "agent": "research-validator",
+  "live": false,
+  "task": "Validate these findings:\n\n1. \"valkey-glide is the official Valkey client library for Node.js\". Source: https://github.com/valkey-io/valkey-glide\n2. \"Valkey was originally created by Microsoft in 2021\". Source: https://valkey.io/about",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "contains", "value": "CONFIRMED"},
+    {"type": "regex", "value": "CONTRADICTED|UNVERIFIED|INCORRECT|FALSE"},
+    {"type": "not_regex", "value": "(?s)^\\s*CONFIRMED\\s*$"}
+  ]
+}

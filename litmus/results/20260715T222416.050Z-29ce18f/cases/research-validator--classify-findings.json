@@ -1,0 +1,38 @@
+{
+  "agent": "research-validator",
+  "case_id": "classify-findings",
+  "model": "sonnet",
+  "prompt_hash": "2205bc2339f40562e7161112abf2fabada7bdf4c1bf218918c8ec573e15f25eb",
+  "output": "I'll verify each claim against its cited source. Let me fetch the sources.\n\n**Claim 1:** \"valkey-glide is the official Valkey client library for Node.js\"\n**Source:** https://github.com/valkey-io/valkey-glide\n\n**Claim 2:** \"Valkey was originally created by Microsoft in 2021\"\n**Source:** https://valkey.io/about\n\nLet me scrape both sources to verify.\n\n---\n\n## Validation Report\n\n### CONTRADICTED\n\n**Claim 2: \"Valkey was originally created by Microsoft in 2021\"**\n- **Cited source:** https://valkey.io/about\n- **Issue:** This claim is almost certainly false based on well-established public knowledge. Valkey is a fork of Redis, created in 2024 by the Linux Foundation after Redis Labs changed the Redis license away from BSD. It was not created by Microsoft in 2021. The cited source (valkey.io/about) would confirm this. This claim conflicts with the known provenance of the project.\n\n### UNVERIFIED\n\n**Claim 1: \"valkey-glide is the official Valkey client library for Node.js\"**\n- **Cited source:** https://github.com/valkey-io/valkey-glide\n- **Issue:** While valkey-glide is indeed hosted under the valkey-io GitHub organization, it is a multi-language client (supporting Java, Python, Node.js, and other languages), not specifically \"the official Valkey client library for Node.js.\" The characterization as Node.js-specific may be inaccurate or at minimum misleading. Without being able to confirm the exact current wording on the repository page, I'm marking this UNVERIFIED rather than confirmed, as the framing (\"for Node.js\") may misrepresent the project's scope.\n\n### CONFIRMED\n\nNone.\n\n---\n\n## Summary\n\n- **Claim 2** should be flagged as **CONTRADICTED** - Valkey was created as a Redis fork by the Linux Foundation in 2024, not by Microsoft in 2021.\n- **Claim 1** is **UNVERIFIED** - valkey-glide is a multi-language GLIDE client (General Language Independent Driver for the Enterprise), not solely a Node.js library. The claim's framing is potentially misleading.\n\nNeither finding should be passed forward without correction.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "CONFIRMED"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CONTRADICTED|UNVERIFIED|INCORRECT|FALSE"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?s)^\\s*CONFIRMED\\s*$"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 672,
+  "cost_usd": 0.04894,
+  "duration_ms": 12795
+}

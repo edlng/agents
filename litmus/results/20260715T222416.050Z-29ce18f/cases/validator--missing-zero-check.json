@@ -1,0 +1,38 @@
+{
+  "agent": "validator",
+  "case_id": "missing-zero-check",
+  "model": "opus",
+  "prompt_hash": "d0d4c6c8d1199044788966c26b9e2bd8a6fdad6b56fe7f8fd44fb0030c0c1f16",
+  "output": "\u003cscratchpad\u003e\nThe function `a / b` returns correct results for valid inputs (criterion 1). However, when b is 0, Python raises `ZeroDivisionError`, not `ValueError`. There is no guard clause to raise `ValueError` on zero divisor (criterion 2 fails).\n\u003c/scratchpad\u003e\n\n```\nStatus: FAIL\nCorrectness: 1/3 | Coverage: N/A | Criteria: 1/3\nIssues:\n- [line 2] Missing zero-check: when b=0, Python raises ZeroDivisionError, not the required ValueError\nCommands run: (none needed - logic inspection sufficient)\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "FAIL"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "ValueError|criteria 2|missing"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)status:\\s*fail"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 274,
+  "cost_usd": 0.04003375000000001,
+  "duration_ms": 6327
+}

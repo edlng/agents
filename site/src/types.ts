@@ -61,8 +61,8 @@ export interface EvalAgentSummary {
 }
 
 export interface EvalStats {
-  fullTestCount: number;
-  smokeTestCount: number;
+  caseCount: number;
+  runCount: number;
   byAgent: EvalAgentSummary[];
   grandRuns: number;
   grandTotalCostUsd: number;

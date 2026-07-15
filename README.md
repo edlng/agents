@@ -54,7 +54,7 @@ Agents are defined in `agents/` as JSON configs with co-located prompt files. Th
 
 ## Skills
 
-Skills are invokable via `/skill-name` in Claude Code or Kiro CLI. They live in `skills/` and are synced to `~/.kiro/skills/` via `make push`. Project-scoped skills live in `.kiro/skills/`.
+Skills are invokable via `/skill-name` in Claude Code, Kiro CLI, or Codex CLI. They live in `skills/` and are synced to `~/.kiro/skills/`, `~/.claude/skills/`, `~/.config/devin/skills/`, and `~/.codex/skills/` via `make push`. Project-scoped skills live in `.kiro/skills/`.
 
 ### Code Review
 
@@ -129,7 +129,7 @@ Shared refs in `skills/_shared/` encode cross-cutting conventions used by multip
 | **security-constraints.md** | Standardized security boundary for all agents: credential access, exfiltration, destructive commands, prompt injection resistance. |
 | **memory-protocol.md** | Scoped memory system using Valkey (hot) + Obsidian (durable). Defines scopes, key naming, injection format, and store/recall conventions. |
 | **async-dispatch-protocols.md** | Idle-based delivery, callback patterns, and anti-patterns for async agent dispatch. |
-| **three-root-sync.md** | Sync convention for keeping agents/skills identical across `~/.kiro/`, `~/.claude/`, and `~/agents/`. |
+| **five-root-sync.md** | Sync convention for keeping agents/skills identical across `~/.kiro/`, `~/.claude/`, `~/agents/`, `~/.config/devin/`, and `~/.codex/`. |
 | **pr-review-base.md** | Base workflow for senior-grade PR reviews (context, merged-lens review, validator pass, report). |
 | **review-findings-schema.md** | JSON schema and severity labels for review findings. |
 | **validator-skeptic-pass.md** | Self-challenge rubric for the Opus validator skeptic pass. |
@@ -161,79 +161,23 @@ make status # diff between repo and ~/.kiro
 
 ## Evaluation Suite
 
-Automated unit tests for each non-orchestrator agent using [promptfoo](https://promptfoo.dev). Each test targets a single agent with a focused single-turn prompt. Assertions are grounded in each agent's documented behavioral rules.
+### Litmus: cheap production checks
 
-Token costs are tracked via `claude -p --output-format json` and summarized after each run.
-
-### Running evals
+Litmus is the compact path for deterministic agent checks and bounded live probes. Start with a zero-cost replay, then use a small live budget only when needed:
 
 ```bash
-make eval                        # full suite (20 tests) + cost summary
-make eval-smoke                  # smoke suite (8 tests, ~50% cheaper, no llm-rubric)
-make eval-agent AGENT=code-reviewer  # run tests for one agent only
-make eval-view                   # open results in browser
-make eval-reset                  # clear promptfoo state and re-run
-make eval-cost                   # reprint cost summary from last run
+make litmus-list
+make litmus-replay AGENT=code-reviewer CASE=eval-exec-injection
+make litmus-probe AGENT=code-reviewer CASE=clean-code-approval BUDGET=0.25
+make litmus-batch MANIFEST=core BUDGET=0.60
+make litmus-batch MANIFEST=core BUDGET=0.60 BATCH_ARGS='--jobs 1'
+make litmus-batch MANIFEST=full BUDGET=1000 BATCH_ARGS='--include-replay-only --jobs 3'
+make litmus-compare BASELINE=litmus/results/<baseline> CURRENT=litmus/results/<current>
 ```
 
-**Caching:** promptfoo caches by task text, not by system prompt content. After editing an agent prompt, use `--no-cache` or `make eval-reset` to get fresh results.
+`replay` checks captured output without calling a model and costs `$0`. The complete 20-case catalog is replay-only by default. `probe` and `batch` reject a case unless it is explicitly marked `"live": true`; the initial live core contains only the two code-reviewer checks with recorded low-cost production runs. The explicit `--include-replay-only` batch override is reserved for a deliberate full-catalog run. Batches run up to three probes concurrently by default; pass `--jobs 1` for serial execution. Litmus reserves each pending case's target before scheduling another one, but Claude's dollar cap is advisory rather than a strict per-call ceiling. Treat a live budget as a scheduling limit, inspect recorded actual cost after every run, and expect concurrent calls to be able to overshoot it. The verified `code-reviewer/clean-code-approval` probe cost `$0.03` with a `$0.25` target. Replay, probe, and batch write pretty JSON and Markdown artifacts under `litmus/results/`; these results are intentionally committed for future comparison and visualization.
 
-### Test suites
-
-| Suite | Config | Tests | Purpose | Est. cost |
-|---|---|---|---|---|
-| Full | `promptfooconfig.yaml` | 20 | Pre-merge, comprehensive | ~$3–4 |
-| Smoke | `promptfooconfig.smoke.yaml` | 8 | Fast iteration on prompt edits | ~$1–1.50 |
-
-The **full suite** uses `javascript` assertions for deterministic checks, `llm-rubric` for subjective quality, and covers behavioral boundaries, injection resistance, and output format compliance.
-
-The **smoke suite** uses only deterministic assertions (no LLM grader calls) with smaller task scopes that produce fewer output tokens. Same behavioral constraints, cheaper to run.
-
-### Test structure
-
-Tests live in `promptfooconfig.yaml`, one section per agent (20 tests across 11 agents). Each test uses:
-
-- `javascript` assertions for deterministic checks — grounded in each agent's documented rules (output formats, required CWEs, no-delegation rules, etc.)
-- `llm-rubric` for subjective quality using `evals/graders/judge-prompt.txt`; rubric text references the [Valkey AI rubric](~/Documents/work/valkey-ai-rubric.md) for Valkey-specific agents
-- `icontains` for exact substring requirements
-
-Scoring is 80% quality / 20% cost (token-based). See `evals/scoring.js`.
-
-### Known flakiness
-
-- **research-validator**: Uses live web scraping (firecrawl) to verify cited URLs. May flake if firecrawl is down, rate-limited, or target pages change. The llm-rubric can also produce borderline scores due to judge variance.
-
-### Cost tracking
-
-Each eval run appends to `evals/metrics/token_usage.jsonl` (gitignored). `make eval` prints a per-agent cost table at the end:
-
-```
-Agent                     | Runs | Avg In  | Avg Out | Avg s | Total Cost
-code-reviewer             |    2 |    3241 |     892 |    40 |    $0.0421
-valkey-glide-implementor  |    1 |    2960 |     720 |    55 |    $0.0216
-...
-TOTAL                     |   13 |         |         |       |    $0.23
-```
-
-### Adding a test
-
-```yaml
-# In evals/promptfooconfig.yaml
-- description: 'agent-name — what behavior this checks'
-  vars:
-    agent: agent-name
-    task: 'The prompt to send'
-  assert:
-    - type: javascript
-      value: |
-        const lower = output.toLowerCase();
-        const passes = lower.includes('expected thing');
-        return { pass: passes, score: passes ? 1 : 0, reason: `Found: ${passes}` };
-      metric: accuracy
-      weight: 3
-```
-
-The `agent` var is passed to `evals/providers/agent.sh`, which reads the agent's system prompt and model from `agents/`, runs it via `claude -p`, and appends token metrics.
+Add cases as JSON under `litmus/cases/<agent>/`, pair them with replay output under `litmus/replays/<agent>/`, and include only vetted, low-risk cases in `litmus/manifests/core.json`. A native provider API with an output-token cap is required before a live budget can be treated as a strict spend ceiling.
 
 ## Credits
 

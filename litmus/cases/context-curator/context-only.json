@@ -1,0 +1,11 @@
+{
+  "id": "context-only",
+  "agent": "context-curator",
+  "live": false,
+  "task": "Task: Review the authentication module for security issues. I need relevant context before starting.",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "(?s)^<context-memory>.*</context-memory>\\s*$"},
+    {"type": "not_regex", "value": "(?i)vulnerability|cwe|finding|severity"}
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "agent": "researcher",
+  "case_id": "valkey-glide-recommendation",
+  "model": "sonnet",
+  "prompt_hash": "0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263",
+  "output": "## Finding 1: Official Valkey Client Libraries for Node.js\n\n**URL:** https://valkey.io/docs/clients/#nodejs\n\n**Summary:** Valkey's official documentation recommends **iovalkey** (a fork of ioredis maintained by the Valkey community) as the primary Node.js client library, with **valkey-glide** as an additional official option.\n\n**Tradeoffs:**\n- *iovalkey*: Pro - drop-in replacement for ioredis with full Valkey compatibility; Con - relatively new fork, smaller independent ecosystem vs. ioredis.\n- *valkey-glide*: Pro - official multi-language client with unified API across languages; Con - newer, less community adoption so far.\n\n**Recommendation:** Use **iovalkey** if migrating from ioredis or starting fresh with a familiar Redis-like API; use **valkey-glide** if you need a multi-language unified client strategy.\n\n---\n\n## Finding 2: iovalkey Usage\n\n**URL:** https://github.com/valkey-io/iovalkey\n\n**Summary:** iovalkey is installed via `npm install iovalkey` and provides the same API as ioredis, supporting clusters, sentinels, TLS, and Lua scripting out of the box.\n\n**Tradeoffs:** Pro - battle-tested API surface inherited from ioredis; Con - if you already use ioredis, switching requires a package rename but minimal code changes.\n\nConnection snippet (from docs, under 10 lines):\n\n```js\nconst Redis = require(\"iovalkey\");\nconst redis = new Redis({\n  host: \"your-valkey-host\",\n  port: 6379,\n});\n```\n\n---\n\n## Finding 3: ioredis Compatibility\n\n**URL:** https://valkey.io/blog/iovalkey-and-valkey-glide/\n\n**Summary:** Valkey is wire-compatible with Redis 7.2, so the existing **ioredis** client also works against Valkey without modification, though the Valkey project recommends iovalkey for long-term alignment with Valkey-specific features.\n\n**Tradeoffs:** Pro - zero migration effort if already using ioredis; Con - future Valkey-only commands may not be added to ioredis.\n\n---\n\n## Recommendation\n\nUse **iovalkey** (`npm install iovalkey`). It is the community-maintained, Valkey-aligned fork of ioredis with the same proven API, cluster/sentinel support, and the best path to receiving Valkey-specific features going forward.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)valkey-glide"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "https?://"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)recommend"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 647,
+  "cost_usd": 0.04923375,
+  "duration_ms": 13639
+}

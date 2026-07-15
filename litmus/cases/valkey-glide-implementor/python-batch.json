@@ -1,0 +1,14 @@
+{
+  "id": "python-batch",
+  "agent": "valkey-glide-implementor",
+  "live": false,
+  "task": "language: python\ncontext: Pipeline 10 SET operations into Valkey using Batch. Use the GLIDE Batch API and do not use asyncio.gather or deprecated transaction APIs.",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "(?i)valkey.glide|from glide|valkey_glide"},
+    {"type": "contains", "value": "Batch"},
+    {"type": "not_regex", "value": "asyncio\\.gather|Transaction|ClusterTransaction"},
+    {"type": "regex", "value": "\\.exec\\(|exec\\(batch|exec\\(b"},
+    {"type": "contains", "value": "```"}
+  ]
+}

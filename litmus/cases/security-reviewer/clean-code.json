@@ -1,0 +1,11 @@
+{
+  "id": "clean-code",
+  "agent": "security-reviewer",
+  "live": false,
+  "task": "Review this code for security issues:\n\n```typescript\nfunction clamp(value: number, min: number, max: number): number {\n  if (min > max) throw new Error(\"min must not exceed max\");\n  return Math.min(Math.max(value, min), max);\n}\n```",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "^\\s*\\[\\s*\\]\\s*$"},
+    {"type": "not_regex", "value": "CWE-\\d+"}
+  ]
+}

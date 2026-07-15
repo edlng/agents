@@ -1,0 +1,46 @@
+{
+  "agent": "documenter",
+  "case_id": "required-sections",
+  "model": "haiku",
+  "prompt_hash": "150337fe06944373304d4ebd1760ca50150fd8020ca1325d6ea0a9c0ddef6509",
+  "output": "## Overview\n\nA utility function that performs floating-point division of two numbers.\n\n## Usage\n\n```python\nresult = divide(10, 2)  # returns 5.0\n```\n\n**Parameters:**\n\n| Name | Type | Description |\n|------|------|-------------|\n| `a` | numeric | The dividend (numerator) |\n| `b` | numeric | The divisor (denominator) |\n\n**Returns:** `float` - the result of `a / b`.\n\n## Limitations\n\n- Raises `ZeroDivisionError` if `b` is `0`.\n- No type validation; passing non-numeric arguments raises `TypeError`.\n- Uses Python's true division (`/`), so the result is always a float even when both inputs are integers.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "## Overview"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "## Usage"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "## Limitations"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)modified.*\\.py|edited.*source"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 274,
+  "cost_usd": 0.03948375,
+  "duration_ms": 6625
+}

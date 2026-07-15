@@ -422,7 +422,7 @@
       "name": "diagram-valkey-flow",
       "description": "Analyze a project and generate a Mermaid sequence diagram showing the full data flow from the application layer through any framework/middleware down to Valkey operations. Works for any language or framework.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/diagram-valkey-flow/skill.md",
+      "sourcePath": "skills/diagram-valkey-flow/SKILL.md",
       "excerpt": "Diagram Valkey Flow Analyze the project at `$ARGUMENTS` (or the current working directory if blank) and produce a Mermaid sequence diagram showing how data flows from the application entry point through to Valkey. Run all phases in order. Do not skip phases. --- Phase 1: Discover Entry Points and Fr"
     },
     {
@@ -514,6 +514,15 @@
       "category": "Code Review",
       "sourcePath": "skills/multi-discipline-review/SKILL.md",
       "excerpt": "Multi-Discipline Code Review `$ARGUMENTS`: diff, file path, branch name, or PR reference. Phase 1: Gather Context Read the code, language, framework, existing patterns, and any linked requirements. **Size gating — determine review depth:** - Count `additions + deletions` in the diff. - If `<= 150 li"
+    },
+    {
+      "id": "skill:onboard",
+      "type": "skill",
+      "name": "onboard",
+      "description": "Use when a developer needs a thorough technical introduction to an unfamiliar local repository, including its architecture, subsystem responsibilities, runtime behavior, verification evidence, security concerns, and operational risks.",
+      "category": "Other",
+      "sourcePath": "skills/onboard/SKILL.md",
+      "excerpt": "Onboard Build an evidence-backed technical guide from the current user request. Use the host-provided `$ARGUMENTS` value when the host supplies one; otherwise parse the request text. Never treat an unexpanded literal `$ARGUMENTS` token as a repository path. Accept a repository path, an optional focu"
     },
     {
       "id": "skill:pr-comment-humanizer",
@@ -1586,7 +1595,7 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 38,
+      "skills": 39,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
@@ -1608,82 +1617,118 @@
     "skillCategories": {
       "Development Workflows": 7,
       "Code Review": 8,
-      "Other": 3,
+      "Other": 4,
       "Meta": 6,
       "Valkey & GLIDE": 5,
       "Planning & Orchestration": 4,
       "Writing & Documentation": 5
     },
     "evals": {
-      "fullTestCount": 20,
-      "smokeTestCount": 8,
+      "caseCount": 20,
+      "runCount": 1,
       "byAgent": [
         {
           "agent": "builder",
           "model": "sonnet",
-          "runs": 2,
+          "runs": 4,
           "avgIn": 3,
-          "avgOut": 575,
-          "avgDurationS": 20,
-          "totalCostUsd": 0.14960805
+          "avgOut": 1660,
+          "avgDurationS": 21,
+          "totalCostUsd": 0.30107874999999995
         },
         {
           "agent": "code-reviewer",
           "model": "sonnet",
-          "runs": 1,
-          "avgIn": 8,
-          "avgOut": 1540,
-          "avgDurationS": 55,
-          "totalCostUsd": 0.15169695000000002
+          "runs": 3,
+          "avgIn": 3,
+          "avgOut": 632,
+          "avgDurationS": 14,
+          "totalCostUsd": 0.15242624999999999
         },
         {
           "agent": "context-curator",
           "model": "haiku",
+          "runs": 2,
+          "avgIn": 3,
+          "avgOut": 192,
+          "avgDurationS": 6,
+          "totalCostUsd": 0.07998625000000001
+        },
+        {
+          "agent": "documenter",
+          "model": "haiku",
           "runs": 1,
-          "avgIn": 2,
-          "avgOut": 71,
+          "avgIn": 3,
+          "avgOut": 274,
           "avgDurationS": 7,
-          "totalCostUsd": 0.06694875
+          "totalCostUsd": 0.03948375
+        },
+        {
+          "agent": "glide-code-reviewer",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 3,
+          "avgOut": 942,
+          "avgDurationS": 18,
+          "totalCostUsd": 0.0601775
+        },
+        {
+          "agent": "research-validator",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 3,
+          "avgOut": 672,
+          "avgDurationS": 13,
+          "totalCostUsd": 0.04894
+        },
+        {
+          "agent": "researcher",
+          "model": "sonnet",
+          "runs": 1,
+          "avgIn": 3,
+          "avgOut": 647,
+          "avgDurationS": 14,
+          "totalCostUsd": 0.04923375
         },
         {
           "agent": "security-reviewer",
           "model": "sonnet",
-          "runs": 1,
-          "avgIn": 2,
-          "avgOut": 661,
-          "avgDurationS": 20,
-          "totalCostUsd": 0.07173
+          "runs": 2,
+          "avgIn": 3,
+          "avgOut": 372,
+          "avgDurationS": 8,
+          "totalCostUsd": 0.093505
         },
         {
           "agent": "tester",
           "model": "sonnet",
           "runs": 1,
-          "avgIn": 14,
-          "avgOut": 3414,
-          "avgDurationS": 82,
-          "totalCostUsd": 0.24845145
+          "avgIn": 3,
+          "avgOut": 144,
+          "avgDurationS": 4,
+          "totalCostUsd": 0.03607125
         },
         {
           "agent": "validator",
           "model": "opus",
-          "runs": 1,
-          "avgIn": 6,
-          "avgOut": 1863,
-          "avgDurationS": 49,
-          "totalCostUsd": 0.22659274999999995
+          "runs": 2,
+          "avgIn": 3,
+          "avgOut": 364,
+          "avgDurationS": 8,
+          "totalCostUsd": 0.08453000000000001
         },
         {
           "agent": "valkey-glide-implementor",
           "model": "sonnet",
-          "runs": 1,
-          "avgIn": 6,
-          "avgOut": 559,
+          "runs": 2,
+          "avgIn": 3,
+          "avgOut": 1199,
           "avgDurationS": 20,
-          "totalCostUsd": 0.11364465
+          "totalCostUsd": 0.13006125000000002
         }
       ],
-      "grandRuns": 8,
-      "grandTotalCostUsd": 1.0286726
+      "grandRuns": 20,
+      "grandTotalCostUsd": 1.07549375
     }
   }
 }

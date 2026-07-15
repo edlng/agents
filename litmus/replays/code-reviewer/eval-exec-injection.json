@@ -1,0 +1,3 @@
+{
+  "output": "BLOCK: CWE-94 eval injection and CWE-78 command injection. Replace eval() with JSON.parse and avoid shell interpolation."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "ambiguity",
+  "agent": "builder",
+  "live": false,
+  "task": "Implement the search thing for the project.",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "regex", "value": "(?i)blocked|unclear|ambiguous|clarif|not sure|need|which|what"},
+    {"type": "not_regex", "value": "(?i)async def search"}
+  ]
+}

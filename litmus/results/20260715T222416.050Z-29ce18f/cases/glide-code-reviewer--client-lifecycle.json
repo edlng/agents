@@ -1,0 +1,38 @@
+{
+  "agent": "glide-code-reviewer",
+  "case_id": "client-lifecycle",
+  "model": "sonnet",
+  "prompt_hash": "0514631d6f5b9ceee5f1648ba09e90b03d9484d86a7c4a24a3f773cea9fa200c",
+  "output": "## GLIDE Code Review: BLOCK\n\n### Finding 1: Client-per-request anti-pattern (BLOCK)\n\n```python\nasync def get_user(user_id):\n    client = await GlideClient.create(config)\n```\n\nA new `GlideClient` is created on every invocation of `get_user`. This is the textbook client-per-request anti-pattern. `GlideClient.create()` establishes a full connection (TCP handshake, possible TLS negotiation, AUTH) each time. Under load this will exhaust server connections and add substantial latency to every call.\n\n### Finding 2: Resource leak, client never closed (BLOCK)\n\n```python\n    client = await GlideClient.create(config)\n    return await client.get(user_id)\n```\n\nThe created client is never closed. There is no `await client.close()`, no `try/finally`, and no async context manager. Every call leaks a connection. If `client.get()` raises an exception, the leak still occurs.\n\n### Finding 3: No error handling\n\nIf `client.get(user_id)` raises (timeout, connection reset, etc.), the exception propagates with no cleanup and no opportunity for retry or graceful degradation.\n\n---\n\n### Recommended fix\n\nCreate the client once at application startup, reuse it across requests, and close it on shutdown:\n\n```python\n# Module or application level\n_client: GlideClient | None = None\n\nasync def init_client():\n    global _client\n    _client = await GlideClient.create(config)\n\nasync def close_client():\n    if _client:\n        await _client.close()\n\nasync def get_user(user_id: str) -\u003e str | None:\n    return await _client.get(user_id)\n```\n\nOr, if a scoped lifetime is preferred (e.g., in tests):\n\n```python\nasync with await GlideClient.create(config) as client:\n    result = await client.get(user_id)\n```\n\n---\n\n**Verdict: BLOCK** - Resource leak (new client per call, never closed) will degrade performance and eventually exhaust server connections.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "BLOCK"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "GlideClient.create"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)per-request|per request|singleton|client lifecycle"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 942,
+  "cost_usd": 0.0601775,
+  "duration_ms": 18421
+}

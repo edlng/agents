@@ -1,0 +1,3 @@
+{
+  "output": "```python\nfrom glide import Batch\n\nbatch = Batch()\nfor index in range(10):\n    batch.set(f\"key:{index}\", str(index))\nawait client.exec(batch)\n```"
+}

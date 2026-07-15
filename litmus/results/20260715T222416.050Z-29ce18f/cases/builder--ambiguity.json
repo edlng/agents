@@ -1,0 +1,30 @@
+{
+  "agent": "builder",
+  "case_id": "ambiguity",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "I need to understand what project and what \"search thing\" you're referring to. Let me explore the codebase first.\n\n```\nPLAN:\n- Files: [unknown - need to explore]\n- Approach: Explore the workspace to understand the project and find references to a search feature\n- Risks: Ambiguous request - may need clarification\n```\n\nLet me look at the project structure.\n\nTask: Implement search feature\nStatus: needs-clarification\n\nI looked at your request but need more context:\n\n1. **Which project?** - I don't see a clear project directory in the current context. Could you point me to the specific codebase or directory?\n\n2. **What \"search thing\"?** - Could you clarify what search functionality you need? For example:\n   - A search bar in a UI?\n   - A backend search API endpoint?\n   - Full-text search integration (e.g., Elasticsearch/OpenSearch)?\n   - A file/code search utility?\n   - Something referenced in a ticket, design doc, or TODO?\n\n3. **Any existing specs?** - Is there a Taskei ticket, design doc, or TODO comment that describes the expected behavior?\n\nPlease provide the project path and any additional details about the search feature you'd like implemented.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)blocked|unclear|ambiguous|clarif|not sure|need|which|what"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)async def search"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 391,
+  "cost_usd": 0.04329625,
+  "duration_ms": 9947
+}

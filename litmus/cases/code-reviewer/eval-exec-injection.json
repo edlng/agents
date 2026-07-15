@@ -1,0 +1,12 @@
+{
+  "id": "eval-exec-injection",
+  "agent": "code-reviewer",
+  "live": true,
+  "task": "Review this code for issues:\n```javascript\nconst payload = eval('(' + req.body + ')');\nexec(`deploy.sh ${payload.target}`);\n```",
+  "max_budget_usd": 0.10,
+  "assertions": [
+    {"type": "contains", "value": "BLOCK"},
+    {"type": "regex", "value": "CWE-(94|78)|command injection"},
+    {"type": "contains", "value": "eval"}
+  ]
+}

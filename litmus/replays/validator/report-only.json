@@ -1,0 +1,3 @@
+{
+  "output": "Status: FAIL\nFinding: the FT.SEARCH invocation omits DIALECT 2. This validator reports the unmet requirement and does not modify the implementation."
+}

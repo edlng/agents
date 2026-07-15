@@ -1,0 +1,3 @@
+{
+  "output": "PLAN:\n- Files: search module\n- Approach: Wrap the search call and preserve the existing query.\n- Risks: Provider errors must not be silently swallowed.\n\ntry:\n    return await ft.search(client, \"product_idx\", \"*=>[KNN 10 @embedding $vec]\")\nexcept Exception as error:\n    raise RuntimeError(\"product search failed\") from error\n\nTask: add search error handling\nStatus: done\nDone: added error propagation\nFiles: search module - error handling\nVerified: not run"
+}

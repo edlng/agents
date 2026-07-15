@@ -1,0 +1,3 @@
+{
+  "output": "BLOCK: `GlideClient.create(config)` creates a client per request in `get_user`. Reuse a singleton client to avoid connection churn and resource leaks."
+}
