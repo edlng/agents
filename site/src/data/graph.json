@@ -411,7 +411,7 @@
       "id": "skill:daily-log",
       "type": "skill",
       "name": "daily-log",
-      "description": "Reads today's AI journal entry from Obsidian, then appends a concise daily log entry to the current month's Notes file matching the established format (bold day name, categorized bullet points). Use when asked to log today, write a daily log, update the monthly notes, or add today's entry.",
+      "description": "Reads today's AI journal entry from Obsidian, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.",
       "category": "Other",
       "sourcePath": "skills/daily-log/SKILL.md",
       "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
