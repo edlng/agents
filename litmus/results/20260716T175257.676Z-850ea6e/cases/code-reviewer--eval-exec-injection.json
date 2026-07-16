@@ -1,0 +1,47 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "## Verdict: **BLOCK**\n\nTwo critical vulnerabilities:\n\n---\n\n**BLOCKING | Remote Code Execution via `eval` | CWE-94**\n\n```javascript\nconst payload = eval('(' + req.body + ')');\n```\n\nAny HTTP client can send arbitrary JavaScript as the request body, achieving full server-side code execution. Use `JSON.parse(req.body)` instead.\n\n---\n\n**BLOCKING | OS Command Injection | CWE-78**\n\n```javascript\nexec(`deploy.sh ${payload.target}`);\n```\n\nEven after fixing `eval`, attacker-controlled `payload.target` (e.g. `; rm -rf /`) is interpolated directly into a shell command. Fix: use `execFile` with an argument array and validate `target` against an allowlist.\n\n```javascript\n// Suggested fix (both issues)\nconst payload = JSON.parse(req.body);\nif (!ALLOWED_TARGETS.includes(payload.target)) throw new Error('invalid target');\nexecFile('./deploy.sh', [payload.target], callback);\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^\\s*(?:(?:##\\s*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 429,
+  "cost_usd": 0.045564999999999994,
+  "duration_ms": 10237
+}

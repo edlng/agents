@@ -1,3 +1,3 @@
 {
-  "output": "Finding 1: CONFIRMED. Valkey GLIDE is the Valkey client library.\nFinding 2: CONTRADICTED. Valkey began as a Redis fork under the Linux Foundation in 2024, not Microsoft in 2021."
+  "output": "{\"finding_1\":{\"classification\":\"CONFIRMED\"},\"finding_2\":{\"classification\":\"CONTRADICTED\"}}"
 }

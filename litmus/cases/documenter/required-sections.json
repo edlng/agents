@@ -5,9 +5,16 @@
   "task": "Document this function without changing code:\n\n```python\ndef divide(a, b):\n    return a / b\n```\n\nInclude Overview, Usage, and Limitations sections.",
   "max_budget_usd": 0.10,
   "assertions": [
-    {"type": "contains", "value": "## Overview"},
-    {"type": "contains", "value": "## Usage"},
-    {"type": "contains", "value": "## Limitations"},
+    {"type": "regex", "value": "(?s)## Overview\\s+\\S+"},
+    {"type": "regex", "value": "(?s)## Usage\\s+\\S+"},
+    {"type": "regex", "value": "(?s)## Limitations\\s+\\S+"},
     {"type": "not_regex", "value": "(?i)modified.*\\.py|edited.*source"}
-  ]
+  ],
+  "model_grader": {
+    "enabled": true,
+    "model": "claude-haiku-4.5",
+    "rubric": "Pass only if the documentation has useful, task-relevant content in all three required sections, accurately explains divide, and does not claim that source code was modified.",
+    "max_budget_usd": 0.03,
+    "max_output_tokens": 96
+  }
 }

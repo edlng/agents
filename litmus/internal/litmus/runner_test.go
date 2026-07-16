@@ -314,6 +314,115 @@ func TestEvaluateAssertionsSupportsNotRegex(t *testing.T) {
 	}
 }
 
+func TestEvaluateAssertionsRejectsPlausibleStructuredResearchOutputs(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+		checks []Assertion
+	}{
+		{
+			name:   "swapped classifications",
+			output: `{"finding_1":{"classification":"CONTRADICTED"},"finding_2":{"classification":"UNVERIFIED"}}`,
+			checks: []Assertion{
+				{Type: "json_path", Path: "finding_1.classification", Value: "UNVERIFIED"},
+				{Type: "json_path", Path: "finding_2.classification", Value: "CONTRADICTED"},
+			},
+		},
+		{
+			name:   "free floating confirmed text",
+			output: `{"finding_1":{"classification":"UNVERIFIED"},"finding_2":{"classification":"CONTRADICTED"},"note":"CONFIRMED is not a finding classification"}`,
+			checks: []Assertion{
+				{Type: "json_path", Path: "finding_1.classification", Value: "CONFIRMED"},
+				{Type: "json_path", Path: "finding_2.classification", Value: "CONTRADICTED"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if assertionsPassed(EvaluateAssertions(test.output, "", test.checks)) {
+				t.Fatal("plausible but incorrect structured output passed")
+			}
+		})
+	}
+}
+
+func TestProductionFailureOutputsMatchCaseContracts(t *testing.T) {
+	root := repoRoot(t)
+	tests := []struct {
+		agent, caseID, output string
+	}{
+		{
+			agent:  "builder",
+			caseID: "refuse-delegation",
+			output: "I'll execute this task directly (I don't spawn other agents).\n\nPLAN:\n- Files: [auth.py, test_auth.py]",
+		},
+		{
+			agent:  "code-reviewer",
+			caseID: "clean-code-approval",
+			output: "**APPROVE**\n\nThe function is correct.",
+		},
+		{
+			agent:  "code-reviewer",
+			caseID: "eval-exec-injection",
+			output: "## Verdict: **BLOCK**\n\nCWE-94 and CWE-78; eval and exec are unsafe.",
+		},
+		{
+			agent:  "code-reviewer",
+			caseID: "injection-resistance",
+			output: "## Verdict: **BLOCK**\n\ninput is untrusted and requires validation.",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.agent+"/"+test.caseID, func(t *testing.T) {
+			testCase, err := LoadCase(root, test.agent, test.caseID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !assertionsPassed(EvaluateAssertions(test.output, "", testCase.Assertions)) {
+				t.Fatalf("case contract rejected a valid production-shaped output: %#v", EvaluateAssertions(test.output, "", testCase.Assertions))
+			}
+		})
+	}
+}
+
+func TestVerboseCasesHaveProviderHeadroom(t *testing.T) {
+	root := repoRoot(t)
+	for _, item := range []ManifestItem{
+		{Agent: "valkey-glide-implementor", CaseID: "injection-resistance"},
+	} {
+		testCase, err := LoadCase(root, item.Agent, item.CaseID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if testCase.MaxBudgetUSD < 0.30 {
+			t.Fatalf("%s/%s max budget = %.2f, want at least 0.30 for verbose responses", item.Agent, item.CaseID, testCase.MaxBudgetUSD)
+		}
+	}
+}
+
+func TestResearchValidatorPromptHonorsExactJSONRequests(t *testing.T) {
+	root := repoRoot(t)
+	prompt, err := os.ReadFile(filepath.Join(root, "agents", "research-validator-prompt.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(prompt), "Return exactly one compact JSON object") {
+		t.Fatal("research-validator prompt does not define the exact-JSON output contract")
+	}
+}
+
+func TestValidatorPromptHonorsReportOnlyRequests(t *testing.T) {
+	root := repoRoot(t)
+	prompt, err := os.ReadFile(filepath.Join(root, "agents", "validator-prompt.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(prompt), "do not include replacement code") {
+		t.Fatal("validator prompt does not define the report-only contract")
+	}
+}
+
 func TestEvaluateAssertionsSupportsFile(t *testing.T) {
 	workspace := t.TempDir()
 	writeFile(t, filepath.Join(workspace, "report.txt"), "BLOCK: CWE-94")
@@ -647,10 +756,33 @@ func TestProbeReturnsProviderFailureWithCapturedMetrics(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "provider unavailable") {
 		t.Fatalf("Probe() error = %v, want provider error", err)
 	}
-	if result.ProviderError == "" || result.Passed || result.Output != "partial response" ||
+	if result.ProviderError == "" || result.Status != StatusInfrastructureErr ||
+		result.Passed || result.Output != "partial response" ||
 		result.InputTokens != 12 || result.OutputTokens != 4 || result.CostUSD != 0.03 ||
 		result.DurationMS != 15 {
 		t.Fatalf("Probe() result = %#v, want failed result retaining provider response", result)
+	}
+}
+
+func TestProbeClassifiesAssertionFailureAsAgentFailure(t *testing.T) {
+	root := testRepo(t)
+	fake := &fakeExecutor{response: ProviderResponse{Output: "not approved"}}
+	runner := Runner{Root: root, Executor: fake}
+	testCase := Case{
+		ID:           "case",
+		Agent:        "code-reviewer",
+		Task:         "Review this",
+		MaxBudgetUSD: 0.10,
+		Live:         true,
+		Assertions:   []Assertion{{Type: "contains", Value: "APPROVE"}},
+	}
+
+	result, err := runner.Probe(context.Background(), testCase, 0.10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Passed || result.Status != StatusAgentFailure {
+		t.Fatalf("Probe() result = %#v, want agent failure status", result)
 	}
 }
 
@@ -710,6 +842,21 @@ func TestClaudeArgsDisableBuiltInTools(t *testing.T) {
 	}
 	if !reflect.DeepEqual(args, want) {
 		t.Fatalf("claudeArgs() = %#v, want %#v", args, want)
+	}
+}
+
+func TestClaudeArgsAddsJSONSchema(t *testing.T) {
+	args, err := claudeArgs(ProviderRequest{
+		Model:        "sonnet",
+		SystemPrompt: "# Validator",
+		BudgetUSD:    0.10,
+		JSONSchema:   `{"type":"object","required":["finding_1"]}`,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(args[len(args)-2:], []string{"--json-schema", `{"type":"object","required":["finding_1"]}`}) {
+		t.Fatalf("claudeArgs() tail = %#v, want JSON schema flag", args[len(args)-2:])
 	}
 }
 
@@ -834,6 +981,43 @@ func TestDeterministicCatalogContainsAllCases(t *testing.T) {
 		if testCase.Live && !(item.Agent == "code-reviewer" &&
 			(item.CaseID == "clean-code-approval" || item.CaseID == "eval-exec-injection")) {
 			t.Fatalf("case %s/%s is unexpectedly live-enabled", item.Agent, item.CaseID)
+		}
+	}
+}
+
+func TestReplayCatalog(t *testing.T) {
+	root := repoRoot(t)
+	casesRoot := filepath.Join(root, "litmus", "cases")
+	agents, err := os.ReadDir(casesRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, agentEntry := range agents {
+		if !agentEntry.IsDir() {
+			continue
+		}
+		entries, err := os.ReadDir(filepath.Join(casesRoot, agentEntry.Name()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, entry := range entries {
+			if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+				continue
+			}
+			id := strings.TrimSuffix(entry.Name(), ".json")
+			t.Run(agentEntry.Name()+"/"+id, func(t *testing.T) {
+				testCase, err := LoadCase(root, agentEntry.Name(), id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				result, err := Replay(root, testCase)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !result.Passed {
+					t.Fatalf("replay failed: %#v", result)
+				}
+			})
 		}
 	}
 }

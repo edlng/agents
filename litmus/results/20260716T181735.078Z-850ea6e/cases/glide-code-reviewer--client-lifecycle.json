@@ -1,0 +1,39 @@
+{
+  "agent": "glide-code-reviewer",
+  "case_id": "client-lifecycle",
+  "model": "sonnet",
+  "prompt_hash": "0514631d6f5b9ceee5f1648ba09e90b03d9484d86a7c4a24a3f773cea9fa200c",
+  "output": "# GLIDE Code Review: **BLOCK**\n\n## Findings\n\n### 1. Client-per-request anti-pattern (BLOCK)\n\n```python\nasync def get_user(user_id):\n    client = await GlideClient.create(config)  # ← new client every call\n```\n\n`GlideClient.create()` establishes a new connection (or connection pool) on every invocation of `get_user`. GLIDE clients are designed to be long-lived and reused across the application lifetime. Creating one per request introduces:\n\n- Unnecessary TCP/TLS handshake overhead on every call\n- Connection exhaustion under load\n- Wasted memory for duplicate connection state\n\n**Fix:** Create the client once at application startup and pass or inject it into request handlers.\n\n---\n\n### 2. Resource leak, no client cleanup (BLOCK)\n\n```python\n    return await client.get(user_id)\n    # ← client is never closed\n```\n\nThe client is created but never closed. There is no `try/finally`, no `async with`, and no explicit `await client.close()`. Each call leaks a connection that will never be returned to the OS until the process exits (or hits file-descriptor limits).\n\n**Fix (combined with #1):**\n\n```python\n# At application startup\nclient = await GlideClient.create(config)\n\n# In request handler - reuse the shared client\nasync def get_user(user_id: str) -\u003e Optional[str]:\n    return await client.get(user_id)\n\n# At application shutdown\nawait client.close()\n```\n\nOr, if you truly need a short-lived client (rare), use a `try/finally`:\n\n```python\nasync def get_user(user_id: str) -\u003e Optional[str]:\n    client = await GlideClient.create(config)\n    try:\n        return await client.get(user_id)\n    finally:\n        await client.close()\n```\n\n---\n\n## Summary\n\n| # | Issue | Severity |\n|---|-------|----------|\n| 1 | Client created per request instead of reused | BLOCK |\n| 2 | Client never closed (resource leak) | BLOCK |\n\n**Verdict: BLOCK** - Both issues must be resolved before merging.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "BLOCK"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "GlideClient.create"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)per-request|per request|singleton|client lifecycle"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 1011,
+  "cost_usd": 0.0619025,
+  "duration_ms": 21055
+}

@@ -1,0 +1,39 @@
+{
+  "agent": "glide-code-reviewer",
+  "case_id": "client-lifecycle",
+  "model": "sonnet",
+  "prompt_hash": "0514631d6f5b9ceee5f1648ba09e90b03d9484d86a7c4a24a3f773cea9fa200c",
+  "output": "# GLIDE Code Review: `get_user`\n\n## Verdict: **BLOCK**\n\n---\n\n### Finding 1: Client-per-request anti-pattern (BLOCK)\n\n**Line:**\n```python\nclient = await GlideClient.create(config)\n```\n\n`GlideClient.create()` is called inside `get_user`, meaning every invocation establishes a new connection to the Valkey server. This is expensive (TCP handshake, potential TLS negotiation, AUTH) and defeats GLIDE's built-in connection pooling and reconnection logic.\n\n**Fix:** Create the client once at application startup and pass it in or use a module-level singleton.\n\n---\n\n### Finding 2: Resource leak, client never closed (BLOCK)\n\n**Line:**\n```python\nreturn await client.get(user_id)\n```\n\nThe function returns immediately after the `get` call. The created `GlideClient` is never closed via `client.close()`. There is no `try/finally` block and no async context manager. Every call to `get_user` leaks a connection.\n\n---\n\n### Suggested correction\n\n```python\n# Create once at startup\nclient = await GlideClient.create(config)\n\nasync def get_user(user_id: str):\n    return await client.get(user_id)\n\n# At shutdown\nawait client.close()\n```\n\nOr, if lifecycle scoping is needed:\n\n```python\nasync def get_user(client: GlideClient, user_id: str):\n    return await client.get(user_id)\n```\n\n---\n\n### Summary\n\n| # | Issue | Severity | Pattern violated |\n|---|-------|----------|-----------------|\n| 1 | New client created per request | BLOCK | Client lifecycle reuse |\n| 2 | Client never closed | BLOCK | Resource leak |\n\nBoth issues together mean unbounded connection growth that will exhaust file descriptors or server connection limits under load.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "BLOCK"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "GlideClient.create"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)per-request|per request|singleton|client lifecycle"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 1166,
+  "cost_usd": 0.0657775,
+  "duration_ms": 25111
+}

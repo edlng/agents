@@ -1,0 +1,31 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "No diff context available (code provided inline). Reviewing the snippet as given.\n\n**APPROVE**\n\nThe implementation is correct. `Math.max(value, min)` followed by `Math.min(_, max)` is the standard clamp idiom. The precondition check is sound (`min \u003e max` throws). No security surface exists in a pure numeric function.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 484,
+  "cost_usd": 0.047171250000000005,
+  "duration_ms": 13368
+}

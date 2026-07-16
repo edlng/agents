@@ -21,15 +21,18 @@ const usage = `usage:
   litmus-eval replay <agent> <case>
   litmus-eval probe <agent> <case> --budget <usd>
   litmus-eval batch <manifest> --budget <usd> [--include-replay-only] [--jobs <count>]
+  litmus-eval grade <run-directory> --budget <usd> [--jobs 1]
   litmus-eval compare <baseline-run> <current-run>`
 
 const defaultBatchJobs = 3
+const defaultGradeJobs = 1
 
 type command struct {
 	Name              string
 	Agent             string
 	CaseID            string
 	Manifest          string
+	RunDirectory      string
 	BaselineRun       string
 	CurrentRun        string
 	BudgetUSD         float64
@@ -85,6 +88,8 @@ func (app application) run(args []string, stdout, stderr io.Writer) int {
 		return app.runProbe(parsed, stdout, stderr)
 	case "batch":
 		return app.runBatch(parsed, stdout, stderr)
+	case "grade":
+		return app.runGrade(parsed, stdout, stderr)
 	case "compare":
 		return app.runCompare(parsed, stdout, stderr)
 	default:
@@ -151,6 +156,37 @@ func parseArgs(args []string) (command, error) {
 			default:
 				return command{}, usageError("batch <manifest> --budget <usd> [--include-replay-only] [--jobs <count>]")
 			}
+		}
+		return parsed, nil
+	case "grade":
+		if len(args) < 4 || args[2] != "--budget" {
+			return command{}, usageError("grade <run-directory> --budget <usd> [--jobs 1]")
+		}
+		budget, err := parseBudget(args[3])
+		if err != nil {
+			return command{}, err
+		}
+		parsed := command{
+			Name:         "grade",
+			RunDirectory: args[1],
+			BudgetUSD:    budget,
+			Jobs:         defaultGradeJobs,
+		}
+		jobsSet := false
+		for index := 4; index < len(args); index++ {
+			if args[index] != "--jobs" || jobsSet || index+1 >= len(args) {
+				return command{}, usageError("grade <run-directory> --budget <usd> [--jobs 1]")
+			}
+			jobs, err := parseJobs(args[index+1])
+			if err != nil {
+				return command{}, err
+			}
+			if jobs != 1 {
+				return command{}, fmt.Errorf("grade jobs must be 1 for cost-controlled grading")
+			}
+			parsed.Jobs = jobs
+			jobsSet = true
+			index++
 		}
 		return parsed, nil
 	case "compare":
@@ -411,6 +447,40 @@ func (app application) runBatch(parsed command, stdout, stderr io.Writer) int {
 
 func reserveBatchCase(caseLimit, runBudget, spent, reserved float64) (float64, error) {
 	return litmus.EffectiveBudget(caseLimit, runBudget, spent+reserved)
+}
+
+func (app application) runGrade(parsed command, stdout, stderr io.Writer) int {
+	run, err := litmus.ReadRun(parsed.RunDirectory)
+	if err != nil {
+		fmt.Fprintf(stderr, "read run: %v\n", err)
+		return 1
+	}
+	grade, err := litmus.Grade(context.Background(), app.root, run, litmus.GradeOptions{
+		BudgetUSD: parsed.BudgetUSD,
+		Jobs:      parsed.Jobs,
+		Executor:  app.runner.Executor,
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "grade: %v\n", err)
+		return 1
+	}
+	if err := litmus.WriteGrade(app.root, parsed.RunDirectory, grade); err != nil {
+		fmt.Fprintf(stderr, "write grade: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(
+		stdout,
+		"graded %s cases=%d subject=$%.2f grader=$%.2f %s\n",
+		grade.RunID,
+		len(grade.Cases),
+		grade.SubjectCostUSD,
+		grade.GraderCostUSD,
+		filepath.Join(parsed.RunDirectory, "grader.json"),
+	)
+	if grade.Failed() {
+		return 1
+	}
+	return 0
 }
 
 func (app application) runCompare(parsed command, stdout, stderr io.Writer) int {

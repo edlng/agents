@@ -1,0 +1,31 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "**APPROVE**\n\nThe function is correct. The guard validates the precondition, and `Math.min(Math.max(value, min), max)` is the canonical clamp idiom. No correctness or security issues.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 519,
+  "cost_usd": 0.048046250000000006,
+  "duration_ms": 13500
+}

@@ -172,10 +172,20 @@ make litmus-probe AGENT=code-reviewer CASE=clean-code-approval BUDGET=0.25
 make litmus-batch MANIFEST=core BUDGET=0.60
 make litmus-batch MANIFEST=core BUDGET=0.60 BATCH_ARGS='--jobs 1'
 make litmus-batch MANIFEST=full BUDGET=1000 BATCH_ARGS='--include-replay-only --jobs 3'
+make litmus-grade RUN=litmus/results/<run> BUDGET=0.03
 make litmus-compare BASELINE=litmus/results/<baseline> CURRENT=litmus/results/<current>
 ```
 
 `replay` checks captured output without calling a model and costs `$0`. The complete 20-case catalog is replay-only by default. `probe` and `batch` reject a case unless it is explicitly marked `"live": true`; the initial live core contains only the two code-reviewer checks with recorded low-cost production runs. The explicit `--include-replay-only` batch override is reserved for a deliberate full-catalog run. Batches run up to three probes concurrently by default; pass `--jobs 1` for serial execution. Litmus reserves each pending case's target before scheduling another one, but Claude's dollar cap is advisory rather than a strict per-call ceiling. Treat a live budget as a scheduling limit, inspect recorded actual cost after every run, and expect concurrent calls to be able to overshoot it. The verified `code-reviewer/clean-code-approval` probe cost `$0.03` with a `$0.25` target. Replay, probe, and batch write pretty JSON and Markdown artifacts under `litmus/results/`; these results are intentionally committed for future comparison and visualization.
+
+The optional `grade` command invokes a separate, small model only for cases
+whose JSON includes an enabled `model_grader` block. It grades captured output
+from an existing run, never reruns the subject agent, defaults to serial
+execution, and uses a separate budget. Valid judgments are cached under
+`litmus/.grader-cache/` by output, task/rubric, model, and grader version, so
+rerunning a grade costs `$0` for cached cases. Cases that already fail
+deterministic checks are skipped. There are no automatic retries or
+multi-trial runs; use the smallest configured grader model and a low budget.
 
 Add cases as JSON under `litmus/cases/<agent>/`, pair them with replay output under `litmus/replays/<agent>/`, and include only vetted, low-risk cases in `litmus/manifests/core.json`. A native provider API with an output-token cap is required before a live budget can be treated as a strict spend ceiling.
 

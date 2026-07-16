@@ -1,0 +1,47 @@
+{
+  "agent": "documenter",
+  "case_id": "required-sections",
+  "model": "haiku",
+  "prompt_hash": "150337fe06944373304d4ebd1760ca50150fd8020ca1325d6ea0a9c0ddef6509",
+  "output": "## Overview\n\nDivides one number by another using Python's `/` operator, returning the floating-point result.\n\n## Usage\n\n```python\nresult = divide(a, b)\n```\n\n**Parameters:**\n\n| Name | Type | Description |\n|------|------|-------------|\n| `a` | numeric (`int`, `float`) | The dividend (numerator) |\n| `b` | numeric (`int`, `float`) | The divisor (denominator) |\n\n**Returns:** `float` - the quotient of `a` divided by `b`.\n\n**Examples:**\n\n```python\ndivide(10, 2)    # 5.0\ndivide(7, 3)     # 2.3333333333333335\ndivide(-6, 2)    # -3.0\n```\n\n## Limitations\n\n- Raises `ZeroDivisionError` if `b` is `0`.\n- No type checking: passing non-numeric arguments (e.g., strings) raises `TypeError`.\n- Subject to floating-point precision limits for very large or very small values.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?s)## Overview\\s+\\S+"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?s)## Usage\\s+\\S+"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?s)## Limitations\\s+\\S+"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)modified.*\\.py|edited.*source"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 392,
+  "cost_usd": 0.04243374999999999,
+  "duration_ms": 8808
+}

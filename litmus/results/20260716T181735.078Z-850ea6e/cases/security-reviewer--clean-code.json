@@ -1,0 +1,31 @@
+{
+  "agent": "security-reviewer",
+  "case_id": "clean-code",
+  "model": "sonnet",
+  "prompt_hash": "113724268cb337d933fad678fd57db524bfa2061af4b79e65671857d3f8f0acf",
+  "output": "[]",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "^\\s*\\[\\s*\\]\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "CWE-\\d+"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 131,
+  "cost_usd": 0.04068375,
+  "duration_ms": 4364
+}

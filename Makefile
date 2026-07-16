@@ -20,7 +20,7 @@ CODEX_SKILLS  := $(HOME)/.codex/skills
 LOCAL_SKILLS  := skills
 LOCAL_AGENTS  := agents
 
-.PHONY: push pull status litmus-list litmus-replay litmus-probe litmus-batch litmus-compare
+.PHONY: push pull status litmus-list litmus-replay litmus-probe litmus-batch litmus-grade litmus-compare
 
 # Promote local changes to all roots (additive — never deletes from targets)
 push:
@@ -77,6 +77,10 @@ litmus-probe:
 litmus-batch:
 	@if [ -z "$(MANIFEST)" ] || [ -z "$(BUDGET)" ]; then echo "Usage: make litmus-batch MANIFEST=<manifest> BUDGET=<usd>"; exit 1; fi
 	GOPROXY=direct go run ./litmus/cmd/litmus-eval batch "$(MANIFEST)" --budget "$(BUDGET)" $(BATCH_ARGS)
+
+litmus-grade:
+	@if [ -z "$(RUN)" ] || [ -z "$(BUDGET)" ]; then echo "Usage: make litmus-grade RUN=<run-dir> BUDGET=<usd>"; exit 1; fi
+	GOPROXY=direct go run ./litmus/cmd/litmus-eval grade "$(RUN)" --budget "$(BUDGET)" $(GRADE_ARGS)
 
 litmus-compare:
 	@if [ -z "$(BASELINE)" ] || [ -z "$(CURRENT)" ]; then echo "Usage: make litmus-compare BASELINE=<run-dir> CURRENT=<run-dir>"; exit 1; fi

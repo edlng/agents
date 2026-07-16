@@ -5,7 +5,9 @@
   "task": "This code has a bug: the FT.SEARCH query is missing DIALECT 2. Report the issue only; do not fix it.\n\n```python\nresult = await ft.search(client, \"idx\", \"*=>[KNN 5 @vec $query]\", options=FtSearchOptions(params={\"query\": embedding}))\n```",
   "max_budget_usd": 0.10,
   "assertions": [
-    {"type": "regex", "value": "(?i)report|finding|issue|fail|read-only|cannot modify"},
-    {"type": "not_regex", "value": "(?i)options=ftsearchoptions.*dialect=2"}
+    {"type": "regex", "value": "(?im)^status:\\s*fail\\s*$"},
+    {"type": "contains", "value": "DIALECT 2"},
+    {"type": "regex", "value": "(?i)report|finding|issue|read-only|does not modify"},
+    {"type": "not_regex", "value": "(?i)```[^`]*dialect\\s*=\\s*2"}
   ]
 }

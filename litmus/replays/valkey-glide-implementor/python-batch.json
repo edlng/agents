@@ -1,3 +1,3 @@
 {
-  "output": "```python\nfrom glide import Batch\n\nbatch = Batch()\nfor index in range(10):\n    batch.set(f\"key:{index}\", str(index))\nawait client.exec(batch)\n```"
+  "output": "```python\nimport asyncio\nfrom glide import Batch, GlideClient, GlideClientConfiguration, NodeAddress\n\nasync def main():\n    config = GlideClientConfiguration(addresses=[NodeAddress(host=\"localhost\", port=6379)], request_timeout=3000)\n    client = await GlideClient.create(config)\n    try:\n        batch = Batch()\n        for index in range(10):\n            batch.set(f\"key:{index}\", str(index))\n        await client.exec(batch)\n    finally:\n        await client.close()\n\nasyncio.run(main())\n```"
 }

@@ -43,25 +43,29 @@ type runSummary struct {
 }
 
 type runTotals struct {
-	Cases        int     `json:"cases"`
-	Passed       int     `json:"passed"`
-	Failed       int     `json:"failed"`
-	InputTokens  int     `json:"input_tokens"`
-	OutputTokens int     `json:"output_tokens"`
-	TotalTokens  int     `json:"total_tokens"`
-	CostUSD      float64 `json:"cost_usd"`
-	DurationMS   int64   `json:"duration_ms"`
+	Cases              int     `json:"cases"`
+	Passed             int     `json:"passed"`
+	Failed             int     `json:"failed"`
+	AgentFailures      int     `json:"agent_failures"`
+	InfrastructureErrs int     `json:"infrastructure_errors"`
+	GraderErrors       int     `json:"grader_errors"`
+	InputTokens        int     `json:"input_tokens"`
+	OutputTokens       int     `json:"output_tokens"`
+	TotalTokens        int     `json:"total_tokens"`
+	CostUSD            float64 `json:"cost_usd"`
+	DurationMS         int64   `json:"duration_ms"`
 }
 
 type summaryCase struct {
-	Agent        string  `json:"agent"`
-	CaseID       string  `json:"case_id"`
-	Passed       bool    `json:"passed"`
-	InputTokens  int     `json:"input_tokens"`
-	OutputTokens int     `json:"output_tokens"`
-	CostUSD      float64 `json:"cost_usd"`
-	DurationMS   int64   `json:"duration_ms"`
-	DetailPath   string  `json:"detail_path"`
+	Agent        string     `json:"agent"`
+	CaseID       string     `json:"case_id"`
+	Status       CaseStatus `json:"status"`
+	Passed       bool       `json:"passed"`
+	InputTokens  int        `json:"input_tokens"`
+	OutputTokens int        `json:"output_tokens"`
+	CostUSD      float64    `json:"cost_usd"`
+	DurationMS   int64      `json:"duration_ms"`
+	DetailPath   string     `json:"detail_path"`
 }
 
 func NewRun(now time.Time, revision string, budgetUSD float64, cases []CaseResult) Run {
@@ -252,7 +256,9 @@ func normalizedRun(run Run) (Run, error) {
 	}
 
 	seen := make(map[caseKey]struct{}, len(run.Cases))
-	for _, result := range run.Cases {
+	for index := range run.Cases {
+		result := normalizeCaseResult(run.Cases[index])
+		run.Cases[index] = result
 		if err := validateCaseIdentityComponent("case agent", result.Agent); err != nil {
 			return Run{}, err
 		}
@@ -272,6 +278,21 @@ func normalizedRun(run Run) (Run, error) {
 		}
 	}
 	return run, nil
+}
+
+func normalizeCaseResult(result CaseResult) CaseResult {
+	if result.Status == "" {
+		switch {
+		case result.ProviderError != "":
+			result.Status = StatusInfrastructureErr
+		case result.Passed:
+			result.Status = StatusPass
+		default:
+			result.Status = StatusAgentFailure
+		}
+	}
+	result.Passed = result.Status == StatusPass
+	return result
 }
 
 func resultDirectory(root string) (string, error) {
@@ -339,6 +360,7 @@ func readCaseDetail(directory string, entry summaryCase) (CaseResult, error) {
 	if err := loadJSON(directory, path, &result); err != nil {
 		return CaseResult{}, fmt.Errorf("read case detail %q: %w", entry.DetailPath, err)
 	}
+	result = normalizeCaseResult(result)
 	if result.Agent != entry.Agent || result.CaseID != entry.CaseID {
 		return CaseResult{}, fmt.Errorf("case detail identity does not match summary")
 	}
@@ -406,9 +428,18 @@ func summaryFor(run Run) runSummary {
 	}
 	for _, result := range sortedCases(run.Cases) {
 		summary.Totals.Cases++
-		if result.Passed {
+		result = normalizeCaseResult(result)
+		switch result.Status {
+		case StatusPass:
 			summary.Totals.Passed++
-		} else {
+		case StatusAgentFailure:
+			summary.Totals.AgentFailures++
+			summary.Totals.Failed++
+		case StatusInfrastructureErr:
+			summary.Totals.InfrastructureErrs++
+			summary.Totals.Failed++
+		case StatusGraderError:
+			summary.Totals.GraderErrors++
 			summary.Totals.Failed++
 		}
 		summary.Totals.InputTokens += result.InputTokens
@@ -418,6 +449,7 @@ func summaryFor(run Run) runSummary {
 		summary.Cases = append(summary.Cases, summaryCase{
 			Agent:        result.Agent,
 			CaseID:       result.CaseID,
+			Status:       result.Status,
 			Passed:       result.Passed,
 			InputTokens:  result.InputTokens,
 			OutputTokens: result.OutputTokens,
@@ -468,6 +500,9 @@ func markdownReport(summary runSummary) string {
 	fmt.Fprintf(&report, "| Cases | %d |\n", summary.Totals.Cases)
 	fmt.Fprintf(&report, "| Passed | %d |\n", summary.Totals.Passed)
 	fmt.Fprintf(&report, "| Failed | %d |\n", summary.Totals.Failed)
+	fmt.Fprintf(&report, "| Agent failures | %d |\n", summary.Totals.AgentFailures)
+	fmt.Fprintf(&report, "| Infrastructure errors | %d |\n", summary.Totals.InfrastructureErrs)
+	fmt.Fprintf(&report, "| Grader errors | %d |\n", summary.Totals.GraderErrors)
 	fmt.Fprintf(&report, "| Input tokens | %d |\n", summary.Totals.InputTokens)
 	fmt.Fprintf(&report, "| Output tokens | %d |\n", summary.Totals.OutputTokens)
 	fmt.Fprintf(&report, "| Total tokens | %d |\n", summary.Totals.TotalTokens)
@@ -475,10 +510,7 @@ func markdownReport(summary runSummary) string {
 	fmt.Fprintf(&report, "| Duration ms | %d |\n\n", summary.Totals.DurationMS)
 	report.WriteString("## Cases\n\n| Agent | Case | Status | Input tokens | Output tokens | Cost USD | Duration ms | Detail |\n| --- | --- | --- | ---: | ---: | ---: | ---: | --- |\n")
 	for _, result := range summary.Cases {
-		status := "fail"
-		if result.Passed {
-			status = "pass"
-		}
+		status := string(result.Status)
 		fmt.Fprintf(
 			&report,
 			"| %s | %s | %s | %d | %d | %.2f | %d | %s |\n",

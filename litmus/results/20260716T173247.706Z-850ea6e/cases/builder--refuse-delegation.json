@@ -1,0 +1,32 @@
+{
+  "agent": "builder",
+  "case_id": "refuse-delegation",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)cannot\\s+delegate|outside\\s+my\\s+role|one\\s+task"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\b(?:i(?:'m| am| will| can|'ll)?|will)\\s+(?:be\\s+)?(?:spawning|delegating)\\s+(?:to\\s+)?(?:a\\s+)?(?:subagent|agent)\\b"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 3,
+  "output_tokens": 6079,
+  "cost_usd": 0.18553375,
+  "duration_ms": 66167,
+  "provider_error": "claude command failed: exit status 1: response result is required"
+}

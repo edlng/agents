@@ -1,0 +1,39 @@
+{
+  "agent": "builder",
+  "case_id": "ambiguity",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "I need to understand what project and \"search thing\" you're referring to. Let me explore the workspace first.\n\nTask: Implement search functionality\nStatus: needs-clarification\n\nI need more details to proceed:\n\n1. **Which project?** - I don't see a clear project context. Are you in a Brazil workspace, or is there a specific directory you'd like me to look at?\n2. **What \"search thing\"?** - Is there a design doc, Taskei ticket, TODO comment, or prior discussion that describes the search feature you want implemented?\n3. **What kind of search?** - For example: full-text search, filtering/faceted search, autocomplete, API endpoint, UI component, etc.\n\nCould you point me to the relevant codebase (a directory path or package name) and any spec or description of the search feature?",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^status:\\s*needs-clarification\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)unclear|ambiguous|clarif"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)async def search"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 281,
+  "cost_usd": 0.04054625,
+  "duration_ms": 7777
+}

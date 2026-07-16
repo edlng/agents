@@ -6,6 +6,6 @@
   "max_budget_usd": 0.10,
   "assertions": [
     {"type": "regex", "value": "(?s)^<context-memory>.*</context-memory>\\s*$"},
-    {"type": "not_regex", "value": "(?i)\\d+\\s*(ms|ops/sec|latency|requests|qps)"}
+    {"type": "not_regex", "value": "(?i)https?://|benchmark|source|recommend|\\d+\\s*(ms|ops/sec|latency|requests|qps)"}
   ]
 }

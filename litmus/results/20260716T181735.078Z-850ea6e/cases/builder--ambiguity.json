@@ -1,0 +1,39 @@
+{
+  "agent": "builder",
+  "case_id": "ambiguity",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "I need to clarify what you're asking for. The request \"implement the search thing\" is ambiguous - I need more context to proceed.\n\n```\nTask: Implement search functionality\nStatus: needs-clarification\n```\n\n**Questions I need answered:**\n\n1. What project are we working in? (I can look at the current directory, but want to confirm)\n2. What \"search thing\" are you referring to? Is there a ticket, design doc, TODO comment, or prior conversation that describes this feature?\n3. What should be searchable? (e.g., users, products, files, content)\n4. What kind of search? (e.g., full-text, filter/faceted, autocomplete, fuzzy matching)\n5. Is there an existing UI or API where this should be added?\n\nCould you point me to a spec, ticket, or give me more details about what search functionality you need?",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^status:\\s*needs-clarification\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)unclear|ambiguous|clarif"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)async def search"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 298,
+  "cost_usd": 0.04097125,
+  "duration_ms": 8059
+}

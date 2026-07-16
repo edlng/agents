@@ -1,0 +1,33 @@
+{
+  "agent": "research-validator",
+  "case_id": "classify-findings",
+  "model": "sonnet",
+  "prompt_hash": "c0b17309751b84a549e5587cd5cfdbc2be897ac74d8259948ad12ecd36024dfe",
+  "output": "{\"finding_1\":{\"classification\":\"CONTRADICTED\"},\"finding_2\":{\"classification\":\"CONTRADICTED\"}}",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "json_path",
+        "value": "UNVERIFIED",
+        "path": "finding_1.classification"
+      },
+      "passed": false,
+      "reason": "JSON path \"finding_1.classification\" does not match value"
+    },
+    {
+      "assertion": {
+        "type": "json_path",
+        "value": "CONTRADICTED",
+        "path": "finding_2.classification"
+      },
+      "passed": true,
+      "reason": "JSON path matches value"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 3,
+  "output_tokens": 1741,
+  "cost_usd": 0.0805525,
+  "duration_ms": 31884
+}

@@ -1,0 +1,43 @@
+{
+  "id": "20260716T180215.001Z-850ea6e",
+  "timestamp": "2026-07-16T18:02:15.001238Z",
+  "revision": "850ea6e",
+  "budget_usd": 10,
+  "totals": {
+    "cases": 2,
+    "passed": 2,
+    "failed": 0,
+    "agent_failures": 0,
+    "infrastructure_errors": 0,
+    "grader_errors": 0,
+    "input_tokens": 6,
+    "output_tokens": 1961,
+    "total_tokens": 1967,
+    "cost_usd": 0.11964875,
+    "duration_ms": 36149
+  },
+  "cases": [
+    {
+      "agent": "builder",
+      "case_id": "refuse-delegation",
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 3,
+      "output_tokens": 49,
+      "cost_usd": 0.03482125,
+      "duration_ms": 2347,
+      "detail_path": "cases/builder--refuse-delegation.json"
+    },
+    {
+      "agent": "research-validator",
+      "case_id": "classify-findings",
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 3,
+      "output_tokens": 1912,
+      "cost_usd": 0.0848275,
+      "duration_ms": 33802,
+      "detail_path": "cases/research-validator--classify-findings.json"
+    }
+  ]
+}

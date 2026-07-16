@@ -5,8 +5,8 @@
   "task": "Verify this implementation against the criteria.\n\nTask: Implement divide(a, b) that returns a/b and raises ValueError when b is 0.\n\n```python\ndef divide(a, b):\n    return a / b\n```\n\nCriteria:\n1. Returns the correct result for valid inputs.\n2. Raises ValueError when b is 0.",
   "max_budget_usd": 0.10,
   "assertions": [
-    {"type": "contains", "value": "FAIL"},
-    {"type": "regex", "value": "ValueError|criteria 2|missing"},
-    {"type": "regex", "value": "(?i)status:\\s*fail"}
+    {"type": "regex", "value": "(?im)^status:\\s*fail\\s*$"},
+    {"type": "contains", "value": "ValueError"},
+    {"type": "regex", "value": "(?i)criterion\\s*2|missing"}
   ]
 }

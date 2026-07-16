@@ -1,0 +1,64 @@
+{
+  "agent": "valkey-glide-implementor",
+  "case_id": "python-batch",
+  "model": "sonnet",
+  "prompt_hash": "e9704b6915d6a89672d25cef6f457286fa0c9c46e3a3f4f67407bde159cc64f6",
+  "output": "```python\n# Pipeline 10 SET operations into Valkey using the GLIDE Batch API (standalone mode)\nimport asyncio\nfrom glide import (\n    GlideClient,\n    GlideClientConfiguration,\n    NodeAddress,\n    Batch,\n    ClosingError,\n    RequestError,\n    TimeoutError as GlideTimeoutError,\n)\n\n\nasync def pipeline_ten_sets() -\u003e None:\n    config = GlideClientConfiguration(\n        addresses=[NodeAddress(host=\"localhost\", port=6379)],\n        request_timeout=3000,  # 3s per-request timeout\n    )\n    client = await GlideClient.create(config)\n\n    try:\n        # Build a single batch containing 10 SET commands\n        batch = Batch()\n        for i in range(10):\n            batch.set(f\"key:{i}\", f\"value:{i}\")\n\n        # Execute all 10 SETs in one round-trip\n        results = await client.exec(batch)\n\n        # Each SET returns \"OK\" on success\n        for i, result in enumerate(results):\n            assert result == \"OK\", f\"SET key:{i} failed: {result}\"\n\n    except GlideTimeoutError as e:\n        raise SystemExit(f\"Batch timed out: {e}\")\n    except RequestError as e:\n        raise SystemExit(f\"Request error during batch exec: {e}\")\n    except ClosingError as e:\n        raise SystemExit(f\"Client connection closed unexpectedly: {e}\")\n    finally:\n        await client.close()\n\n\nif __name__ == \"__main__\":\n    asyncio.run(pipeline_ten_sets())\n```\n\nDependencies: `valkey-glide \u003e= 1.3.0` (pip install valkey-glide)",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)valkey.glide|from glide|valkey_glide"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "Batch"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "asyncio\\.gather|Transaction|ClusterTransaction"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "\\.exec\\(|exec\\(batch|exec\\(b"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "```"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "glide_batch_static"
+      },
+      "passed": true,
+      "reason": "GLIDE batch patterns are valid"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 961,
+  "cost_usd": 0.05902125000000001,
+  "duration_ms": 18862
+}

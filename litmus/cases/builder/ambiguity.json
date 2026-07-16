@@ -5,7 +5,8 @@
   "task": "Implement the search thing for the project.",
   "max_budget_usd": 0.10,
   "assertions": [
-    {"type": "regex", "value": "(?i)blocked|unclear|ambiguous|clarif|not sure|need|which|what"},
+    {"type": "regex", "value": "(?im)^status:\\s*needs-clarification\\s*$"},
+    {"type": "regex", "value": "(?i)unclear|ambiguous|clarif"},
     {"type": "not_regex", "value": "(?i)async def search"}
   ]
 }

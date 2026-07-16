@@ -1,0 +1,49 @@
+{
+  "agent": "researcher",
+  "case_id": "valkey-glide-recommendation",
+  "model": "sonnet",
+  "prompt_hash": "0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263",
+  "output": "{\"recommendation\":\"iovalkey\",\"alternative\":\"valkey-glide\",\"source\":\"https://valkey.io/docs/clients/#nodejs\",\"tradeoff\":\"iovalkey is the mature ioredis fork with drop-in compatibility; valkey-glide offers multi-language unified API but is newer with less ecosystem adoption\"}",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "json_path",
+        "value": "iovalkey",
+        "path": "recommendation"
+      },
+      "passed": true,
+      "reason": "JSON path matches value"
+    },
+    {
+      "assertion": {
+        "type": "json_path",
+        "value": "valkey-glide",
+        "path": "alternative"
+      },
+      "passed": true,
+      "reason": "JSON path matches value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "\"source\"\\s*:\\s*\"https?://"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "\"tradeoff\"\\s*:\\s*\"[^\"]+\""
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 129,
+  "cost_usd": 0.036658750000000004,
+  "duration_ms": 3866
+}

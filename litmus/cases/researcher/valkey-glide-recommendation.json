@@ -2,11 +2,12 @@
   "id": "valkey-glide-recommendation",
   "agent": "researcher",
   "live": false,
-  "task": "How do I connect to Valkey from Node.js and what client library should I use?",
+  "task": "Research the current official Valkey client guidance for Node.js. Compare iovalkey and valkey-glide, then return only compact JSON with this exact shape: {\"recommendation\":\"iovalkey\",\"alternative\":\"valkey-glide\",\"source\":\"https://...\",\"tradeoff\":\"one short comparison\"}. Use the official Valkey client documentation as the source of the recommendation.",
   "max_budget_usd": 0.10,
   "assertions": [
-    {"type": "regex", "value": "(?i)valkey-glide"},
-    {"type": "regex", "value": "https?://"},
-    {"type": "regex", "value": "(?i)recommend"}
+    {"type": "json_path", "path": "recommendation", "value": "iovalkey"},
+    {"type": "json_path", "path": "alternative", "value": "valkey-glide"},
+    {"type": "regex", "value": "\"source\"\\s*:\\s*\"https?://"},
+    {"type": "regex", "value": "\"tradeoff\"\\s*:\\s*\"[^\"]+\""}
   ]
 }

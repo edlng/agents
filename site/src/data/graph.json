@@ -1625,110 +1625,110 @@
     },
     "evals": {
       "caseCount": 20,
-      "runCount": 1,
+      "runCount": 10,
       "byAgent": [
         {
           "agent": "builder",
           "model": "sonnet",
-          "runs": 4,
+          "runs": 21,
           "avgIn": 3,
-          "avgOut": 1660,
-          "avgDurationS": 21,
-          "totalCostUsd": 0.30107874999999995
+          "avgOut": 1632,
+          "avgDurationS": 22,
+          "totalCostUsd": 1.4725805000000003
         },
         {
           "agent": "code-reviewer",
           "model": "sonnet",
-          "runs": 3,
+          "runs": 15,
           "avgIn": 3,
-          "avgOut": 632,
-          "avgDurationS": 14,
-          "totalCostUsd": 0.15242624999999999
+          "avgOut": 645,
+          "avgDurationS": 15,
+          "totalCostUsd": 0.76713125
         },
         {
           "agent": "context-curator",
           "model": "haiku",
-          "runs": 2,
+          "runs": 8,
           "avgIn": 3,
-          "avgOut": 192,
-          "avgDurationS": 6,
-          "totalCostUsd": 0.07998625000000001
+          "avgOut": 233,
+          "avgDurationS": 7,
+          "totalCostUsd": 0.32819500000000007
         },
         {
           "agent": "documenter",
           "model": "haiku",
-          "runs": 1,
+          "runs": 4,
           "avgIn": 3,
-          "avgOut": 274,
-          "avgDurationS": 7,
-          "totalCostUsd": 0.03948375
+          "avgOut": 390,
+          "avgDurationS": 9,
+          "totalCostUsd": 0.16948499999999997
         },
         {
           "agent": "glide-code-reviewer",
           "model": "sonnet",
-          "runs": 1,
+          "runs": 4,
           "avgIn": 3,
-          "avgOut": 942,
-          "avgDurationS": 18,
-          "totalCostUsd": 0.0601775
+          "avgOut": 1047,
+          "avgDurationS": 22,
+          "totalCostUsd": 0.25116000000000005
         },
         {
           "agent": "research-validator",
           "model": "sonnet",
-          "runs": 1,
+          "runs": 9,
           "avgIn": 3,
-          "avgOut": 672,
-          "avgDurationS": 13,
-          "totalCostUsd": 0.04894
+          "avgOut": 1137,
+          "avgDurationS": 21,
+          "totalCostUsd": 0.5710975
         },
         {
           "agent": "researcher",
           "model": "sonnet",
-          "runs": 1,
+          "runs": 4,
           "avgIn": 3,
-          "avgOut": 647,
-          "avgDurationS": 14,
-          "totalCostUsd": 0.04923375
+          "avgOut": 260,
+          "avgDurationS": 6,
+          "totalCostUsd": 0.159335
         },
         {
           "agent": "security-reviewer",
           "model": "sonnet",
-          "runs": 2,
+          "runs": 8,
           "avgIn": 3,
-          "avgOut": 372,
-          "avgDurationS": 8,
-          "totalCostUsd": 0.093505
+          "avgOut": 346,
+          "avgDurationS": 7,
+          "totalCostUsd": 0.36877
         },
         {
           "agent": "tester",
           "model": "sonnet",
-          "runs": 1,
+          "runs": 4,
           "avgIn": 3,
-          "avgOut": 144,
+          "avgOut": 149,
           "avgDurationS": 4,
-          "totalCostUsd": 0.03607125
+          "totalCostUsd": 0.144785
         },
         {
           "agent": "validator",
           "model": "opus",
-          "runs": 2,
+          "runs": 9,
           "avgIn": 3,
-          "avgOut": 364,
+          "avgOut": 328,
           "avgDurationS": 8,
-          "totalCostUsd": 0.08453000000000001
+          "totalCostUsd": 0.3422905000000001
         },
         {
           "agent": "valkey-glide-implementor",
           "model": "sonnet",
-          "runs": 2,
+          "runs": 9,
           "avgIn": 3,
-          "avgOut": 1199,
-          "avgDurationS": 20,
-          "totalCostUsd": 0.13006125000000002
+          "avgOut": 1676,
+          "avgDurationS": 29,
+          "totalCostUsd": 0.6927100000000002
         }
       ],
-      "grandRuns": 20,
-      "grandTotalCostUsd": 1.07549375
+      "grandRuns": 95,
+      "grandTotalCostUsd": 5.26753975
     }
   }
 }

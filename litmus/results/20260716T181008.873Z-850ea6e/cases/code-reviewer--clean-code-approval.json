@@ -1,0 +1,31 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "**APPROVE**\n\nThe function is correct. The `Math.min(Math.max(value, min), max)` composition properly clamps in all cases, and the precondition check fails fast with context.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 487,
+  "cost_usd": 0.047246250000000004,
+  "duration_ms": 11369
+}

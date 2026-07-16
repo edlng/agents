@@ -20,6 +20,7 @@ func TestWriteRunCreatesReadableArtifacts(t *testing.T) {
 		Cases: []CaseResult{{
 			Agent:        "reviewer",
 			CaseID:       "case",
+			Status:       StatusPass,
 			Passed:       true,
 			InputTokens:  100,
 			OutputTokens: 20,
@@ -75,7 +76,8 @@ func TestWriteRunCreatesReadableArtifacts(t *testing.T) {
 		t.Fatal(err)
 	}
 	if read.ID != run.ID || len(read.Cases) != 1 || read.Cases[0].Agent != "reviewer" ||
-		read.Cases[0].CaseID != "case" || !read.Cases[0].Passed || read.Cases[0].CostUSD != 0.04 {
+		read.Cases[0].CaseID != "case" || read.Cases[0].Status != StatusPass ||
+		!read.Cases[0].Passed || read.Cases[0].CostUSD != 0.04 {
 		t.Fatalf("ReadRun() = %#v, want summary run", read)
 	}
 
@@ -91,6 +93,58 @@ func TestWriteRunCreatesReadableArtifacts(t *testing.T) {
 		if !strings.Contains(string(report), want) {
 			t.Fatalf("report.md missing %q:\n%s", want, report)
 		}
+	}
+}
+
+func TestReadRunNormalizesLegacyCaseStatus(t *testing.T) {
+	root := t.TempDir()
+	run := Run{
+		ID:        "20260715T143022-a1b2c3d",
+		Timestamp: time.Date(2026, time.July, 15, 14, 30, 22, 0, time.UTC),
+		Revision:  "a1b2c3d",
+		Cases: []CaseResult{
+			{Agent: "reviewer", CaseID: "passed", Passed: true},
+			{Agent: "reviewer", CaseID: "failed", Passed: false},
+			{Agent: "reviewer", CaseID: "provider", Passed: false, ProviderError: "decode failed"},
+		},
+	}
+	directory, err := WriteRun(root, run)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, id := range []string{"passed", "failed", "provider"} {
+		path := filepath.Join(directory, "cases", "reviewer--"+id+".json")
+		contents, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var result CaseResult
+		if err := json.Unmarshal(contents, &result); err != nil {
+			t.Fatal(err)
+		}
+		result.Status = ""
+		contents, err = json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, contents, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	read, err := ReadRun(directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statuses := map[string]CaseStatus{}
+	for _, result := range read.Cases {
+		statuses[result.CaseID] = result.Status
+	}
+	if statuses["passed"] != StatusPass ||
+		statuses["failed"] != StatusAgentFailure ||
+		statuses["provider"] != StatusInfrastructureErr {
+		t.Fatalf("legacy statuses = %#v, want normalized statuses", statuses)
 	}
 }
 

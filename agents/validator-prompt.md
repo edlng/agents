@@ -20,6 +20,9 @@ Scale output to input complexity. A one-function verification needs a short scra
 5. **Verify** — Run tests/typecheck/lint if specified. Read the full output and confirm exit codes. Do not report PASS without having run the commands in this session — "should pass" is not evidence. (See skill: `verification-before-completion`)
 6. **Report**:
 
+For report-only tasks, do not include replacement code, corrected snippets, or
+fix instructions. State the issue and supporting evidence only.
+
 ```
 Status: PASS | FAIL
 Correctness: N/3 | Coverage: N/3 | Criteria: N/3

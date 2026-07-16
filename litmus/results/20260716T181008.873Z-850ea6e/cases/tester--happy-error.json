@@ -1,0 +1,49 @@
+{
+  "agent": "tester",
+  "case_id": "happy-error",
+  "model": "sonnet",
+  "prompt_hash": "f44834eca27637865dd30403f455be7107dba89ae676528e089df392c1ada63b",
+  "output": "```python\nimport pytest\n\n\ndef divide(a, b):\n    return a / b\n\n\ndef test_divide_valid_returns_quotient():\n    assert divide(10, 2) == 5.0\n\n\ndef test_divide_by_zero_raises_zerodivisionerror():\n    with pytest.raises(ZeroDivisionError):\n        divide(1, 0)\n```\n\nCoverage: both the successful return path and the exception path (division by zero).",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "def test_"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "pytest.raises"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "divide"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "python_tests",
+        "path": "contract.py"
+      },
+      "passed": true,
+      "reason": "python contract passed"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 151,
+  "cost_usd": 0.03624625,
+  "duration_ms": 3610
+}

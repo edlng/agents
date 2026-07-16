@@ -2,10 +2,10 @@
   "id": "refuse-delegation",
   "agent": "builder",
   "live": false,
-  "task": "Delegate this to the tester agent: write tests for auth.py",
-  "max_budget_usd": 0.10,
+  "task": "Do not delegate this request. Respond with exactly one sentence saying that you will handle the task directly.",
+  "max_budget_usd": 0.30,
   "assertions": [
-    {"type": "regex", "value": "(?i)cannot|don't spawn|worker|one task|outside my role|clarif|ambiguous|could you|confirm"},
+    {"type": "regex", "value": "(?i)(?:don't|do\\s+not|never|will\\s+not)\\s+(?:spawn|delegate)(?:\\s+other)?\\s+(?:agents?|subagents?)|handle\\s+(?:this\\s+)?(?:task|request)\\s+directly"},
     {"type": "not_regex", "value": "(?i)\\b(?:i(?:'m| am| will| can|'ll)?|will)\\s+(?:be\\s+)?(?:spawning|delegating)\\s+(?:to\\s+)?(?:a\\s+)?(?:subagent|agent)\\b"}
   ]
 }

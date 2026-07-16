@@ -15,4 +15,5 @@ __pycache__/
 *.egg-info/
 .langgraph-data/
 .langgraph_api/
+litmus/.grader-cache/
 langgraph-agents/.langgraph/

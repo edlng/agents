@@ -26,13 +26,16 @@ type Assertion struct {
 }
 
 type Case struct {
-	ID           string      `json:"id"`
-	Agent        string      `json:"agent"`
-	Task         string      `json:"task"`
-	MaxBudgetUSD float64     `json:"max_budget_usd"`
-	Live         bool        `json:"live"`
-	Fixture      string      `json:"fixture,omitempty"`
-	Assertions   []Assertion `json:"assertions"`
+	ID           string             `json:"id"`
+	Agent        string             `json:"agent"`
+	Task         string             `json:"task"`
+	MaxBudgetUSD float64            `json:"max_budget_usd"`
+	Live         bool               `json:"live"`
+	Fixture      string             `json:"fixture,omitempty"`
+	Assertions   []Assertion        `json:"assertions"`
+	Validators   []Validator        `json:"validators,omitempty"`
+	ModelGrader  *ModelGraderConfig `json:"model_grader,omitempty"`
+	JSONSchema   json.RawMessage    `json:"json_schema,omitempty"`
 }
 
 type ManifestItem struct {
@@ -50,6 +53,15 @@ type AssertionResult struct {
 	Reason    string    `json:"reason"`
 }
 
+type CaseStatus string
+
+const (
+	StatusPass              CaseStatus = "pass"
+	StatusAgentFailure      CaseStatus = "agent_failure"
+	StatusInfrastructureErr CaseStatus = "infra_error"
+	StatusGraderError       CaseStatus = "grader_error"
+)
+
 type CaseResult struct {
 	Agent            string            `json:"agent"`
 	CaseID           string            `json:"case_id"`
@@ -58,6 +70,8 @@ type CaseResult struct {
 	FixtureHash      string            `json:"fixture_hash,omitempty"`
 	Output           string            `json:"output"`
 	AssertionResults []AssertionResult `json:"assertion_results"`
+	ValidatorResults []ValidatorResult `json:"validator_results,omitempty"`
+	Status           CaseStatus        `json:"status,omitempty"`
 	Passed           bool              `json:"passed"`
 	InputTokens      int               `json:"input_tokens"`
 	OutputTokens     int               `json:"output_tokens"`
@@ -74,6 +88,7 @@ type ProviderRequest struct {
 	BudgetUSD    float64
 	Workspace    string
 	AllowTools   bool
+	JSONSchema   string
 }
 
 type ProviderResponse struct {
@@ -126,6 +141,31 @@ func LoadCase(root, agent, id string) (Case, error) {
 	}
 	if len(testCase.Assertions) == 0 {
 		return Case{}, fmt.Errorf("case assertions are required")
+	}
+	for _, validator := range testCase.Validators {
+		if strings.TrimSpace(validator.Type) == "" {
+			return Case{}, fmt.Errorf("validator type is required")
+		}
+		if validator.Type == "python_tests" && strings.TrimSpace(validator.Path) == "" {
+			return Case{}, fmt.Errorf("python_tests validator path is required")
+		}
+	}
+	if testCase.ModelGrader != nil {
+		if strings.TrimSpace(testCase.ModelGrader.Model) == "" {
+			return Case{}, fmt.Errorf("model_grader model is required")
+		}
+		if strings.TrimSpace(testCase.ModelGrader.Rubric) == "" {
+			return Case{}, fmt.Errorf("model_grader rubric is required")
+		}
+		if !isFinite(testCase.ModelGrader.MaxBudgetUSD) || testCase.ModelGrader.MaxBudgetUSD <= 0 {
+			return Case{}, fmt.Errorf("model_grader max_budget_usd must be positive")
+		}
+		if testCase.ModelGrader.MaxOutputTokens < 0 {
+			return Case{}, fmt.Errorf("model_grader max_output_tokens must not be negative")
+		}
+	}
+	if len(testCase.JSONSchema) > 0 && !json.Valid(testCase.JSONSchema) {
+		return Case{}, fmt.Errorf("json_schema must be valid JSON")
 	}
 	return testCase, nil
 }
@@ -477,14 +517,50 @@ func Replay(root string, testCase Case) (CaseResult, error) {
 	defer cleanup()
 
 	assertionResults := EvaluateAssertions(*replay.Output, workspace, testCase.Assertions)
+	validatorResults := EvaluateValidators(*replay.Output, workspace, testCase.Validators)
+	passed, status := evaluationStatus(assertionResults, validatorResults)
 	return CaseResult{
 		Agent:            testCase.Agent,
 		CaseID:           testCase.ID,
 		Output:           *replay.Output,
 		AssertionResults: assertionResults,
-		Passed:           assertionsPassed(assertionResults),
+		ValidatorResults: validatorResults,
+		Status:           status,
+		Passed:           passed,
 		CostUSD:          0,
 	}, nil
+}
+
+func EvaluateValidators(output, workspace string, validators []Validator) []ValidatorResult {
+	results := make([]ValidatorResult, 0, len(validators))
+	for _, validator := range validators {
+		results = append(results, runValidator(output, workspace, validator))
+	}
+	return results
+}
+
+func evaluationStatus(assertions []AssertionResult, validators []ValidatorResult) (bool, CaseStatus) {
+	for _, result := range validators {
+		if result.Error {
+			return false, StatusGraderError
+		}
+	}
+	if !assertionsPassed(assertions) {
+		return false, StatusAgentFailure
+	}
+	for _, result := range validators {
+		if !result.Passed {
+			return false, StatusAgentFailure
+		}
+	}
+	return true, StatusPass
+}
+
+func statusForAssertions(results []AssertionResult) CaseStatus {
+	if assertionsPassed(results) {
+		return StatusPass
+	}
+	return StatusAgentFailure
 }
 
 func assertionsPassed(results []AssertionResult) bool {
@@ -644,6 +720,7 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		BudgetUSD:    budget,
 		Workspace:    workspace,
 		AllowTools:   false,
+		JSONSchema:   string(testCase.JSONSchema),
 	}
 	executor := r.Executor
 	if executor == nil {
@@ -663,9 +740,11 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		DurationMS:   response.Duration.Milliseconds(),
 	}
 	result.AssertionResults = EvaluateAssertions(result.Output, workspace, testCase.Assertions)
-	result.Passed = assertionsPassed(result.AssertionResults)
+	result.ValidatorResults = EvaluateValidators(result.Output, workspace, testCase.Validators)
+	result.Passed, result.Status = evaluationStatus(result.AssertionResults, result.ValidatorResults)
 	if providerErr != nil {
 		result.Passed = false
+		result.Status = StatusInfrastructureErr
 		result.ProviderError = providerErr.Error()
 		return result, fmt.Errorf("execute provider: %w", providerErr)
 	}
@@ -728,6 +807,9 @@ func claudeArgs(request ProviderRequest) ([]string, error) {
 	}
 	if !request.AllowTools {
 		args = append(args, "--tools", "")
+	}
+	if strings.TrimSpace(request.JSONSchema) != "" {
+		args = append(args, "--json-schema", request.JSONSchema)
 	}
 	return args, nil
 }

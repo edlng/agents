@@ -32,6 +32,53 @@ func TestParseProbeRejectsMissingCase(t *testing.T) {
 	}
 }
 
+func TestParseGradeDefaultsToSerial(t *testing.T) {
+	command, err := parseArgs([]string{"grade", "litmus/results/run", "--budget", "0.03"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if command.Name != "grade" || command.RunDirectory != "litmus/results/run" ||
+		command.BudgetUSD != 0.03 || command.Jobs != 1 {
+		t.Fatalf("parseArgs() = %#v, want serial grade command", command)
+	}
+}
+
+func TestRunGradeWritesSeparateArtifact(t *testing.T) {
+	root := testRoot(t)
+	writeAgent(t, root, "reviewer")
+	writeCase(t, root, "reviewer", "case", `{
+		"id": "case",
+		"agent": "reviewer",
+		"task": "review this",
+		"max_budget_usd": 0.10,
+		"assertions": [{"type": "contains", "value": "APPROVE"}],
+		"model_grader": {
+			"enabled": true,
+			"model": "claude-haiku-4.5",
+			"rubric": "Judge the answer.",
+			"max_budget_usd": 0.03
+		}
+	}`)
+	runDirectory := writeRun(t, root, "grade", true, 0.04)
+	executor := &gradeExecutor{output: `{"pass":true,"score":1,"reason":"approved."}`}
+
+	var stdout, stderr bytes.Buffer
+	code := testApplication(root, executor).run(
+		[]string{"grade", runDirectory, "--budget", "0.03"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("run(grade) = %d, stderr = %s", code, stderr.String())
+	}
+	if executor.calls != 1 {
+		t.Fatalf("grader calls = %d, want 1", executor.calls)
+	}
+	if _, err := os.Stat(filepath.Join(runDirectory, "grader.json")); err != nil {
+		t.Fatalf("grader artifact missing: %v", err)
+	}
+}
+
 func TestParseFullBatchCommand(t *testing.T) {
 	command, err := parseArgs([]string{
 		"batch", "full", "--budget", "1000", "--include-replay-only",
@@ -437,6 +484,24 @@ type fakeExecutor struct {
 	response litmus.ProviderResponse
 	err      error
 	calls    int
+}
+
+type gradeExecutor struct {
+	output string
+	calls  int
+}
+
+func (f *gradeExecutor) Execute(_ context.Context, request litmus.ProviderRequest) (litmus.ProviderResponse, error) {
+	f.calls++
+	if request.Agent != "model-grader" {
+		return litmus.ProviderResponse{}, fmt.Errorf("unexpected grader agent %q", request.Agent)
+	}
+	return litmus.ProviderResponse{
+		Output:       f.output,
+		InputTokens:  10,
+		OutputTokens: 8,
+		CostUSD:      0.01,
+	}, nil
 }
 
 func (f *fakeExecutor) Execute(_ context.Context, _ litmus.ProviderRequest) (litmus.ProviderResponse, error) {

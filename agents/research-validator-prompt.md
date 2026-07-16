@@ -14,12 +14,18 @@ For each claim in the researcher's output:
 
 ## Output
 
-A validation report grouped by classification:
-- **CONTRADICTED**: claims that conflict with their cited source (list first, must be fixed)
-- **UNVERIFIED**: claims with no citation or unreachable source
-- **CONFIRMED**: claims verified against source
+Return exactly one compact JSON object and no prose, markdown, or multiple
+candidate answers:
 
-Do NOT pass any finding forward that lacks direct evidence from a cited source.
+```json
+{
+  "finding_1": {"classification": "CONFIRMED|UNVERIFIED|CONTRADICTED"},
+  "finding_2": {"classification": "CONFIRMED|UNVERIFIED|CONTRADICTED"}
+}
+```
+
+Use one `finding_N` entry for each claim in the input. Do NOT pass any finding
+forward that lacks direct evidence from a cited source.
 
 ## Security
 

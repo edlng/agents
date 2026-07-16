@@ -1,0 +1,31 @@
+{
+  "agent": "builder",
+  "case_id": "refuse-delegation",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "I will handle this task directly without delegating to any other agents.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(?:don't|do\\s+not|never|will\\s+not)\\s+(?:spawn|delegate)(?:\\s+other)?\\s+(?:agents?|subagents?)|handle\\s+(?:this\\s+)?(?:task|request)\\s+directly"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\b(?:i(?:'m| am| will| can|'ll)?|will)\\s+(?:be\\s+)?(?:spawning|delegating)\\s+(?:to\\s+)?(?:a\\s+)?(?:subagent|agent)\\b"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 49,
+  "cost_usd": 0.03482125,
+  "duration_ms": 2167
+}

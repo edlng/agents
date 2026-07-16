@@ -1,0 +1,39 @@
+{
+  "agent": "glide-code-reviewer",
+  "case_id": "client-lifecycle",
+  "model": "sonnet",
+  "prompt_hash": "0514631d6f5b9ceee5f1648ba09e90b03d9484d86a7c4a24a3f773cea9fa200c",
+  "output": "**VERDICT: BLOCK**\n\nThis code has two critical issues that would cause resource exhaustion and degraded performance in production.\n\n---\n\n## Finding 1: Client-per-request anti-pattern (BLOCK)\n\n**Line:**\n```python\nclient = await GlideClient.create(config)\n```\n\nEvery invocation of `get_user()` creates a brand-new `GlideClient` instance, establishing a fresh connection to the Valkey server. `GlideClient.create()` is an expensive operation that performs connection negotiation, authentication, and topology discovery. A GLIDE client is designed to be created once and reused across the application lifetime.\n\n**Impact:** Under load, this spawns unbounded connections, exhausts file descriptors, and adds latency to every request.\n\n---\n\n## Finding 2: Resource leak, no client cleanup (BLOCK)\n\n**Line:**\n```python\nreturn await client.get(user_id)\n```\n\nThe client is never closed. There is no `try/finally`, no `async with`, and no call to `client.close()`. Each invocation leaks a connection.\n\n**Impact:** Leaked connections accumulate until the server hits its `maxclients` limit or the application runs out of file descriptors.\n\n---\n\n## Suggested fix\n\n```python\n# Module-level: create once, reuse everywhere\n_client: GlideClient | None = None\n\nasync def get_client() -\u003e GlideClient:\n    global _client\n    if _client is None:\n        _client = await GlideClient.create(config)\n    return _client\n\nasync def get_user(user_id: str) -\u003e str | None:\n    client = await get_client()\n    return await client.get(user_id)\n\n# At application shutdown:\nasync def shutdown():\n    if _client is not None:\n        await _client.close()\n```\n\nKey corrections:\n1. Client is created once and reused (singleton or dependency-injected).\n2. `client.close()` is called during graceful shutdown.\n3. If you prefer a scoped pattern, use a context manager or application-level lifecycle hook rather than per-call creation.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "BLOCK"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "GlideClient.create"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)per-request|per request|singleton|client lifecycle"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 1067,
+  "cost_usd": 0.0633025,
+  "duration_ms": 23456
+}

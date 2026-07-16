@@ -2,11 +2,39 @@
   "id": "classify-findings",
   "agent": "research-validator",
   "live": false,
-  "task": "Validate these findings:\n\n1. \"valkey-glide is the official Valkey client library for Node.js\". Source: https://github.com/valkey-io/valkey-glide\n2. \"Valkey was originally created by Microsoft in 2021\". Source: https://valkey.io/about",
-  "max_budget_usd": 0.10,
+  "task": "Validate these findings against their cited sources. Return only compact JSON with this exact shape: {\"finding_1\":{\"classification\":\"CONFIRMED|UNVERIFIED|CONTRADICTED\"},\"finding_2\":{\"classification\":\"CONFIRMED|UNVERIFIED|CONTRADICTED}}.\n\n1. \"The valkey-glide repository is hosted under the valkey-io GitHub organization\". Source: https://github.com/valkey-io/valkey-glide\n2. \"Valkey was originally created by Microsoft in 2021\". Source: https://valkey.io/about",
+  "max_budget_usd": 0.30,
   "assertions": [
-    {"type": "contains", "value": "CONFIRMED"},
-    {"type": "regex", "value": "CONTRADICTED|UNVERIFIED|INCORRECT|FALSE"},
-    {"type": "not_regex", "value": "(?s)^\\s*CONFIRMED\\s*$"}
-  ]
+    {"type": "json_path", "path": "finding_1.classification", "value": "CONFIRMED"},
+    {"type": "json_path", "path": "finding_2.classification", "value": "CONTRADICTED"}
+  ],
+  "json_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "finding_1": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": ["CONFIRMED", "UNVERIFIED", "CONTRADICTED"]
+          }
+        },
+        "required": ["classification"]
+      },
+      "finding_2": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": ["CONFIRMED", "UNVERIFIED", "CONTRADICTED"]
+          }
+        },
+        "required": ["classification"]
+      }
+    },
+    "required": ["finding_1", "finding_2"]
+  }
 }

