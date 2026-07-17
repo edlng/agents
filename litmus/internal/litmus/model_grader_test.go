@@ -78,7 +78,7 @@ func TestGradeCacheKeyChangesWithRubric(t *testing.T) {
 		"assertions": [{"type": "contains", "value": "APPROVE"}],
 		"model_grader": {
 			"enabled": true,
-			"model": "claude-haiku-4.5",
+			"model": "claude-haiku-4-5",
 			"rubric": "Use a different rubric.",
 			"max_budget_usd": 0.03
 		}
@@ -102,7 +102,7 @@ func TestGradeSkipsDeterministicFailureAndStopsAtBudget(t *testing.T) {
 		"assertions": [{"type": "contains", "value": "APPROVE"}],
 		"model_grader": {
 			"enabled": true,
-			"model": "claude-haiku-4.5",
+			"model": "claude-haiku-4-5",
 			"rubric": "Judge the answer.",
 			"max_budget_usd": 0.03
 		}
@@ -167,7 +167,7 @@ func writeModelGraderCase(t *testing.T, root string, enabled bool, budget float6
 		"assertions": [{"type": "contains", "value": "APPROVE"}],
 		"model_grader": {
 			"enabled": true,
-			"model": "claude-haiku-4.5",
+			"model": "claude-haiku-4-5",
 			"rubric": "Judge whether the answer is approved.",
 			"max_budget_usd": 0.03
 		}

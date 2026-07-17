@@ -1,9 +1,20 @@
 import graphData from '../data/graph.json';
 import { useNavigate } from 'react-router';
-import { type GraphNode, type GraphData } from '../types';
+import { type GraphNode, type GraphData, type Platform } from '../types';
 import './NodeDetailPanel.css';
 
 const data = graphData as GraphData;
+const PLATFORM_ORDER: Array<Platform | 'universal'> = ['claude', 'codex', 'kiro', 'universal'];
+
+function platformLabel(platform: Platform | 'universal'): string {
+  return platform === 'universal'
+    ? 'Universal'
+    : platform[0].toUpperCase() + platform.slice(1);
+}
+
+function githubSourceUrl(sourcePath: string): string {
+  return `https://github.com/liawedwa/agents/blob/main/${sourcePath}`;
+}
 
 interface Props {
   node: GraphNode;
@@ -35,7 +46,7 @@ export function NodeDetailPanel({ node, onClose }: Props) {
     ? data.workflows.filter(wf => wf.nodes.some(n => n.agent === node.name))
     : [];
 
-  const sourceUrl = node.sourcePath
+  const fallbackSourceUrl = node.sourcePath
     ? `https://github.com/liawedwa/agents/blob/main/${node.sourcePath}`
     : null;
 
@@ -48,6 +59,13 @@ export function NodeDetailPanel({ node, onClose }: Props) {
               <span className={`detail-type-badge type-${node.type}`}>{node.type}</span>
               {node.userInvocable && (
                 <span className="detail-invocable-badge">user-invocable</span>
+              )}
+              {node.compatibility && (
+                <span className={`compatibility-badge compatibility-${node.compatibility}`}>
+                  {node.compatibility === 'variants'
+                    ? 'Claude + Codex'
+                    : platformLabel(node.compatibility as Platform | 'universal')}
+                </span>
               )}
             </div>
             <button className="detail-close" onClick={onClose} aria-label="Close">×</button>
@@ -66,10 +84,53 @@ export function NodeDetailPanel({ node, onClose }: Props) {
             </div>
           )}
 
-          {node.model && (
+          {node.profile && (
             <div className="detail-field">
-              <span className="detail-field-label">Model</span>
-              <span className="detail-field-value">{node.model}</span>
+              <span className="detail-field-label">Profile</span>
+              <span className="detail-field-value">{node.profile}</span>
+            </div>
+          )}
+
+          {node.models && Object.keys(node.models).length > 0 && (
+            <div className="detail-field">
+              <span className="detail-field-label">Models</span>
+              <div className="detail-model-list">
+                {PLATFORM_ORDER.map((platform) => {
+                  const model = node.models?.[platform as Platform];
+                  if (!model) return null;
+                  return (
+                    <div key={platform} className="detail-model-row">
+                      <span className="detail-model-platform">{platformLabel(platform)}</span>
+                      <span className="detail-model-name">{model.model}</span>
+                      <span className="detail-model-effort">{model.effort}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {node.sources && Object.keys(node.sources).length > 0 && (
+            <div className="detail-field">
+              <span className="detail-field-label">Sources</span>
+              <div className="detail-source-list">
+                {PLATFORM_ORDER.map((platform) => {
+                  const source = node.sources?.[platform];
+                  if (!source) return null;
+                  return (
+                    <a
+                      key={platform}
+                      className="detail-source-row"
+                      href={githubSourceUrl(source)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span>{platformLabel(platform)}</span>
+                      <code>{source}</code>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -151,10 +212,10 @@ export function NodeDetailPanel({ node, onClose }: Props) {
           )}
         </section>
 
-        {sourceUrl && (
+        {fallbackSourceUrl && !node.sources && (
           <footer className="detail-footer">
             <a
-              href={sourceUrl}
+              href={fallbackSourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="detail-source-link"

@@ -16,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Assertion struct {
@@ -825,9 +827,14 @@ func providerBudget(requested float64) (float64, error) {
 	return (cents - 2) / 100, nil
 }
 
-type agentConfig struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
+type claudeAgentManifest struct {
+	Name string `json:"name"`
+}
+
+type claudeAgentFrontmatter struct {
+	Name   string `yaml:"name"`
+	Model  string `yaml:"model"`
+	Effort string `yaml:"effort"`
 }
 
 func resolveProductionAgent(root, agent string) (string, string, error) {
@@ -835,39 +842,53 @@ func resolveProductionAgent(root, agent string) (string, string, error) {
 		return "", "", err
 	}
 
-	config := agentConfig{Model: "claude-sonnet-5"}
-	configPath := filepath.Join(root, "agents", agent+".json")
-	if err := loadJSON(root, configPath, &config); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return "", "", fmt.Errorf("load agent config: %w", err)
+	var manifest claudeAgentManifest
+	manifestPath := filepath.Join(root, "agents", agent, "manifest.json")
+	if err := loadJSON(root, manifestPath, &manifest); err != nil {
+		return "", "", fmt.Errorf("load agent manifest: %w", err)
 	}
-	model, err := normalizeModel(config.Model)
+	if manifest.Name != agent {
+		return "", "", fmt.Errorf("agent manifest name %q does not match requested agent %q", manifest.Name, agent)
+	}
+
+	configPath := filepath.Join(root, "agents", agent, "claude.md")
+	contents, err := readRootFile(root, filepath.Join("agents", agent, "claude.md"))
+	if err != nil {
+		return "", "", fmt.Errorf("read Claude agent %q: %w", configPath, err)
+	}
+	frontmatter, prompt, err := parseClaudeAgent(string(contents))
+	if err != nil {
+		return "", "", fmt.Errorf("parse Claude agent %q: %w", configPath, err)
+	}
+	if frontmatter.Name != agent {
+		return "", "", fmt.Errorf("Claude agent name %q does not match requested agent %q", frontmatter.Name, agent)
+	}
+	model, err := normalizeModel(frontmatter.Model)
 	if err != nil {
 		return "", "", err
 	}
+	if strings.TrimSpace(prompt) == "" {
+		return "", "", fmt.Errorf("production prompt for agent %q is empty", agent)
+	}
+	return prompt, model, nil
+}
 
-	for _, path := range []string{
-		filepath.Join("agents", agent+"-prompt.md"),
-		filepath.Join("agents", agent+".md"),
-		filepath.Join("skills", agent, "SKILL.md"),
-	} {
-		prompt, err := readRootFile(root, path)
-		switch {
-		case err == nil:
-			if strings.TrimSpace(string(prompt)) == "" {
-				return "", "", fmt.Errorf("production prompt %q is empty", path)
-			}
-			return string(prompt), model, nil
-		case errors.Is(err, os.ErrNotExist):
-			continue
-		default:
-			return "", "", fmt.Errorf("read production prompt %q: %w", path, err)
-		}
+func parseClaudeAgent(contents string) (claudeAgentFrontmatter, string, error) {
+	normalized := strings.ReplaceAll(contents, "\r\n", "\n")
+	if !strings.HasPrefix(normalized, "---\n") {
+		return claudeAgentFrontmatter{}, "", fmt.Errorf("missing YAML frontmatter")
 	}
-	inlinePrompt := strings.TrimSpace(config.Prompt)
-	if inlinePrompt == "" || strings.HasPrefix(inlinePrompt, "file://") {
-		return "", "", fmt.Errorf("production prompt for agent %q was not found", agent)
+	end := strings.Index(normalized[4:], "\n---")
+	if end < 0 {
+		return claudeAgentFrontmatter{}, "", fmt.Errorf("unterminated YAML frontmatter")
 	}
-	return inlinePrompt, model, nil
+	end += 4
+	var frontmatter claudeAgentFrontmatter
+	if err := yaml.Unmarshal([]byte(normalized[4:end]), &frontmatter); err != nil {
+		return claudeAgentFrontmatter{}, "", fmt.Errorf("invalid YAML frontmatter: %w", err)
+	}
+	prompt := strings.TrimPrefix(normalized[end+4:], "\n")
+	return frontmatter, prompt, nil
 }
 
 func readRootFile(root, path string) ([]byte, error) {

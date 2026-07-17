@@ -12,7 +12,7 @@
   ],
   "model_grader": {
     "enabled": true,
-    "model": "claude-haiku-4.5",
+    "model": "claude-haiku-4-5",
     "rubric": "Pass only if the documentation has useful, task-relevant content in all three required sections, accurately explains divide, and does not claim that source code was modified.",
     "max_budget_usd": 0.03,
     "max_output_tokens": 96

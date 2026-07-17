@@ -1,12 +1,18 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs';
 import { join, basename, resolve } from 'path';
 import { parse as parseYaml } from 'yaml';
+import TOML from '@iarna/toml';
 
-const ROOT = resolve(import.meta.dirname, '..', '..');
+const ROOT = resolve(
+  process.env.CATALOG_ROOT || resolve(import.meta.dirname, '..', '..'),
+);
 const AGENTS_DIR = join(ROOT, 'agents');
 const SKILLS_DIR = join(ROOT, 'skills');
 const SHARED_DIR = join(SKILLS_DIR, '_shared');
-const OUTPUT = join(import.meta.dirname, '..', 'src', 'data', 'graph.json');
+const SKILL_PLATFORMS = ['universal', 'claude', 'codex'] as const;
+const OUTPUT = resolve(
+  process.env.CATALOG_OUTPUT || join(import.meta.dirname, '..', 'src', 'data', 'graph.json'),
+);
 const LITMUS_RESULTS_DIR = join(ROOT, 'litmus', 'results');
 
 // Category mappings from README
@@ -75,6 +81,11 @@ interface GraphNode {
   name: string;
   description: string;
   category?: string;
+  platforms?: ('claude' | 'codex' | 'kiro')[];
+  compatibility?: 'universal' | 'claude' | 'codex' | 'variants';
+  profile?: 'haiku' | 'sonnet' | 'opus';
+  models?: Partial<Record<'claude' | 'codex' | 'kiro', { model: string; effort: string }>>;
+  sources?: Partial<Record<'claude' | 'codex' | 'kiro' | 'universal', string>>;
   model?: string;
   tools?: string[];
   mcpServers?: string[];
@@ -144,7 +155,8 @@ interface StatsData {
     mcpServers: number;
     workflows: number;
   };
-  modelDistribution: Record<string, number>;
+  profileDistribution: Record<string, number>;
+  modelDistribution: Record<string, Record<string, number>>;
   agentCategories: Record<string, number>;
   skillCategories: Record<string, number>;
   evals: EvalStats;
@@ -157,48 +169,123 @@ interface GraphData {
   stats: StatsData;
 }
 
+function parseFrontmatter(content: string): Record<string, unknown> {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return {};
+  const parsed = parseYaml(match[1]);
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : {};
+}
+
 function extractAgents(): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 
-  const files = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.json') && f !== 'agent_config.json.example');
+  const dirs = readdirSync(AGENTS_DIR, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => entry.name)
+    .sort();
 
-  for (const file of files) {
-    const content = readFileSync(join(AGENTS_DIR, file), 'utf-8');
-    let config: Record<string, unknown>;
+  for (const directoryName of dirs) {
+    const directory = join(AGENTS_DIR, directoryName);
+    const manifestPath = join(directory, 'manifest.json');
+    if (!existsSync(manifestPath)) continue;
+
+    let manifest: Record<string, unknown>;
     try {
-      config = JSON.parse(content);
+      manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as Record<string, unknown>;
     } catch {
-      console.warn(`Skipping invalid JSON: ${file}`);
+      console.warn(`Skipping invalid manifest: ${directoryName}`);
       continue;
     }
 
-    const name = config.name as string;
+    const name = String(manifest.name || directoryName);
     const id = `agent:${name}`;
+    const sources: GraphNode['sources'] = {
+      claude: `agents/${directoryName}/claude.md`,
+      codex: `agents/${directoryName}/codex.toml`,
+      kiro: `agents/${directoryName}/kiro.json`,
+    };
+    const models: NonNullable<GraphNode['models']> = {};
+    let claudeFrontmatter: Record<string, unknown> = {};
+    let codexConfig: Record<string, unknown> = {};
+    let kiroConfig: Record<string, unknown> = {};
+
+    const claudePath = join(directory, 'claude.md');
+    if (existsSync(claudePath)) {
+      claudeFrontmatter = parseFrontmatter(readFileSync(claudePath, 'utf-8'));
+      if (typeof claudeFrontmatter.model === 'string') {
+        models.claude = {
+          model: claudeFrontmatter.model,
+          effort: String(claudeFrontmatter.effort || 'unspecified'),
+        };
+      }
+    }
+
+    const codexPath = join(directory, 'codex.toml');
+    if (existsSync(codexPath)) {
+      try {
+        codexConfig = TOML.parse(readFileSync(codexPath, 'utf-8')) as Record<string, unknown>;
+      } catch {
+        console.warn(`Skipping invalid Codex config: ${directoryName}`);
+      }
+      if (typeof codexConfig.model === 'string') {
+        models.codex = {
+          model: codexConfig.model,
+          effort: String(codexConfig.model_reasoning_effort || 'unspecified'),
+        };
+      }
+    }
+
+    const kiroPath = join(directory, 'kiro.json');
+    if (existsSync(kiroPath)) {
+      try {
+        kiroConfig = JSON.parse(readFileSync(kiroPath, 'utf-8')) as Record<string, unknown>;
+      } catch {
+        console.warn(`Skipping invalid Kiro config: ${directoryName}`);
+      }
+      if (typeof kiroConfig.model === 'string') {
+        models.kiro = { model: kiroConfig.model, effort: 'unspecified' };
+      }
+    }
+
+    const platforms = Array.isArray(manifest.platforms)
+      ? manifest.platforms.filter(
+        (platform): platform is 'claude' | 'codex' | 'kiro' =>
+          platform === 'claude' || platform === 'codex' || platform === 'kiro',
+      )
+      : (Object.keys(models) as ('claude' | 'codex' | 'kiro')[]);
 
     // Extract trustedAgents from toolsSettings
-    const toolsSettings = config.toolsSettings as Record<string, Record<string, unknown>> | undefined;
+    const toolsSettings = kiroConfig.toolsSettings as Record<string, Record<string, unknown>> | undefined;
     const trustedAgents = toolsSettings?.subagent?.trustedAgents as string[] | undefined;
 
     // Extract MCP server names
-    const mcpServers = config.mcpServers as Record<string, unknown> | undefined;
+    const mcpServers = kiroConfig.mcpServers as Record<string, unknown> | undefined;
     const mcpServerNames = mcpServers ? Object.keys(mcpServers) : undefined;
 
     // Extract resource references
-    const resources = config.resources as string[] | undefined;
+    const resources = kiroConfig.resources as string[] | undefined;
 
     nodes.push({
       id,
       type: 'agent',
       name,
-      description: (config.description as string) || '',
-      category: AGENT_CATEGORIES[name] || 'Other',
-      model: config.model as string | undefined,
-      tools: config.allowedTools as string[] | undefined,
+      description: (manifest.description as string) || '',
+      category: (manifest.category as string) || AGENT_CATEGORIES[name] || 'Other',
+      platforms,
+      profile: manifest.profile as 'haiku' | 'sonnet' | 'opus' | undefined,
+      models,
+      sources,
+      model: models.claude?.model,
+      tools: Array.isArray(claudeFrontmatter.tools)
+        ? claudeFrontmatter.tools as string[]
+        : undefined,
       mcpServers: mcpServerNames,
       trustedAgents,
       resources,
-      sourcePath: `agents/${file}`,
+      sourcePath: `agents/${directoryName}/manifest.json`,
     });
 
     // Create delegation edges
@@ -273,88 +360,93 @@ function extractAgents(): { nodes: GraphNode[]; edges: GraphEdge[] } {
 }
 
 function extractSkills(): GraphNode[] {
-  const nodes: GraphNode[] = [];
+  const grouped = new Map<string, {
+    variants: Partial<Record<typeof SKILL_PLATFORMS[number], {
+      path: string;
+      content: string;
+      metadata: Record<string, unknown>;
+    }>>;
+  }>();
 
-  const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory() && d.name !== '_shared' && d.name !== '.DS_Store');
+  for (const platform of SKILL_PLATFORMS) {
+    const platformRoot = join(SKILLS_DIR, platform);
+    if (!existsSync(platformRoot)) continue;
+    const dirs = readdirSync(platformRoot, { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => entry.name);
 
-  for (const dir of dirs) {
-    const skillMdPath = join(SKILLS_DIR, dir.name, 'SKILL.md');
-    // Some skills use lowercase skill.md
-    const skillMdPathAlt = join(SKILLS_DIR, dir.name, 'skill.md');
-
-    let mdPath = '';
-    if (existsSync(skillMdPath)) {
-      mdPath = skillMdPath;
-    } else if (existsSync(skillMdPathAlt)) {
-      mdPath = skillMdPathAlt;
-    } else {
-      continue;
+    for (const directoryName of dirs) {
+      const directory = join(platformRoot, directoryName);
+      const skillPath = join(directory, 'SKILL.md');
+      if (!existsSync(skillPath)) continue;
+      const content = readFileSync(skillPath, 'utf-8');
+      const metadata = parseFrontmatter(content);
+      const name = typeof metadata.name === 'string' ? metadata.name : directoryName;
+      const current = grouped.get(name) ?? { variants: {} };
+      current.variants[platform] = {
+        path: `skills/${platform}/${directoryName}/SKILL.md`,
+        content,
+        metadata,
+      };
+      grouped.set(name, current);
     }
-
-    // Resolve the real on-disk filename (the case-insensitive filesystem
-    // makes both SKILL.md and skill.md "exist", so read the directory to
-    // get the actual casing for the source path we report).
-    const dirEntries = readdirSync(join(SKILLS_DIR, dir.name));
-    const mdFile = dirEntries.find(f => f.toLowerCase() === 'skill.md') ?? basename(mdPath);
-
-    const content = readFileSync(mdPath, 'utf-8');
-
-    // Extract YAML frontmatter
-    let name = dir.name;
-    let description = '';
-    let whenToUse: string | undefined;
-    let userInvocable: boolean | undefined;
-
-    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-    if (frontmatterMatch) {
-      try {
-        const fm = parseYaml(frontmatterMatch[1]);
-        if (fm.name) name = fm.name;
-        if (fm.description) description = fm.description;
-        // Only set when discoverable from frontmatter; otherwise omit.
-        const fmWhenToUse = fm['when-to-use'] ?? fm.whenToUse;
-        if (typeof fmWhenToUse === 'string') whenToUse = fmWhenToUse;
-        const fmUserInvocable = fm['user-invocable'] ?? fm.userInvocable;
-        if (typeof fmUserInvocable === 'boolean') userInvocable = fmUserInvocable;
-      } catch {
-        // Fall back to directory name
-      }
-    }
-
-    // If no description from frontmatter, try first paragraph after heading
-    if (!description) {
-      const headingMatch = content.match(/^#\s+.+\n+(.+)/m);
-      if (headingMatch) {
-        description = headingMatch[1].trim();
-      }
-    }
-
-    // Body excerpt: first ~300 chars after the frontmatter block,
-    // stripped of heading markers and collapsed whitespace.
-    const body = frontmatterMatch
-      ? content.slice(frontmatterMatch[0].length)
-      : content;
-    const plainBody = body
-      .replace(/^#+\s*/gm, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const excerpt = plainBody ? plainBody.slice(0, 300) : undefined;
-
-    nodes.push({
-      id: `skill:${dir.name}`,
-      type: 'skill',
-      name,
-      description,
-      category: SKILL_CATEGORIES[dir.name] || 'Other',
-      sourcePath: `skills/${dir.name}/${mdFile}`,
-      whenToUse,
-      excerpt,
-      userInvocable,
-    });
   }
 
-  return nodes;
+  return Array.from(grouped.entries()).sort(([left], [right]) => left.localeCompare(right)).map(
+    ([name, { variants }]) => {
+      const universal = variants.universal;
+      const claude = variants.claude;
+      const codex = variants.codex;
+      const primary = universal ?? claude ?? codex;
+      if (!primary) throw new Error(`Skill ${name} has no source`);
+
+      const compatibility = universal
+        ? 'universal'
+        : claude && codex
+          ? 'variants'
+          : claude
+            ? 'claude'
+            : 'codex';
+      const metadata = primary.metadata;
+      const description = typeof metadata.description === 'string'
+        ? metadata.description
+        : '';
+      const frontmatterMatch = primary.content.match(/^---\r?\n[\s\S]*?\r?\n---/);
+      const body = frontmatterMatch
+        ? primary.content.slice(frontmatterMatch[0].length)
+        : primary.content;
+      const plainBody = body
+        .replace(/^#+\s*/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const fmWhenToUse = metadata['when-to-use'] ?? metadata.whenToUse;
+      const fmUserInvocable = metadata['user-invocable'] ?? metadata.userInvocable;
+      const sources: GraphNode['sources'] = {};
+      for (const [platform, variant] of Object.entries(variants)) {
+        if (variant) sources[platform as keyof typeof sources] = variant.path;
+      }
+
+      return {
+        id: `skill:${name}`,
+        type: 'skill' as const,
+        name,
+        description,
+        category: SKILL_CATEGORIES[name] || 'Other',
+        platforms: universal
+          ? ['claude', 'codex']
+          : [
+            ...(claude ? ['claude' as const] : []),
+            ...(codex ? ['codex' as const] : []),
+          ],
+        compatibility,
+        sources,
+        sourcePath: primary.path,
+        whenToUse: typeof fmWhenToUse === 'string' ? fmWhenToUse : undefined,
+        excerpt: plainBody ? plainBody.slice(0, 300) : undefined,
+        userInvocable: typeof fmUserInvocable === 'boolean' ? fmUserInvocable : undefined,
+      };
+    },
+  );
 }
 
 function extractSharedRefs(): GraphNode[] {
@@ -488,11 +580,20 @@ function buildStats(
   mcpNodes: GraphNode[],
   workflows: Workflow[],
 ): StatsData {
-  const modelDistribution: Record<string, number> = {};
+  const profileDistribution: Record<string, number> = {};
+  const modelDistribution: Record<string, Record<string, number>> = {
+    claude: {},
+    codex: {},
+    kiro: {},
+  };
   const agentCategories: Record<string, number> = {};
   for (const node of agentNodes) {
-    const model = node.model || 'unspecified';
-    modelDistribution[model] = (modelDistribution[model] || 0) + 1;
+    const profile = node.profile || 'unspecified';
+    profileDistribution[profile] = (profileDistribution[profile] || 0) + 1;
+    for (const [platform, model] of Object.entries(node.models || {})) {
+      if (!model) continue;
+      modelDistribution[platform][model.model] = (modelDistribution[platform][model.model] || 0) + 1;
+    }
     const category = node.category || 'Other';
     agentCategories[category] = (agentCategories[category] || 0) + 1;
   }
@@ -511,6 +612,7 @@ function buildStats(
       mcpServers: mcpNodes.length,
       workflows: workflows.length,
     },
+    profileDistribution,
     modelDistribution,
     agentCategories,
     skillCategories,

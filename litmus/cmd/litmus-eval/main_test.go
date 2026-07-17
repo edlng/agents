@@ -54,7 +54,7 @@ func TestRunGradeWritesSeparateArtifact(t *testing.T) {
 		"assertions": [{"type": "contains", "value": "APPROVE"}],
 		"model_grader": {
 			"enabled": true,
-			"model": "claude-haiku-4.5",
+			"model": "claude-haiku-4-5",
 			"rubric": "Judge the answer.",
 			"max_budget_usd": 0.03
 		}
@@ -594,8 +594,16 @@ func writeCase(t *testing.T, root, agent, id, contents string) {
 
 func writeAgent(t *testing.T, root, agent string) {
 	t.Helper()
-	writeFile(t, filepath.Join(root, "agents", agent+"-prompt.md"), "# Reviewer")
-	writeFile(t, filepath.Join(root, "agents", agent+".json"), `{"model":"claude-sonnet-5"}`)
+	writeFile(t, filepath.Join(root, "agents", agent, "manifest.json"),
+		fmt.Sprintf(`{"name":%q,"profile":"sonnet"}`, agent))
+	writeFile(t, filepath.Join(root, "agents", agent, "claude.md"),
+		fmt.Sprintf(`---
+name: %s
+description: Reviewer
+model: sonnet
+effort: medium
+---
+# Reviewer`, agent))
 }
 
 func writeRun(t *testing.T, root, id string, passed bool, cost float64) string {

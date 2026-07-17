@@ -20,16 +20,29 @@ function TypeBadge({ type }: { type: NodeType }) {
   return <span className={`type-badge type-${type}`}>{type}</span>;
 }
 
+function CompatibilityBadge({ node }: { node: GraphNode }) {
+  if (node.type !== 'skill' || !node.compatibility) return null;
+  const label = node.compatibility === 'variants'
+    ? 'Claude + Codex'
+    : node.compatibility[0].toUpperCase() + node.compatibility.slice(1);
+  return <span className={`compatibility-badge compatibility-${node.compatibility}`}>{label}</span>;
+}
+
 function Card({ node, onSelect }: { node: GraphNode; onSelect: (node: GraphNode) => void }) {
   return (
     <div className={`card card-${node.type}`} onClick={() => onSelect(node)}>
-      <div className="card-header">
-        <h3 className="card-name">{node.name}</h3>
-        <TypeBadge type={node.type} />
+    <div className="card-header">
+      <h3 className="card-name">{node.name}</h3>
+        <div className="card-badges">
+          <TypeBadge type={node.type} />
+          <CompatibilityBadge node={node} />
+        </div>
       </div>
       {node.category && <span className="card-category">{node.category}</span>}
       <p className="card-description">{node.description}</p>
-      {node.model && <span className="card-model">{node.model}</span>}
+      {node.type === 'agent' && node.profile && (
+        <span className="card-model">profile: {node.profile}</span>
+      )}
     </div>
   );
 }

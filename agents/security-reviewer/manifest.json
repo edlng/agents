@@ -1,0 +1,11 @@
+{
+  "name": "security-reviewer",
+  "description": "Read-only threat-model-driven security reviewer anchored to CWE taxonomy for injection, access control, secrets, cryptography, SSRF, and path traversal.",
+  "category": "quality-assurance",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "research-summarizer",
+  "description": "Orchestrates research and adversarial validation, then produces a final summary containing confirmed findings.",
+  "category": "research",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

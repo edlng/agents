@@ -1,0 +1,8 @@
+{
+  "name": "research-summarizer",
+  "description": "Orchestrates research, validation, and produces a final summary",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": ["subagent", "read", "write"],
+  "allowedTools": ["subagent", "read", "write"],
+  "model": "claude-sonnet-5"
+}

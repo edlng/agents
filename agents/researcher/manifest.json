@@ -1,0 +1,11 @@
+{
+  "name": "researcher",
+  "description": "Read-only researcher that answers a specific external documentation, API, or library question with concise cited findings, tradeoffs, and a recommendation.",
+  "category": "research",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

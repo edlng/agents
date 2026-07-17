@@ -1,0 +1,66 @@
+{
+  "name": "explore",
+  "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence docs to build context for planning. Never modifies files.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "shell",
+    "glob",
+    "grep",
+    "code",
+    "mcp__atlassian__getJiraIssue",
+    "mcp__atlassian__searchJiraIssuesUsingJql",
+    "mcp__atlassian__getJiraIssueRemoteIssueLinks",
+    "mcp__atlassian__getVisibleJiraProjects",
+    "mcp__atlassian__getConfluencePage",
+    "mcp__atlassian__getConfluencePageDescendants",
+    "mcp__atlassian__getPagesInConfluenceSpace",
+    "mcp__atlassian__getConfluenceSpaces",
+    "mcp__atlassian__searchConfluenceUsingCql",
+    "mcp__atlassian__search",
+    "mcp__atlassian__fetch"
+  ],
+  "allowedTools": [
+    "read",
+    "shell",
+    "glob",
+    "grep",
+    "code",
+    "mcp__atlassian__getJiraIssue",
+    "mcp__atlassian__searchJiraIssuesUsingJql",
+    "mcp__atlassian__getJiraIssueRemoteIssueLinks",
+    "mcp__atlassian__getVisibleJiraProjects",
+    "mcp__atlassian__getConfluencePage",
+    "mcp__atlassian__getConfluencePageDescendants",
+    "mcp__atlassian__getPagesInConfluenceSpace",
+    "mcp__atlassian__getConfluenceSpaces",
+    "mcp__atlassian__searchConfluenceUsingCql",
+    "mcp__atlassian__search",
+    "mcp__atlassian__fetch"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "timeout": 60000,
+      "autoAllowReadonly": true,
+      "allowedCommands": [
+        "find *",
+        "grep *",
+        "rg *",
+        "cat *",
+        "head *",
+        "tail *",
+        "wc *",
+        "ls *",
+        "tree *",
+        "git log *",
+        "git show *",
+        "git diff *",
+        "git ls-files *"
+      ]
+    }
+  },
+  "model": "claude-haiku-4.5",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ]
+}

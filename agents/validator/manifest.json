@@ -1,0 +1,11 @@
+{
+  "name": "validator",
+  "description": "Read-only validator that checks one completed implementation task against its acceptance criteria and issues a scored PASS or FAIL report.",
+  "category": "quality-assurance",
+  "profile": "opus",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

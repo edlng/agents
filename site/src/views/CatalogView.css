@@ -158,6 +158,14 @@
   margin-bottom: 6px;
 }
 
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .card-name {
   font-size: 14px;
   font-weight: 600;
@@ -191,6 +199,36 @@
 .type-badge.type-mcp-server {
   color: var(--node-mcp);
   background: rgba(188, 140, 255, 0.12);
+}
+
+.compatibility-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  white-space: nowrap;
+}
+
+.compatibility-universal {
+  color: #d29922;
+  background: rgba(210, 153, 34, 0.12);
+}
+
+.compatibility-variants {
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+}
+
+.compatibility-claude {
+  color: #f0883e;
+  background: rgba(240, 136, 62, 0.12);
+}
+
+.compatibility-codex {
+  color: #3fb950;
+  background: rgba(63, 185, 80, 0.12);
 }
 
 .card-category {

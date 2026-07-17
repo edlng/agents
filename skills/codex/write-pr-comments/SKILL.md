@@ -1,0 +1,237 @@
+---
+name: write-pr-comments
+description: Post inline PR review comments from an Obsidian review note as a pending review. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as a pending GitHub review (visible only to you until manually submitted).
+---
+
+> **Codex runtime:** Use Codex-native agent dispatch, task plans, user-input requests, MCP capabilities, and skill loading. Resolve agents from `~/.codex/agents` or `.codex/agents`; resolve skills from `~/.agents/skills` or `.agents/skills`.
+>
+> Match work to catalog roles: low effort uses `context-curator`, `explore`, or `documenter`; medium uses `builder`, `code-reviewer`, `tester`, or `researcher`; high uses `validator` or `superhuman`.
+
+# Write PR Comments
+
+Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note.
+
+`$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/<slug>.md`. If empty, list recent notes in `PRs/` via `the matching MCP server capability` and ask which review to post.
+
+---
+
+## Phase 1: Load and Parse the Review Note
+
+1. Derive the Obsidian note path from `$ARGUMENTS`:
+   - If a PR URL or `owner/repo#number` is given, search `the matching MCP server capability` in the `PRs/` folder using the repo name and PR number.
+   - If empty, use `the matching MCP server capability` on `PRs/` and ask the user which note to use.
+
+2. Read the note with `the matching MCP server capability`.
+
+3. Parse the markdown into structured findings. Each finding has:
+   - `severity`: from which `##` section it appears under (`Blocking`, `Recommended`, `Nits`)
+   - `file`: extracted from the bold `**file:line**` pattern
+   - `line`: the line number (or start of range)
+   - `claim`: the text after the `—` on the finding line
+   - `evidence`: text after `Evidence:`
+   - `fix`: text after `Fix:`
+
+---
+
+## Phase 2: Filter Non-Actionable Findings
+
+Remove any finding where the `fix` field contains any of these phrases (case-insensitive):
+- "no change needed"
+- "no action needed"
+- "accept as consistent"
+- "accept as matching"
+- "no action required"
+- "matches existing pattern"
+- "matches flowise pattern"
+
+Also remove findings where `fix` starts with "This is acknowledged" or "This is fine".
+
+After filtering, if zero findings remain, tell the user "No actionable findings to post" and stop.
+
+---
+
+## Phase 3: Extract PR Metadata
+
+From the review note header, extract:
+- `owner/repo` and `PR number` (from the `# Review:` line — format is `owner-repo-number`)
+- `commit_sha`: fetch via `gh pr view <number> --repo <owner/repo> --json headRefOid --jq .headRefOid`
+
+If the PR identifier is ambiguous, ask the user to confirm.
+
+---
+
+## Phase 3b: Skip Already-Posted Comments
+
+Before presenting findings, fetch existing review comments so the same point isn't posted twice:
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<number>/comments --paginate \
+  --jq '.[] | {path: .path, line: .line, body: .body}'
+```
+
+For each finding, check whether an existing comment is on the same `file` at (or near) the same line and covers the same point. If it does, drop the finding from the queue and tell the user it was skipped as a duplicate. Match on file + proximity of line + overlapping subject, not exact string equality — the existing comment may be phrased differently.
+
+---
+
+## Phase 4: Present Findings One-by-One
+
+For each remaining finding, present it to the user in this format:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Finding [N/total] — [severity]
+File: [file], Line: [line]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[claim]
+
+Evidence: [evidence]
+
+Suggested fix: [fix]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Post this comment? (yes / skip / edit / stop)
+```
+
+Wait for the user's response:
+- **yes**: Queue this finding for posting.
+- **skip**: Do not post this finding. Move to next.
+- **edit**: Ask the user for revised text, then queue the edited version.
+- **stop**: Stop presenting findings. Post whatever has been queued so far.
+
+---
+
+## Phase 5: Humanize Comment Text
+
+Before posting, run each approved comment's body through the `/pr-comment-humanizer` skill. The goal is to make comments sound like the author's real code review voice: terse, imperative, no AI-isms, no severity labels in the body (severity is conveyed by word choice and a lowercase `nit` prefix for minor things).
+
+Apply pr-comment-humanizer to the combined `claim + evidence + fix` text of each approved finding. Keep technical accuracy intact — only adjust tone, phrasing, and AI-isms. The humanized text IS the final comment body; do not re-wrap it with severity headers or templated sections in Phase 7.
+
+---
+
+## Phase 6: Resolve and Verify Comment Anchors
+
+The line number in the review note is NOT trustworthy — it is generated by an LLM and is routinely off by a few lines (e.g. a finding about a call on line 44 may be recorded as line 48). Posting on the note's raw line number lands the comment on the wrong code. The anchor MUST be verified against the actual file content, then confirmed to fall inside a diff hunk.
+
+Anchor with `line` + `side: "RIGHT"` (file-relative), not the deprecated `position`. The constraint: the line must be inside a diff hunk, or the API returns HTTP 422 ("line ... could not be resolved").
+
+Resolve each anchor in three steps:
+
+**Step 1 — Verify the line against real file content (authoritative).**
+Each finding's `evidence` field contains a verbatim code quote. Fetch the file at the PR head commit and locate that quote to get the TRUE line number. Do not trust the note's number when the evidence can be found.
+
+```bash
+# Fetch the file content at the head commit, numbered
+gh api "repos/<owner>/<repo>/contents/<path>?ref=<commit_sha>" --jq '.content' \
+  | base64 -d | nl -ba
+```
+
+For each finding:
+- Extract the most distinctive verbatim fragment from `evidence` — prefer the code inside the first backtick pair (e.g. `get_query_embedding(query.query_str)`). Strip backticks.
+- `grep -nF '<fragment>'` the numbered content. If exactly one line matches, that line is the verified anchor.
+- If multiple lines match, pick the one closest to the note's line number.
+- If no verbatim match (evidence paraphrased or reformatted), fall back to the note's line number and flag to the user that the anchor is unverified.
+
+**Step 2 — Build the set of commentable lines from the diff.**
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<number>/files --paginate \
+  | python3 -c '
+import sys, json, re
+files = json.load(sys.stdin)
+out = {}
+for f in files:
+    patch = f.get("patch")
+    if not patch:
+        continue
+    valid, new_line = [], None
+    for ln in patch.split("\n"):
+        if ln.startswith("@@"):
+            m = re.search(r"\+(\d+)", ln)   # new-side start line from @@ -a,b +c,d @@
+            new_line = int(m.group(1)) if m else None
+        elif new_line is None or ln == "" or ln.startswith("\\"):
+            continue                         # skip preamble and "\ No newline" markers
+        elif ln.startswith("-"):
+            continue                         # removed line: not commentable on RIGHT, no advance
+        else:                                # added (+) or context ( ): commentable, advance
+            valid.append(new_line)
+            new_line += 1
+    out[f["filename"]] = valid    # files API returns "filename", not "path"
+print(json.dumps(out, indent=2))
+'
+```
+
+This prints a map of `path -> [commentable line numbers]` (new-side / RIGHT).
+
+**Step 3 — Anchor each comment.** Decide single-line vs range first, then validate against the commentable set.
+
+*Single line (default, preferred).* Use the Step 1 verified line:
+- **Verified line is in the commentable set** → anchor with `"line": <verified_line>, "side": "RIGHT"`.
+- **Verified line is NOT in the set** → snap to the nearest value in that file's list and prefix the body with `(re: line <verified_line>)`.
+- **File has no entry** (not in the diff: renamed-only, binary, or unchanged) → skip and warn the user.
+
+*Multi-line range (only when both endpoints are verifiable).* Some findings are about a block, not one line (e.g. a batch-insert loop, a try/except, a multi-line config). Draw a range ONLY when both ends can be located in the real file:
+- The `evidence` quotes two distinct code fragments (e.g. `tasks.append(...)` AND `await asyncio.gather(...)`) → grep each in the numbered content (Step 1) to get `start_line` and the end `line`.
+- Set `start_line = min`, `line = max`, both `side`/`start_side` = `"RIGHT"`. `start_line` must be strictly less than `line`.
+- Both endpoints MUST be in the commentable set and within the same diff hunk. If either fails validation, do NOT draw the range — fall back to a single-line anchor on the verified start line.
+- NEVER fabricate a range from the note's `start-end` numbers alone (e.g. `191-210`). Those numbers are LLM-generated and unreliable; an unverified range highlights the wrong block. The note's range is a hint for *where to look*, not the anchor.
+
+Notes:
+- For a single-line comment, omit `start_line`/`start_side` entirely.
+- Removed lines are only commentable on `side: "LEFT"`. This skill posts on new code, so always use `RIGHT`.
+
+---
+
+## Phase 7: Post Approved Comments
+
+The review is posted as **PENDING** - it will be visible only to you in the GitHub UI with inline comments attached, but NOT submitted publicly. You finish the review manually in the browser (choose Approve, Comment, or Request Changes).
+
+Write a top-level review body as a draft summary for your reference:
+- Brief note on what the PR does well
+- One-line summary of the comments left (e.g. "1 blocking issue re: credential handling, 2 nits")
+- Keep it short - you'll edit this before submitting if needed
+
+Construct a single review via `gh api`. Each comment's `body` is the humanized text from Phase 5 (anchored with `line` + `side`, never `position`):
+
+```bash
+cat <<'EOF' | gh api repos/<owner>/<repo>/pulls/<number>/reviews --method POST --input -
+{
+  "commit_id": "<commit_sha>",
+  "body": "<friendly review body written above>",
+  "comments": [
+    {
+      "path": "<file>",
+      "line": <line>,
+      "side": "RIGHT",
+      "body": "<humanized single-line comment body from Phase 5>"
+    },
+    {
+      "path": "<file>",
+      "start_line": <start_line>,
+      "start_side": "RIGHT",
+      "line": <end_line>,
+      "side": "RIGHT",
+      "body": "<humanized range comment body — only when both endpoints were verified>"
+    }
+  ]
+}
+EOF
+```
+
+If more than 20 comments are queued, batch into multiple reviews (GitHub API limit).
+
+After posting, print a confirmation with the review URL, the count of comments posted, and a reminder: "Review is pending — open the PR in your browser to submit with your chosen action."
+
+---
+
+## Rules
+
+- Use `gh` CLI for all GitHub writes (posting review comments). This is the inverse of review-pr which is read-only.
+- Use `the matching MCP server capability*` tools for reading review notes.
+- Anchor inline comments with `"line"` + `"side": "RIGHT"` (file-relative), NOT the deprecated `"position"`. VERIFY the line against actual file content using the finding's evidence quote (Phase 6, Step 1) — the note's line number is LLM-generated and often wrong. Then confirm the line falls inside a diff hunk (Step 2); an out-of-diff line returns HTTP 422.
+- Always run approved comment bodies through `/pr-comment-humanizer` before posting (Phase 5).
+- Skip findings already covered by an existing PR comment (Phase 3b).
+- NEVER modify the Obsidian note.
+- To create a pending review, **omit the `"event"` field entirely** from the POST body — that is what GitHub requires. The API rejects `"event": "PENDING"` with HTTP 422. NEVER include an `event` field when creating the review; the review will be pending (draft, visible only to you) by default. You submit manually in the GitHub UI.
+- If `gh auth status` fails, stop and tell the user to authenticate.
+- If the PR has been merged or closed, warn the user and ask whether to proceed.

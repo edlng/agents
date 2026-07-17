@@ -1,0 +1,11 @@
+{
+  "name": "builder",
+  "description": "Worker agent that executes one scoped implementation task. Writes and edits code, runs commands, does not delegate, and does not expand scope.",
+  "category": "implementation",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

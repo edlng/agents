@@ -1,0 +1,11 @@
+{
+  "name": "research-validator",
+  "description": "Read-only adversarial verification agent that checks research claims against cited sources and classifies each as CONFIRMED, UNVERIFIED, or CONTRADICTED.",
+  "category": "research",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

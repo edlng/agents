@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "extract": "tsx scripts/extract-data.ts",
+    "test": "tsx --test scripts/*.test.ts",
     "prebuild": "tsx scripts/extract-data.ts",
     "predev": "tsx scripts/extract-data.ts",
     "dev": "vite",
@@ -21,6 +22,7 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@iarna/toml": "^2.2.5",
     "@types/dagre": "^0.7.52",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",

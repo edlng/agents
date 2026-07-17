@@ -1,0 +1,11 @@
+{
+  "name": "documenter",
+  "description": "Generates concise documentation for completed and validated features without modifying implementation code.",
+  "category": "documentation",
+  "profile": "haiku",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

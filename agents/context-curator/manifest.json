@@ -1,0 +1,11 @@
+{
+  "name": "context-curator",
+  "description": "Curates memory context for worker agents from Valkey and Obsidian and returns only a context-memory block; it does not perform tasks.",
+  "category": "orchestration",
+  "profile": "haiku",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

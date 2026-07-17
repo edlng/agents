@@ -4,6 +4,10 @@ output/
 .DS_Store
 skills/humanizer/.git/
 skills/daily-log/
+.decisions.md
+openspec/
+docs/superpowers/
+langgraph-agents/
 
 # Site (visualizer)
 site/dist/

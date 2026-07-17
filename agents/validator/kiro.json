@@ -1,0 +1,28 @@
+{
+  "name": "validator",
+  "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only \u2014 inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "/tmp/**"
+      ]
+    },
+    "shell": {
+      "timeout": 120000,
+      "autoAllowReadonly": true
+    }
+  },
+  "model": "claude-opus-4.8",
+  "welcomeMessage": "Validator ready. What should I verify?"
+}

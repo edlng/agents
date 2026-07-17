@@ -1,5 +1,12 @@
 export type NodeType = 'agent' | 'skill' | 'shared-ref' | 'mcp-server';
 export type EdgeType = 'delegates-to' | 'uses-skill' | 'uses-shared-ref' | 'uses-mcp';
+export type Platform = 'claude' | 'codex' | 'kiro';
+export type Compatibility = 'universal' | 'claude' | 'codex' | 'variants';
+
+export interface PlatformModel {
+  model: string;
+  effort: string;
+}
 
 export interface GraphNode {
   id: string;
@@ -7,6 +14,11 @@ export interface GraphNode {
   name: string;
   description: string;
   category?: string;
+  platforms?: Platform[];
+  compatibility?: Compatibility;
+  profile?: 'haiku' | 'sonnet' | 'opus';
+  models?: Partial<Record<Platform, PlatformModel>>;
+  sources?: Partial<Record<Platform | 'universal', string>>;
   model?: string;
   tools?: string[];
   mcpServers?: string[];
@@ -76,7 +88,8 @@ export interface StatsData {
     mcpServers: number;
     workflows: number;
   };
-  modelDistribution: Record<string, number>;
+  profileDistribution: Record<string, number>;
+  modelDistribution: Record<string, Record<string, number>>;
   agentCategories: Record<string, number>;
   skillCategories: Record<string, number>;
   evals: EvalStats;

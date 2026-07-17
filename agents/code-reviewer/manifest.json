@@ -1,0 +1,11 @@
+{
+  "name": "code-reviewer",
+  "description": "Read-only code reviewer that checks correctness, security, specification alignment, and testability, then issues an evidence-backed APPROVE or BLOCK decision.",
+  "category": "quality-assurance",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

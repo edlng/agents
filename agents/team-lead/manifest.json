@@ -1,0 +1,11 @@
+{
+  "name": "team-lead",
+  "description": "Team orchestrator that plans work and delegates implementation, validation, review, testing, research, and documentation to specialized agents.",
+  "category": "orchestration",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

@@ -36,11 +36,32 @@ function ModelBar({ model, count, max }: { model: string; count: number; max: nu
   );
 }
 
+function ModelTable({
+  platform,
+  models,
+}: {
+  platform: string;
+  models: Record<string, number>;
+}) {
+  const entries = Object.entries(models).sort((a, b) => b[1] - a[1]);
+  const max = entries[0]?.[1] || 1;
+  return (
+    <div className="model-table">
+      <h3 className="column-title">{platform} models</h3>
+      <div className="model-bars">
+        {entries.map(([model, count]) => (
+          <ModelBar key={model} model={model} count={count} max={max} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function OverviewView() {
   const navigate = useNavigate();
 
-  const modelEntries = Object.entries(stats.modelDistribution).sort((a, b) => b[1] - a[1]);
-  const maxModelCount = modelEntries.length > 0 ? modelEntries[0][1] : 1;
+  const profileEntries = Object.entries(stats.profileDistribution).sort((a, b) => b[1] - a[1]);
+  const maxProfileCount = profileEntries.length > 0 ? profileEntries[0][1] : 1;
 
   const agentCategoryEntries = Object.entries(stats.agentCategories).sort((a, b) => b[1] - a[1]);
   const skillCategoryEntries = Object.entries(stats.skillCategories).sort((a, b) => b[1] - a[1]);
@@ -67,13 +88,17 @@ export function OverviewView() {
         </div>
       </section>
 
-      {/* Model distribution */}
+      {/* Profile and platform model distribution */}
       <section className="overview-section">
-        <h2 className="section-title">Agent Models</h2>
+        <h2 className="section-title">Agent Profiles</h2>
         <div className="model-bars">
-          {modelEntries.map(([model, count]) => (
-            <ModelBar key={model} model={model} count={count} max={maxModelCount} />
+          {profileEntries.map(([profile, count]) => (
+            <ModelBar key={profile} model={profile} count={count} max={maxProfileCount} />
           ))}
+        </div>
+        <div className="platform-model-grid">
+          <ModelTable platform="Claude" models={stats.modelDistribution.claude || {}} />
+          <ModelTable platform="Codex" models={stats.modelDistribution.codex || {}} />
         </div>
       </section>
 

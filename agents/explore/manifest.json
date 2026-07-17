@@ -1,0 +1,11 @@
+{
+  "name": "explore",
+  "description": "Read-only exploration agent that surveys codebases, Jira tickets, and Confluence documentation to build planning context without modifying files.",
+  "category": "research",
+  "profile": "haiku",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

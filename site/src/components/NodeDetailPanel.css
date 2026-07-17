@@ -60,6 +60,10 @@
   border: 1px solid rgba(63, 185, 80, 0.3);
 }
 
+.detail-header-badges .compatibility-badge {
+  font-size: 10px;
+}
+
 .detail-type-badge {
   font-size: 10px;
   font-weight: 600;
@@ -150,6 +154,64 @@
   border-radius: var(--radius-sm);
   display: inline-block;
   width: fit-content;
+}
+
+.detail-model-list,
+.detail-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-model-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.detail-model-platform {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.detail-model-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.detail-model-effort {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.detail-source-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--node-agent);
+  text-decoration: none;
+}
+
+.detail-source-row:hover {
+  text-decoration: underline;
+}
+
+.detail-source-row span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.detail-source-row code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 11px;
 }
 
 .detail-field-tags {

@@ -1,7 +1,0 @@
-{
-  "graphs": {
-    "github_notifier": "./github_notifier.py:build_graph"
-  },
-  "source": {"kind": "uv", "root": "."},
-  "env": ".env"
-}

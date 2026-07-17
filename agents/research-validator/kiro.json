@@ -1,0 +1,90 @@
+{
+  "name": "research-validator",
+  "description": "Adversarial verification agent. Cross-checks researcher findings against cited source URLs using firecrawl. Classifies each claim as CONFIRMED, UNVERIFIED, or CONTRADICTED. Use after the researcher agent to validate accuracy before passing findings to the caller.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "shell",
+    "@firecrawl",
+    "@sequential-thinking"
+  ],
+  "allowedTools": [
+    "read",
+    "shell",
+    "@firecrawl/firecrawl_scrape",
+    "@firecrawl/firecrawl_search",
+    "@firecrawl/firecrawl_map",
+    "@firecrawl/firecrawl_extract",
+    "@firecrawl/firecrawl_crawl",
+    "@firecrawl/firecrawl_check_crawl_status",
+    "@firecrawl/firecrawl_agent",
+    "@firecrawl/firecrawl_agent_status",
+    "@sequential-thinking/sequentialthinking"
+  ],
+  "mcpServers": {
+    "obsidian": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mauricio.wolff/mcp-obsidian@latest",
+        "~/Documents/work"
+      ],
+      "autoApprove": [
+        "write_note",
+        "list_directory",
+        "search_notes",
+        "read_note",
+        "patch_note"
+      ],
+      "disabledTools": [
+        "move_note",
+        "move_file",
+        "update_frontmatter",
+        "manage_tags",
+        "get_vault_stats"
+      ]
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_URL": "${FIRECRAWL_API_URL:-http://localhost:3002}"
+      },
+      "autoApprove": [
+        "firecrawl_scrape",
+        "firecrawl_map",
+        "firecrawl_search",
+        "firecrawl_extract"
+      ],
+      "disabledTools": [
+        "firecrawl_browser_create",
+        "firecrawl_browser_execute",
+        "firecrawl_browser_delete",
+        "firecrawl_browser_list"
+      ]
+    }
+  },
+  "toolsSettings": {
+    "shell": {
+      "timeout": 30000,
+      "allowedCommands": [
+        "curl *",
+        "wget *",
+        "git log",
+        "git show",
+        "cat",
+        "head",
+        "tail",
+        "find",
+        "grep"
+      ]
+    }
+  },
+  "model": "claude-sonnet-5",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ]
+}

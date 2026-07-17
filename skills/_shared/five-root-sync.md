@@ -1,32 +1,40 @@
-# Shared: Five-Root Sync Convention
+# Shared: Catalog Authoring Convention
 
-> Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the five-location sync rule and the paths involved.
+This reference is used by `create-skill`, `update-skill`, and `update-agent`.
+The repository catalog is the source of truth. Platform-native files are
+authored in their own format and then validated from the catalog.
 
-All skills and agents are maintained as identical copies across five roots. Changes to one location MUST be applied to all five. Never leave locations out of sync.
+## Catalog layout
 
-## Root paths
+| Entity | Source files |
+|---|---|
+| Agent | `agents/<name>/{manifest.json,claude.md,codex.toml,kiro.json,kiro-prompt.md}` |
+| Universal skill | `skills/universal/<name>/` |
+| Claude skill | `skills/claude/<name>/` |
+| Codex skill | `skills/codex/<name>/` |
+| Shared reference | `skills/_shared/<file>.md` |
 
-| Entity type | Root 1 (canonical) | Root 2 | Root 3 | Root 4 | Root 5 |
-|---|---|---|---|---|---|
-| Skill | `~/.kiro/skills/<name>/SKILL.md` | `~/.claude/skills/<name>/SKILL.md` | `~/agents/skills/<name>/SKILL.md` | `~/.config/devin/skills/<name>/SKILL.md` | `~/.codex/skills/<name>/SKILL.md` |
-| Agent | `~/.kiro/agents/<name>.md` | `~/.claude/agents/<name>.md` | `~/agents/agents/<name>.md` | — (devin-cli uses `--agent-config` file, not a directory of agents) | — (codex does not use agent markdown files) |
-| Shared ref | `~/.kiro/skills/_shared/<file>.md` | `~/.claude/skills/_shared/<file>.md` | `~/agents/skills/_shared/<file>.md` | `~/.config/devin/skills/_shared/<file>.md` | `~/.codex/skills/_shared/<file>.md` |
+## Authoring rules
 
-## Sync rules
+1. Read the existing source and preserve content that is outside the requested
+   change.
+2. Keep universal skills free of provider-specific model IDs and tool names.
+3. Keep Claude and Codex variants behaviorally equivalent, but use each
+   platform's native agent, tool, model, and installation vocabulary.
+4. Update the platform-native source directly. Do not copy files across home
+   directories or treat an installed copy as canonical.
+5. Run `node scripts/validate-catalog.mjs` after changing catalog files.
 
-1. **Read before write** — read the existing file in each target directory to understand current content. Preserve formatting, frontmatter fields, section structure, and any content not targeted by the change.
-2. **Author once, replicate** — make the change to the canonical copy (`~/.kiro/`), then copy byte-for-byte to the other four roots. This is more reliable than editing each independently.
-3. **Verify** — after replication, confirm all five copies are byte-identical (e.g. `diff -q`).
-4. **Never partial sync** — if the write fails in one root, report the failure. Do not leave roots diverged.
+## Installation and verification
 
-## Workflow pattern (parameterized)
+Preview the relevant platform install with:
 
-1. Parse the user's request to determine: target entity name, entity type (skill/agent/shared), and what changes to make.
-2. Read the existing file from the canonical root (`~/.kiro/`).
-3. Apply the requested changes while preserving unchanged content.
-4. Write the updated file to the canonical root.
-5. Copy to the other four roots (skip Root 4 and Root 5 for agents since neither devin-cli nor codex use agent markdown files).
-6. Verify byte-identity across all applicable roots.
-7. Confirm completion with paths and a summary of what changed.
+```text
+node scripts/install.mjs claude --dry-run
+node scripts/install.mjs codex --dry-run
+```
 
-For **create** operations, also check for naming conflicts across all five directories before writing. For **shared refs**, the same sync applies (create/update in `~/.kiro/skills/_shared/`, copy to the other four `_shared/` directories).
+Claude installs agents under `~/.claude/agents` or `.claude/agents` and skills
+under `~/.claude/skills` or `.claude/skills`. Codex installs agents under
+`~/.codex/agents` or `.codex/agents` and skills under `~/.agents/skills` or
+`.agents/skills`.

@@ -1,0 +1,11 @@
+{
+  "name": "developer",
+  "description": "Implementation agent in a multi-agent workflow that makes minimal, reviewable changes, runs focused checks, and leaves independent validation to the tester.",
+  "category": "implementation",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

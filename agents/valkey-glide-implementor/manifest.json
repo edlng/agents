@@ -1,0 +1,11 @@
+{
+  "name": "valkey-glide-implementor",
+  "description": "Read-only Valkey GLIDE specialist that generates production-ready client code snippets for supported languages and usage patterns.",
+  "category": "valkey-glide",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

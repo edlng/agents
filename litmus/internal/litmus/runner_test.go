@@ -403,7 +403,7 @@ func TestVerboseCasesHaveProviderHeadroom(t *testing.T) {
 
 func TestResearchValidatorPromptHonorsExactJSONRequests(t *testing.T) {
 	root := repoRoot(t)
-	prompt, err := os.ReadFile(filepath.Join(root, "agents", "research-validator-prompt.md"))
+	prompt, err := os.ReadFile(filepath.Join(root, "agents", "research-validator", "claude.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -414,7 +414,7 @@ func TestResearchValidatorPromptHonorsExactJSONRequests(t *testing.T) {
 
 func TestValidatorPromptHonorsReportOnlyRequests(t *testing.T) {
 	root := repoRoot(t)
-	prompt, err := os.ReadFile(filepath.Join(root, "agents", "validator-prompt.md"))
+	prompt, err := os.ReadFile(filepath.Join(root, "agents", "validator", "claude.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -709,8 +709,15 @@ func TestProbeRejectsReplayOnlyCase(t *testing.T) {
 
 func TestProbeDisablesToolsForLiveCases(t *testing.T) {
 	root := testRepo(t)
-	writeFile(t, filepath.Join(root, "agents", "builder-prompt.md"), "# Builder")
-	writeFile(t, filepath.Join(root, "agents", "builder.json"), `{"model":"claude-haiku-5"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "manifest.json"),
+		`{"name":"builder","profile":"haiku"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "claude.md"), `---
+name: builder
+description: Builder
+model: claude-haiku-5
+effort: medium
+---
+# Builder`)
 	fake := &fakeExecutor{response: ProviderResponse{Output: "done"}}
 	runner := Runner{Root: root, Executor: fake}
 	testCase := Case{
@@ -860,28 +867,71 @@ func TestClaudeArgsAddsJSONSchema(t *testing.T) {
 	}
 }
 
-func TestResolveProductionAgentUsesDefaultModelWithoutConfig(t *testing.T) {
+func TestResolveProductionAgentLoadsNativeClaudeVariant(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "agents", "reviewer-prompt.md"), "# Reviewer")
+	writeFile(t, filepath.Join(root, "agents", "builder", "manifest.json"),
+		`{"name":"builder","profile":"haiku"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "claude.md"), `---
+name: builder
+description: Builder
+model: claude-haiku-4-5
+effort: medium
+---
+# Builder`)
 
-	prompt, model, err := resolveProductionAgent(root, "reviewer")
+	prompt, model, err := resolveProductionAgent(root, "builder")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if prompt != "# Reviewer" || model != "sonnet" {
-		t.Fatalf("resolveProductionAgent() = (%q, %q), want prompt and default sonnet", prompt, model)
+	if prompt != "# Builder" || model != "haiku" {
+		t.Fatalf("resolveProductionAgent() = (%q, %q), want native prompt and haiku", prompt, model)
 	}
 }
 
-func TestResolveProductionAgentRejectsFileReferenceAsInlinePrompt(t *testing.T) {
+func TestResolveProductionAgentRejectsMalformedFrontmatter(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "agents", "reviewer.json"), `{
-		"model": "claude-opus-5",
-		"prompt": "file://./reviewer-prompt.md"
-	}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "manifest.json"),
+		`{"name":"builder","profile":"haiku"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "claude.md"), `---
+name: builder
+model: claude-haiku-4-5
+`)
 
-	if _, _, err := resolveProductionAgent(root, "reviewer"); err == nil || !strings.Contains(err.Error(), "production prompt") {
-		t.Fatalf("resolveProductionAgent() error = %v, want missing production prompt", err)
+	if _, _, err := resolveProductionAgent(root, "builder"); err == nil || !strings.Contains(err.Error(), "frontmatter") {
+		t.Fatalf("resolveProductionAgent() error = %v, want malformed frontmatter", err)
+	}
+}
+
+func TestResolveProductionAgentRequiresModel(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "agents", "builder", "manifest.json"),
+		`{"name":"builder","profile":"haiku"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "claude.md"), `---
+name: builder
+description: Builder
+effort: medium
+---
+# Builder`)
+
+	if _, _, err := resolveProductionAgent(root, "builder"); err == nil || !strings.Contains(err.Error(), "agent model is required") {
+		t.Fatalf("resolveProductionAgent() error = %v, want missing model", err)
+	}
+}
+
+func TestResolveProductionAgentRejectsManifestNameMismatch(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "agents", "builder", "manifest.json"),
+		`{"name":"other","profile":"haiku"}`)
+	writeFile(t, filepath.Join(root, "agents", "builder", "claude.md"), `---
+name: builder
+description: Builder
+model: claude-haiku-4-5
+effort: medium
+---
+# Builder`)
+
+	if _, _, err := resolveProductionAgent(root, "builder"); err == nil || !strings.Contains(err.Error(), "manifest name") {
+		t.Fatalf("resolveProductionAgent() error = %v, want manifest mismatch", err)
 	}
 }
 
@@ -1077,8 +1127,15 @@ func fixedNow() time.Time {
 func testRepo(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "agents", "code-reviewer-prompt.md"), "# Code Reviewer")
-	writeFile(t, filepath.Join(root, "agents", "code-reviewer.json"), `{"model":"claude-sonnet-5"}`)
+	writeFile(t, filepath.Join(root, "agents", "code-reviewer", "manifest.json"),
+		`{"name":"code-reviewer","profile":"sonnet"}`)
+	writeFile(t, filepath.Join(root, "agents", "code-reviewer", "claude.md"), `---
+name: code-reviewer
+description: Code Reviewer
+model: claude-sonnet-5
+effort: medium
+---
+# Code Reviewer`)
 	return root
 }
 

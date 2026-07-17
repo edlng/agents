@@ -1,0 +1,11 @@
+{
+  "name": "team-leader",
+  "description": "Read-only orchestrator that creates specifications, delegates one implementation task at a time, tracks progress, and requires independent testing and review.",
+  "category": "orchestration",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

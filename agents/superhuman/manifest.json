@@ -1,0 +1,11 @@
+{
+  "name": "superhuman",
+  "description": "Expert implementation agent for complex multi-step engineering across AWS, backend, frontend, user experience, and architecture.",
+  "category": "implementation",
+  "profile": "opus",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

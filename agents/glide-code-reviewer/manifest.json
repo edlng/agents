@@ -1,0 +1,11 @@
+{
+  "name": "glide-code-reviewer",
+  "description": "Read-only Valkey GLIDE specialist that reviews client code for correctness, anti-patterns, resource leaks, and cluster awareness.",
+  "category": "quality-assurance",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

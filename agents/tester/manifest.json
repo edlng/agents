@@ -1,0 +1,11 @@
+{
+  "name": "tester",
+  "description": "Test and verification agent that runs quality checks, writes tests when coverage is missing, and reports commands, results, and reproduction steps.",
+  "category": "quality-assurance",
+  "profile": "sonnet",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

@@ -4,42 +4,87 @@
       "id": "agent:builder",
       "type": "agent",
       "name": "builder",
-      "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
-      "category": "Implementation",
-      "model": "claude-sonnet-5",
+      "description": "Worker agent that executes one scoped implementation task. Writes and edits code, runs commands, does not delegate, and does not expand scope.",
+      "category": "implementation",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/builder/claude.md",
+        "codex": "agents/builder/codex.toml",
+        "kiro": "agents/builder/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "write",
-        "shell"
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep",
+        "Skill"
       ],
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/builder.json"
+      "sourcePath": "agents/builder/manifest.json"
     },
     {
       "id": "agent:code-reviewer",
       "type": "agent",
       "name": "code-reviewer",
-      "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
-      "category": "Quality Assurance",
-      "model": "claude-sonnet-5",
+      "description": "Read-only code reviewer that checks correctness, security, specification alignment, and testability, then issues an evidence-backed APPROVE or BLOCK decision.",
+      "category": "quality-assurance",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/code-reviewer/claude.md",
+        "codex": "agents/code-reviewer/codex.toml",
+        "kiro": "agents/code-reviewer/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "write",
-        "shell",
-        "@sequential-thinking/sequentialthinking",
-        "@github/get_file_contents",
-        "@github/pull_request_read",
-        "@github/search_pull_requests",
-        "@github/get_me",
-        "@github/list_pull_requests",
-        "@github/get_commit",
-        "@github/list_commits",
-        "@github/search_code",
-        "@github/search_issues",
-        "@github/issue_read",
-        "@github/list_issues"
+        "Read",
+        "Bash",
+        "Glob",
+        "Grep",
+        "Agent",
+        "Skill"
       ],
       "mcpServers": [
         "github"
@@ -47,21 +92,46 @@
       "resources": [
         "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
       ],
-      "sourcePath": "agents/code-reviewer.json"
+      "sourcePath": "agents/code-reviewer/manifest.json"
     },
     {
       "id": "agent:context-curator",
       "type": "agent",
       "name": "context-curator",
-      "description": "Curates memory context for worker agents. Given a task description, selects relevant memories from Valkey and Obsidian and returns a <context-memory> block. Does NOT perform tasks.",
-      "category": "Orchestration",
-      "model": "claude-haiku-4.5",
+      "description": "Curates memory context for worker agents from Valkey and Obsidian and returns only a context-memory block; it does not perform tasks.",
+      "category": "orchestration",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "haiku",
+      "models": {
+        "claude": {
+          "model": "haiku",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-haiku-4.5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/context-curator/claude.md",
+        "codex": "agents/context-curator/codex.toml",
+        "kiro": "agents/context-curator/kiro.json"
+      },
+      "model": "haiku",
       "tools": [
-        "read",
-        "shell",
-        "@obsidian/search_notes",
-        "@obsidian/read_note",
-        "@obsidian/list_directory"
+        "Read",
+        "Bash",
+        "mcp__obsidian__search_notes",
+        "mcp__obsidian__read_note",
+        "mcp__obsidian__list_directory"
       ],
       "mcpServers": [
         "obsidian"
@@ -69,19 +139,43 @@
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/context-curator.json"
+      "sourcePath": "agents/context-curator/manifest.json"
     },
     {
       "id": "agent:developer",
       "type": "agent",
       "name": "developer",
-      "description": "Developer Agent in a multi-agent system",
-      "category": "Implementation",
+      "description": "Implementation agent in a multi-agent workflow that makes minimal, reviewable changes, runs focused checks, and leaves independent validation to the tester.",
+      "category": "implementation",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        }
+      },
+      "sources": {
+        "claude": "agents/developer/claude.md",
+        "codex": "agents/developer/codex.toml",
+        "kiro": "agents/developer/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "@builtin",
-        "fs_*",
-        "execute_bash",
-        "@cao-mcp-server"
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep"
       ],
       "mcpServers": [
         "cao-mcp-server"
@@ -90,42 +184,89 @@
         "file://~/.aws/cli-agent-orchestrator/agent-context/developer.md",
         "skill://~/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
       ],
-      "sourcePath": "agents/developer.json"
+      "sourcePath": "agents/developer/manifest.json"
     },
     {
       "id": "agent:documenter",
       "type": "agent",
       "name": "documenter",
-      "description": "Generates documentation for completed and validated features.",
-      "category": "Documentation",
-      "model": "claude-haiku-4.5",
-      "tools": [
-        "read",
-        "write"
+      "description": "Generates concise documentation for completed and validated features without modifying implementation code.",
+      "category": "documentation",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
       ],
-      "sourcePath": "agents/documenter.json"
+      "profile": "haiku",
+      "models": {
+        "claude": {
+          "model": "haiku",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-haiku-4.5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/documenter/claude.md",
+        "codex": "agents/documenter/codex.toml",
+        "kiro": "agents/documenter/kiro.json"
+      },
+      "model": "haiku",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Glob",
+        "Grep"
+      ],
+      "sourcePath": "agents/documenter/manifest.json"
     },
     {
       "id": "agent:explore",
       "type": "agent",
       "name": "explore",
-      "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence docs to build context for planning. Never modifies files.",
-      "category": "Research",
-      "model": "claude-haiku-4.5",
+      "description": "Read-only exploration agent that surveys codebases, Jira tickets, and Confluence documentation to build planning context without modifying files.",
+      "category": "research",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "haiku",
+      "models": {
+        "claude": {
+          "model": "haiku",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-haiku-4.5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/explore/claude.md",
+        "codex": "agents/explore/codex.toml",
+        "kiro": "agents/explore/kiro.json"
+      },
+      "model": "haiku",
       "tools": [
-        "read",
-        "shell",
-        "glob",
-        "grep",
-        "code",
+        "Read",
+        "Bash",
+        "Glob",
+        "Grep",
         "mcp__atlassian__getJiraIssue",
         "mcp__atlassian__searchJiraIssuesUsingJql",
-        "mcp__atlassian__getJiraIssueRemoteIssueLinks",
-        "mcp__atlassian__getVisibleJiraProjects",
         "mcp__atlassian__getConfluencePage",
-        "mcp__atlassian__getConfluencePageDescendants",
-        "mcp__atlassian__getPagesInConfluenceSpace",
-        "mcp__atlassian__getConfluenceSpaces",
         "mcp__atlassian__searchConfluenceUsingCql",
         "mcp__atlassian__search",
         "mcp__atlassian__fetch"
@@ -133,57 +274,131 @@
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/explore.json"
+      "sourcePath": "agents/explore/manifest.json"
     },
     {
       "id": "agent:glide-code-reviewer",
       "type": "agent",
       "name": "glide-code-reviewer",
-      "description": "Specialized GLIDE code reviewer. Reviews Valkey GLIDE client code for correctness, anti-patterns, resource leaks, and cluster-awareness using the glide skill references. Invoked as a subagent of code-reviewer when GLIDE code is in the diff.",
-      "category": "Quality Assurance",
-      "model": "claude-sonnet-5",
+      "description": "Read-only Valkey GLIDE specialist that reviews client code for correctness, anti-patterns, resource leaks, and cluster awareness.",
+      "category": "quality-assurance",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/glide-code-reviewer/claude.md",
+        "codex": "agents/glide-code-reviewer/codex.toml",
+        "kiro": "agents/glide-code-reviewer/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "shell"
+        "Read",
+        "Bash",
+        "Glob",
+        "Grep",
+        "Skill"
       ],
       "resources": [
         "skill://~/.kiro/skills/glide-skill/SKILL.md"
       ],
-      "sourcePath": "agents/glide-code-reviewer.json"
+      "sourcePath": "agents/glide-code-reviewer/manifest.json"
     },
     {
       "id": "agent:research-summarizer",
       "type": "agent",
       "name": "research-summarizer",
-      "description": "Orchestrates research, validation, and produces a final summary",
-      "category": "Research",
-      "model": "claude-sonnet-5",
-      "tools": [
-        "subagent",
-        "read",
-        "write"
+      "description": "Orchestrates research and adversarial validation, then produces a final summary containing confirmed findings.",
+      "category": "research",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
       ],
-      "sourcePath": "agents/research-summarizer.json"
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/research-summarizer/claude.md",
+        "codex": "agents/research-summarizer/codex.toml",
+        "kiro": "agents/research-summarizer/kiro.json"
+      },
+      "model": "sonnet",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Agent"
+      ],
+      "sourcePath": "agents/research-summarizer/manifest.json"
     },
     {
       "id": "agent:research-validator",
       "type": "agent",
       "name": "research-validator",
-      "description": "Adversarial verification agent. Cross-checks researcher findings against cited source URLs using firecrawl. Classifies each claim as CONFIRMED, UNVERIFIED, or CONTRADICTED. Use after the researcher agent to validate accuracy before passing findings to the caller.",
-      "category": "Research",
-      "model": "claude-sonnet-5",
+      "description": "Read-only adversarial verification agent that checks research claims against cited sources and classifies each as CONFIRMED, UNVERIFIED, or CONTRADICTED.",
+      "category": "research",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/research-validator/claude.md",
+        "codex": "agents/research-validator/codex.toml",
+        "kiro": "agents/research-validator/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "shell",
-        "@firecrawl/firecrawl_scrape",
-        "@firecrawl/firecrawl_search",
-        "@firecrawl/firecrawl_map",
-        "@firecrawl/firecrawl_extract",
-        "@firecrawl/firecrawl_crawl",
-        "@firecrawl/firecrawl_check_crawl_status",
-        "@firecrawl/firecrawl_agent",
-        "@firecrawl/firecrawl_agent_status",
-        "@sequential-thinking/sequentialthinking"
+        "Read",
+        "Bash",
+        "mcp__firecrawl__firecrawl_scrape",
+        "mcp__firecrawl__firecrawl_search",
+        "mcp__firecrawl__firecrawl_map",
+        "mcp__firecrawl__firecrawl_extract"
       ],
       "mcpServers": [
         "obsidian",
@@ -192,27 +407,47 @@
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/research-validator.json"
+      "sourcePath": "agents/research-validator/manifest.json"
     },
     {
       "id": "agent:researcher",
       "type": "agent",
       "name": "researcher",
-      "description": "Search external documentation, APIs, and libraries to answer a specific question. Use proactively when a caller needs citable external knowledge before implementing or deciding. Returns concise findings with source URLs, tradeoffs, and a concrete recommendation.",
-      "category": "Research",
-      "model": "claude-sonnet-5",
+      "description": "Read-only researcher that answers a specific external documentation, API, or library question with concise cited findings, tradeoffs, and a recommendation.",
+      "category": "research",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/researcher/claude.md",
+        "codex": "agents/researcher/codex.toml",
+        "kiro": "agents/researcher/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "shell",
-        "@firecrawl/firecrawl_scrape",
-        "@firecrawl/firecrawl_search",
-        "@firecrawl/firecrawl_map",
-        "@firecrawl/firecrawl_extract",
-        "@firecrawl/firecrawl_crawl",
-        "@firecrawl/firecrawl_check_crawl_status",
-        "@firecrawl/firecrawl_agent",
-        "@firecrawl/firecrawl_agent_status",
-        "@sequential-thinking/sequentialthinking"
+        "Read",
+        "Bash",
+        "mcp__firecrawl__firecrawl_search",
+        "mcp__firecrawl__firecrawl_scrape",
+        "mcp__firecrawl__firecrawl_map",
+        "mcp__firecrawl__firecrawl_extract"
       ],
       "mcpServers": [
         "obsidian",
@@ -221,51 +456,94 @@
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/researcher.json"
+      "sourcePath": "agents/researcher/manifest.json"
     },
     {
       "id": "agent:security-reviewer",
       "type": "agent",
       "name": "security-reviewer",
-      "description": "Threat-model-driven security analysis anchored to CWE taxonomy. Injection, access control, secrets, crypto, SSRF, path traversal. Read-only - never modifies files.",
-      "category": "Quality Assurance",
-      "model": "claude-sonnet-5",
+      "description": "Read-only threat-model-driven security reviewer anchored to CWE taxonomy for injection, access control, secrets, cryptography, SSRF, and path traversal.",
+      "category": "quality-assurance",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/security-reviewer/claude.md",
+        "codex": "agents/security-reviewer/codex.toml",
+        "kiro": "agents/security-reviewer/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "shell"
+        "Read",
+        "Bash",
+        "Glob",
+        "Grep"
       ],
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/security-reviewer.json"
+      "sourcePath": "agents/security-reviewer/manifest.json"
     },
     {
       "id": "agent:superhuman",
       "type": "agent",
       "name": "superhuman",
-      "description": "Expert engineer with deep domain knowledge in AWS, backend, UI/UX, and architecture. Use proactively for complex, multi-step engineering tasks requiring deep reasoning. Uses sequential thinking for complex problem-solving and firecrawl for research. Cross-checks all solutions for correctness.",
-      "category": "Implementation",
-      "model": "claude-opus-4.8",
+      "description": "Expert implementation agent for complex multi-step engineering across AWS, backend, frontend, user experience, and architecture.",
+      "category": "implementation",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "opus",
+      "models": {
+        "claude": {
+          "model": "opus",
+          "effort": "high"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-sol",
+          "effort": "high"
+        },
+        "kiro": {
+          "model": "claude-opus-4.8",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/superhuman/claude.md",
+        "codex": "agents/superhuman/codex.toml",
+        "kiro": "agents/superhuman/kiro.json"
+      },
+      "model": "opus",
       "tools": [
-        "read",
-        "write",
-        "shell",
-        "glob",
-        "grep",
-        "code",
-        "todo_list",
-        "use_aws",
-        "web_fetch",
-        "web_search",
-        "@firecrawl/firecrawl_scrape",
-        "@firecrawl/firecrawl_search",
-        "@firecrawl/firecrawl_map",
-        "@firecrawl/firecrawl_extract",
-        "@firecrawl/firecrawl_crawl",
-        "@firecrawl/firecrawl_check_crawl_status",
-        "@firecrawl/firecrawl_agent",
-        "@firecrawl/firecrawl_agent_status",
-        "@sequential-thinking/sequentialthinking"
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep",
+        "WebFetch",
+        "WebSearch",
+        "mcp__firecrawl__firecrawl_search",
+        "mcp__firecrawl__firecrawl_scrape"
       ],
       "mcpServers": [
         "firecrawl",
@@ -274,19 +552,44 @@
       "resources": [
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/superhuman.json"
+      "sourcePath": "agents/superhuman/manifest.json"
     },
     {
       "id": "agent:team-lead",
       "type": "agent",
       "name": "team-lead",
-      "description": "Team orchestrator that creates plans and delegates work to specialized subagents (builder, validator).",
-      "category": "Orchestration",
-      "model": "claude-sonnet-5",
+      "description": "Team orchestrator that plans work and delegates implementation, validation, review, testing, research, and documentation to specialized agents.",
+      "category": "orchestration",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/team-lead/claude.md",
+        "codex": "agents/team-lead/codex.toml",
+        "kiro": "agents/team-lead/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "subagent",
-        "todo"
+        "Read",
+        "Agent",
+        "TodoWrite"
       ],
       "trustedAgents": [
         "explore",
@@ -304,20 +607,44 @@
         "file://README.md",
         "file://skills/_shared/security-constraints.md"
       ],
-      "sourcePath": "agents/team-lead.json"
+      "sourcePath": "agents/team-lead/manifest.json"
     },
     {
       "id": "agent:team-leader",
       "type": "agent",
       "name": "team-leader",
-      "description": "Orchestrator. Delegates tasks, tracks TODO. Does NOT write code or run commands.",
-      "category": "Orchestration",
-      "model": "claude-sonnet-5",
+      "description": "Read-only orchestrator that creates specifications, delegates one implementation task at a time, tracks progress, and requires independent testing and review.",
+      "category": "orchestration",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/team-leader/claude.md",
+        "codex": "agents/team-leader/codex.toml",
+        "kiro": "agents/team-leader/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read",
-        "subagent",
-        "todo",
-        "@sequential-thinking/sequentialthinking"
+        "Read",
+        "Agent",
+        "TodoWrite"
       ],
       "trustedAgents": [
         "researcher",
@@ -325,51 +652,132 @@
         "tester",
         "code-reviewer"
       ],
-      "sourcePath": "agents/team-leader.json"
+      "sourcePath": "agents/team-leader/manifest.json"
     },
     {
       "id": "agent:tester",
       "type": "agent",
       "name": "tester",
-      "description": "Test and verification agent. Runs tests, linters, and security scans. Reports commands, pass/fail status, and repro steps for failures. Writes new tests when coverage is missing. Recommends merge only when all quality gates pass.",
-      "category": "Quality Assurance",
-      "model": "claude-sonnet-5",
-      "tools": [
-        "read",
-        "write",
-        "shell",
-        "@sequential-thinking/sequentialthinking"
+      "description": "Test and verification agent that runs quality checks, writes tests when coverage is missing, and reports commands, results, and reproduction steps.",
+      "category": "quality-assurance",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
       ],
-      "sourcePath": "agents/tester.json"
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/tester/claude.md",
+        "codex": "agents/tester/codex.toml",
+        "kiro": "agents/tester/kiro.json"
+      },
+      "model": "sonnet",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep",
+        "Skill"
+      ],
+      "sourcePath": "agents/tester/manifest.json"
     },
     {
       "id": "agent:validator",
       "type": "agent",
       "name": "validator",
-      "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only — inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
-      "category": "Quality Assurance",
-      "model": "claude-opus-4.8",
-      "tools": [
-        "read",
-        "write",
-        "shell"
+      "description": "Read-only validator that checks one completed implementation task against its acceptance criteria and issues a scored PASS or FAIL report.",
+      "category": "quality-assurance",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
       ],
-      "sourcePath": "agents/validator.json"
+      "profile": "opus",
+      "models": {
+        "claude": {
+          "model": "opus",
+          "effort": "high"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-sol",
+          "effort": "high"
+        },
+        "kiro": {
+          "model": "claude-opus-4.8",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/validator/claude.md",
+        "codex": "agents/validator/codex.toml",
+        "kiro": "agents/validator/kiro.json"
+      },
+      "model": "opus",
+      "tools": [
+        "Read",
+        "Bash",
+        "Glob",
+        "Grep",
+        "Skill"
+      ],
+      "sourcePath": "agents/validator/manifest.json"
     },
     {
       "id": "agent:valkey-glide-implementor",
       "type": "agent",
       "name": "valkey-glide-implementor",
-      "description": "Generates production-ready Valkey GLIDE code snippets. Uses the glide skill to produce accurate, working code for client setup, vector search, batch operations, caching, and session management across all 6 supported languages.",
-      "category": "Valkey & GLIDE",
-      "model": "claude-sonnet-5",
+      "description": "Read-only Valkey GLIDE specialist that generates production-ready client code snippets for supported languages and usage patterns.",
+      "category": "valkey-glide",
+      "platforms": [
+        "claude",
+        "codex",
+        "kiro"
+      ],
+      "profile": "sonnet",
+      "models": {
+        "claude": {
+          "model": "sonnet",
+          "effort": "medium"
+        },
+        "codex": {
+          "model": "openai.gpt-5.6-luna",
+          "effort": "xhigh"
+        },
+        "kiro": {
+          "model": "claude-sonnet-5",
+          "effort": "unspecified"
+        }
+      },
+      "sources": {
+        "claude": "agents/valkey-glide-implementor/claude.md",
+        "codex": "agents/valkey-glide-implementor/codex.toml",
+        "kiro": "agents/valkey-glide-implementor/kiro.json"
+      },
+      "model": "sonnet",
       "tools": [
-        "read"
+        "Read",
+        "Skill"
       ],
       "resources": [
         "skill://~/.kiro/skills/glide-skill/SKILL.md"
       ],
-      "sourcePath": "agents/valkey-glide-implementor.json"
+      "sourcePath": "agents/valkey-glide-implementor/manifest.json"
     },
     {
       "id": "skill:brainstorming",
@@ -377,7 +785,16 @@
       "name": "brainstorming",
       "description": "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
       "category": "Development Workflows",
-      "sourcePath": "skills/brainstorming/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/brainstorming/SKILL.md",
+        "codex": "skills/codex/brainstorming/SKILL.md"
+      },
+      "sourcePath": "skills/claude/brainstorming/SKILL.md",
       "excerpt": "Brainstorming Ideas Into Designs Help turn ideas into fully formed designs and specs through natural collaborative dialogue. Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get u"
     },
     {
@@ -386,7 +803,15 @@
       "name": "code-review-excellence",
       "description": "Reasoning framework for systematic code review. Provides lenses (correctness, security, design fit, testability), self-challenge rubrics, and severity differentiation. Use as the reasoning frame when a reviewer subagent applies multi-lens analysis to a diff or PR. Reports only findings affecting correctness or stated requirements — explicitly excludes style.",
       "category": "Code Review",
-      "sourcePath": "skills/code-review-excellence/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/code-review-excellence/SKILL.md"
+      },
+      "sourcePath": "skills/universal/code-review-excellence/SKILL.md",
       "excerpt": "Code Review Excellence Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative improvement. When to Use This Skill - Reviewing pull requests and code changes - Establishing code review standards for teams - Mentoring junior d"
     },
     {
@@ -395,7 +820,16 @@
       "name": "crash-course",
       "description": "Research any topic and produce a structured crash course saved to Obsidian. Takes a topic as input, dispatches a researcher subagent with a bounded effort budget, optionally validates findings, formats output as a consistent crash course document, saves to the Obsidian vault, and outputs in chat. Use when asked to learn about, research, get a crash course on, or explore any technology, concept, framework, or project.",
       "category": "Other",
-      "sourcePath": "skills/crash-course/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/crash-course/SKILL.md",
+        "codex": "skills/codex/crash-course/SKILL.md"
+      },
+      "sourcePath": "skills/claude/crash-course/SKILL.md",
       "excerpt": "Crash Course Research `$ARGUMENTS` and produce a structured crash course. Save to Obsidian and output in chat. Follow each phase in order. Do not skip phases. --- Phase 1: Scope the Topic Parse `$ARGUMENTS` to determine: - **Topic**: the subject to research (e.g. \"DynamoDB DAX\", \"Kubernetes HPA\", \"R"
     },
     {
@@ -404,7 +838,16 @@
       "name": "create-skill",
       "description": "Use when the user wants to create a new skill for their AI agents",
       "category": "Meta",
-      "sourcePath": "skills/create-skill/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/create-skill/SKILL.md",
+        "codex": "skills/codex/create-skill/SKILL.md"
+      },
+      "sourcePath": "skills/claude/create-skill/SKILL.md",
       "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all five directories before writing"
     },
     {
@@ -413,7 +856,16 @@
       "name": "daily-log",
       "description": "Reads today's AI journal entry from Obsidian, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.",
       "category": "Other",
-      "sourcePath": "skills/daily-log/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/daily-log/SKILL.md",
+        "codex": "skills/codex/daily-log/SKILL.md"
+      },
+      "sourcePath": "skills/claude/daily-log/SKILL.md",
       "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
     },
     {
@@ -422,7 +874,15 @@
       "name": "diagram-valkey-flow",
       "description": "Analyze a project and generate a Mermaid sequence diagram showing the full data flow from the application layer through any framework/middleware down to Valkey operations. Works for any language or framework.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/diagram-valkey-flow/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/diagram-valkey-flow/SKILL.md"
+      },
+      "sourcePath": "skills/universal/diagram-valkey-flow/SKILL.md",
       "excerpt": "Diagram Valkey Flow Analyze the project at `$ARGUMENTS` (or the current working directory if blank) and produce a Mermaid sequence diagram showing how data flows from the application entry point through to Valkey. Run all phases in order. Do not skip phases. --- Phase 1: Discover Entry Points and Fr"
     },
     {
@@ -431,7 +891,16 @@
       "name": "dispatching-parallel-agents",
       "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
       "category": "Planning & Orchestration",
-      "sourcePath": "skills/dispatching-parallel-agents/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/dispatching-parallel-agents/SKILL.md",
+        "codex": "skills/codex/dispatching-parallel-agents/SKILL.md"
+      },
+      "sourcePath": "skills/claude/dispatching-parallel-agents/SKILL.md",
       "excerpt": "Dispatching Parallel Agents Overview You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what "
     },
     {
@@ -440,7 +909,16 @@
       "name": "executing-plans",
       "description": "Use when you have a written implementation plan to execute in a separate session with review checkpoints",
       "category": "Planning & Orchestration",
-      "sourcePath": "skills/executing-plans/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/executing-plans/SKILL.md",
+        "codex": "skills/codex/executing-plans/SKILL.md"
+      },
+      "sourcePath": "skills/claude/executing-plans/SKILL.md",
       "excerpt": "Executing Plans Overview Load plan, review critically, execute all tasks, report when complete. **Announce at start:** \"I'm using the executing-plans skill to implement this plan.\" **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work "
     },
     {
@@ -449,7 +927,15 @@
       "name": "find-skills",
       "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
       "category": "Meta",
-      "sourcePath": "skills/find-skills/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/find-skills/SKILL.md"
+      },
+      "sourcePath": "skills/universal/find-skills/SKILL.md",
       "excerpt": "Find Skills This skill helps you discover and install skills from the open agent skills ecosystem. When to Use This Skill Use this skill when the user: - Asks \"how do I do X\" where X might be a common task with an existing skill - Says \"find a skill for X\" or \"is there a skill for X\" - Asks \"can you"
     },
     {
@@ -458,16 +944,32 @@
       "name": "finishing-a-development-branch",
       "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup",
       "category": "Development Workflows",
-      "sourcePath": "skills/finishing-a-development-branch/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/finishing-a-development-branch/SKILL.md"
+      },
+      "sourcePath": "skills/universal/finishing-a-development-branch/SKILL.md",
       "excerpt": "Finishing a Development Branch Overview Guide completion of development work by presenting clear options and handling chosen workflow. **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up. **Announce at start:** \"I'm using the finishing-a-development-br"
     },
     {
       "id": "skill:glide-skill",
       "type": "skill",
-      "name": "glide",
+      "name": "glide-skill",
       "description": "Production-ready patterns for Valkey GLIDE clients across 6 languages. Activate when generating, reviewing, or debugging Valkey GLIDE code including client creation, batch/pipeline/transaction operations, clustering, authentication, TLS, error handling, and timeout configuration.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/glide-skill/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/glide-skill/SKILL.md"
+      },
+      "sourcePath": "skills/universal/glide-skill/SKILL.md",
       "excerpt": "**Based on valkey-glide v2.4.0** ⚠️ CRITICAL: Version Verification **BEFORE writing or reviewing any GLIDE code, determine the target GLIDE version.** Detect version from: `package.json` (`@valkey/valkey-glide`), `requirements.txt`/`pyproject.toml` (`valkey-glide`), `pom.xml`/`build.gradle` (`io.val"
     },
     {
@@ -476,7 +978,16 @@
       "name": "humanizer",
       "description": "Remove signs of AI-generated writing from text. Use when editing or reviewing\ntext to make it sound more natural and human-written. Based on Wikipedia's\ncomprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including:\ninflated symbolism, promotional language, superficial -ing analyses, vague\nattributions, em dash overuse, rule of three, AI vocabulary words, passive\nvoice, negative parallelisms, and filler phrases.\n",
       "category": "Writing & Documentation",
-      "sourcePath": "skills/humanizer/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/humanizer/SKILL.md",
+        "codex": "skills/codex/humanizer/SKILL.md"
+      },
+      "sourcePath": "skills/claude/humanizer/SKILL.md",
       "excerpt": "Humanizer: Remove AI Writing Patterns You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's \"Signs of AI writing\" page, maintained by WikiProject AI Cleanup. Your Task When given text to humani"
     },
     {
@@ -485,7 +996,15 @@
       "name": "implement-cookbook",
       "description": "Given a PR link containing a Valkey integration in a project, create a cookbook matching the style of valkey-io/Valkey-Samples (you can find it in ~/valkey/Valkey-Samples). Builds the cookbook locally in the project directory, verifies it runs, then copies to ~/valkey/valkey-samples/ and removes the local copy. Use when asked to create a cookbook, write a cookbook, or implement a cookbook from a PR. Also works from local git commits on the current branch.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/implement-cookbook/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/implement-cookbook/SKILL.md"
+      },
+      "sourcePath": "skills/universal/implement-cookbook/SKILL.md",
       "excerpt": "Implement Cookbook Produce a working cookbook that demonstrates the Valkey integration in the current project. --- Phase 1: Analyze the Integration Determine the input source: - If `$ARGUMENTS` is a PR link: fetch the PR diff and description using GitHub tools. - If `$ARGUMENTS` is empty or not a UR"
     },
     {
@@ -494,7 +1013,16 @@
       "name": "implement-jira",
       "description": "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, runs an Opus advisor loop over Sonnet's approach for medium-complexity subtasks before any code is written, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.",
       "category": "Development Workflows",
-      "sourcePath": "skills/implement-jira/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/implement-jira/SKILL.md",
+        "codex": "skills/codex/implement-jira/SKILL.md"
+      },
+      "sourcePath": "skills/claude/implement-jira/SKILL.md",
       "excerpt": "Implement Jira Task Implement the Jira task `$ARGUMENTS` end-to-end using the workflow below. Follow each phase in order. Do not skip phases. This workflow assigns specific models to each subagent for cost efficiency, and uses a two-tier cache (Anthropic prompt caching + Valkey at `localhost:8888`) "
     },
     {
@@ -503,7 +1031,16 @@
       "name": "implement-task",
       "description": "Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review using existing agents. Use when given a task description without a Jira ticket. Do NOT use for tasks that have a Jira ticket (use implement-jira), for quick one-file fixes, or when a plan already exists (use subagent-driven-development).",
       "category": "Other",
-      "sourcePath": "skills/implement-task/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/implement-task/SKILL.md",
+        "codex": "skills/codex/implement-task/SKILL.md"
+      },
+      "sourcePath": "skills/claude/implement-task/SKILL.md",
       "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. **Announce at start:** \"Implementing task: $ARGUMENTS\" **Continuous execution:** Do not pause between phases. The only reasons to stop are: a blocking review finding that needs human input, or ambiguity that genuinely prev"
     },
     {
@@ -512,7 +1049,16 @@
       "name": "multi-discipline-review",
       "description": "Run a parallel multi-discipline review across codebase alignment, correctness, security, testability, and Valkey GLIDE using dedicated sub-agents (code-reviewer, security-reviewer, tester, glide-code-reviewer). Codebase alignment is the primary lens. Findings are merged and validated by an Opus validator. Use when a single-lens review is insufficient for a PR or diff.\n",
       "category": "Code Review",
-      "sourcePath": "skills/multi-discipline-review/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/multi-discipline-review/SKILL.md",
+        "codex": "skills/codex/multi-discipline-review/SKILL.md"
+      },
+      "sourcePath": "skills/claude/multi-discipline-review/SKILL.md",
       "excerpt": "Multi-Discipline Code Review `$ARGUMENTS`: diff, file path, branch name, or PR reference. Phase 1: Gather Context Read the code, language, framework, existing patterns, and any linked requirements. **Size gating — determine review depth:** - Count `additions + deletions` in the diff. - If `<= 150 li"
     },
     {
@@ -521,7 +1067,15 @@
       "name": "onboard",
       "description": "Use when a developer needs a thorough technical introduction to an unfamiliar local repository, including its architecture, subsystem responsibilities, runtime behavior, verification evidence, security concerns, and operational risks.",
       "category": "Other",
-      "sourcePath": "skills/onboard/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/onboard/SKILL.md"
+      },
+      "sourcePath": "skills/universal/onboard/SKILL.md",
       "excerpt": "Onboard Build an evidence-backed technical guide from the current user request. Use the host-provided `$ARGUMENTS` value when the host supplies one; otherwise parse the request text. Never treat an unexpanded literal `$ARGUMENTS` token as a repository path. Accept a repository path, an optional focu"
     },
     {
@@ -530,7 +1084,16 @@
       "name": "pr-comment-humanizer",
       "description": "Humanize PR review comments to match the author's terse, direct code review voice.\nStrips AI-isms and rewrites comments to sound like a real engineer: short imperatives,\nparenthetical precision, \"nit\" prefix for minor things, \"we should\" for collaborative\nframing, questions to verify rather than assert, links instead of explanations.\n",
       "category": "Writing & Documentation",
-      "sourcePath": "skills/pr-comment-humanizer/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/pr-comment-humanizer/SKILL.md",
+        "codex": "skills/codex/pr-comment-humanizer/SKILL.md"
+      },
+      "sourcePath": "skills/claude/pr-comment-humanizer/SKILL.md",
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
     },
     {
@@ -539,7 +1102,15 @@
       "name": "receiving-code-review",
       "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
       "category": "Code Review",
-      "sourcePath": "skills/receiving-code-review/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/receiving-code-review/SKILL.md"
+      },
+      "sourcePath": "skills/universal/receiving-code-review/SKILL.md",
       "excerpt": "Code Review Reception Overview Code review requires technical evaluation, not emotional performance. **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort. The Response Pattern ``` WHEN receiving code review feedback: 1. READ: Complete feedbac"
     },
     {
@@ -548,8 +1119,34 @@
       "name": "requesting-code-review",
       "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
       "category": "Code Review",
-      "sourcePath": "skills/requesting-code-review/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/requesting-code-review/SKILL.md",
+        "codex": "skills/codex/requesting-code-review/SKILL.md"
+      },
+      "sourcePath": "skills/claude/requesting-code-review/SKILL.md",
       "excerpt": "Requesting Code Review Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for c"
+    },
+    {
+      "id": "skill:revamp-cookbook",
+      "type": "skill",
+      "name": "revamp-cookbook",
+      "description": "Use when refreshing an existing Valkey cookbook from archive/main-pre-reorg to current CONTRIBUTING.md guidance, checking for duplicate or overlapping cookbook PRs, adding runnable validation, or preparing local draft materials for language-specific CI.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/revamp-cookbook/SKILL.md"
+      },
+      "sourcePath": "skills/universal/revamp-cookbook/SKILL.md",
+      "excerpt": "Revamp Cookbook Overview Update one existing Valkey-Samples cookbook into a locally reviewable draft. The source is the original cookbook on `archive/main-pre-reorg`; the acceptance contract comes from the current CONTRIBUTING.md guidance, including any open contributing-guidelines PR. The first del"
     },
     {
       "id": "skill:review-addressed-comments",
@@ -557,7 +1154,15 @@
       "name": "review-addressed-comments",
       "description": "Given a PR link, reviews edlng's review comments, verifies each was addressed in the latest code, and provides a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence.",
       "category": "Code Review",
-      "sourcePath": "skills/review-addressed-comments/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/review-addressed-comments/SKILL.md"
+      },
+      "sourcePath": "skills/universal/review-addressed-comments/SKILL.md",
       "excerpt": "Review Addressed Comments Verify that all of edlng's review comments on a PR have been addressed in the current code, providing the new code snippets as evidence, and give a final recommendation. When to Use - When asked to check whether edlng's review feedback has been addressed on a PR - Before ap"
     },
     {
@@ -566,16 +1171,34 @@
       "name": "review-code",
       "description": "Self-review uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, Valkey caching, a single Sonnet reviewer, an Opus validator skeptic pass, and auto-fix offer. Pass a branch name to review vs main, a Jira key to use as requirements source, or leave empty to review staged+unstaged changes.",
       "category": "Code Review",
-      "sourcePath": "skills/review-code/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/review-code/SKILL.md",
+        "codex": "skills/codex/review-code/SKILL.md"
+      },
+      "sourcePath": "skills/claude/review-code/SKILL.md",
       "excerpt": "Review My Local Changes Self-review your own uncommitted or unpushed work before opening a PR. The goal is to catch your own mistakes — bugs, sloppy patterns, missed requirements — at the cheapest possible point. Optimized for speed and **fixing in place**: when a finding is unambiguous, this comman"
     },
     {
       "id": "skill:review-cookbook-pr",
       "type": "skill",
       "name": "review-cookbook-pr",
-      "description": "Review a cookbook pull request. This is the standard PR review **plus** two cookbook-specific checks.",
+      "description": "Senior-grade PR review for cookbook PRs. Same as review-pr but adds two cookbook-specific checks: (1) code snippets call project functions directly rather than simulating Valkey internals, and (2) valkey/valkey-bundle version tags are verified against Docker Hub.",
       "category": "Code Review",
-      "sourcePath": "skills/review-cookbook-pr/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/review-cookbook-pr/SKILL.md",
+        "codex": "skills/codex/review-cookbook-pr/SKILL.md"
+      },
+      "sourcePath": "skills/claude/review-cookbook-pr/SKILL.md",
       "excerpt": "Review Cookbook PR (senior-dev grade) Review a cookbook pull request. This is the standard PR review **plus** two cookbook-specific checks. Run the base workflow Follow `_shared/pr-review-base.md` (relative path: `../_shared/pr-review-base.md`) for cache setup, Phase 1 (context), Phase 2 (merged-len"
     },
     {
@@ -584,7 +1207,16 @@
       "name": "review-pr",
       "description": "Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.",
       "category": "Code Review",
-      "sourcePath": "skills/review-pr/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/review-pr/SKILL.md",
+        "codex": "skills/codex/review-pr/SKILL.md"
+      },
+      "sourcePath": "skills/claude/review-pr/SKILL.md",
       "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. This is the **standard** PR review. The full workflow is defined in the shared base file so it can be reused by specialized variants (e.g. `review-cookbook-pr`). Run the base wor"
     },
     {
@@ -593,7 +1225,16 @@
       "name": "subagent-driven-development",
       "description": "Use when executing implementation plans with independent tasks in the current session",
       "category": "Development Workflows",
-      "sourcePath": "skills/subagent-driven-development/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/subagent-driven-development/SKILL.md",
+        "codex": "skills/codex/subagent-driven-development/SKILL.md"
+      },
+      "sourcePath": "skills/claude/subagent-driven-development/SKILL.md",
       "excerpt": "Subagent-Driven Development Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review. **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and c"
     },
     {
@@ -602,7 +1243,15 @@
       "name": "systematic-debugging",
       "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
       "category": "Development Workflows",
-      "sourcePath": "skills/systematic-debugging/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/systematic-debugging/SKILL.md"
+      },
+      "sourcePath": "skills/universal/systematic-debugging/SKILL.md",
       "excerpt": "Systematic Debugging Overview Random fixes waste time and create new bugs. Quick patches mask underlying issues. **Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure. **Violating the letter of this process is violating the spirit of debugging.** The Iron Law "
     },
     {
@@ -611,7 +1260,15 @@
       "name": "test-driven-development",
       "description": "Use when implementing any feature or bugfix, before writing implementation code",
       "category": "Development Workflows",
-      "sourcePath": "skills/test-driven-development/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/test-driven-development/SKILL.md"
+      },
+      "sourcePath": "skills/universal/test-driven-development/SKILL.md",
       "excerpt": "Test-Driven Development (TDD) Overview Write the test first. Watch it fail. Write minimal code to pass. **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing. **Violating the letter of the rules is violating the spirit of the rules.** When to Use **Always:"
     },
     {
@@ -620,7 +1277,15 @@
       "name": "test-valkey",
       "description": "Test Valkey integration code against a live valkey-bundle container. Starts Valkey from a clean slate, exercises staged/unstaged git changes (cache backend, vector search provider, rate limiter, connection parsing), validates all configurations by tearing down and recreating the container as needed. Use when Valkey integration code has been written and needs end-to-end verification before commit.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/test-valkey/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/test-valkey/SKILL.md"
+      },
+      "sourcePath": "skills/universal/test-valkey/SKILL.md",
       "excerpt": "Test Valkey Run integration tests against the staged/unstaged Valkey changes in the current repository. Proves correctness by exercising the code against a real `valkey/valkey-bundle` container. --- Prerequisites Before starting, verify: ```bash Container runtime podman -v 2>/dev/null || docker -v 2"
     },
     {
@@ -629,7 +1294,16 @@
       "name": "update-agent",
       "description": "Use when the user wants to update or modify an existing agent definition for their AI agents",
       "category": "Meta",
-      "sourcePath": "skills/update-agent/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/update-agent/SKILL.md",
+        "codex": "skills/codex/update-agent/SKILL.md"
+      },
+      "sourcePath": "skills/claude/update-agent/SKILL.md",
       "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The sync"
     },
     {
@@ -638,7 +1312,16 @@
       "name": "update-skill",
       "description": "Use when the user wants to update or modify an existing skill for their AI agents",
       "category": "Meta",
-      "sourcePath": "skills/update-skill/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/update-skill/SKILL.md",
+        "codex": "skills/codex/update-skill/SKILL.md"
+      },
+      "sourcePath": "skills/claude/update-skill/SKILL.md",
       "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in t"
     },
     {
@@ -647,7 +1330,15 @@
       "name": "using-git-worktrees",
       "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
       "category": "Planning & Orchestration",
-      "sourcePath": "skills/using-git-worktrees/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/using-git-worktrees/SKILL.md"
+      },
+      "sourcePath": "skills/universal/using-git-worktrees/SKILL.md",
       "excerpt": "Using Git Worktrees Overview Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available. **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never f"
     },
     {
@@ -656,7 +1347,16 @@
       "name": "using-superpowers",
       "description": "Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions",
       "category": "Meta",
-      "sourcePath": "skills/using-superpowers/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/using-superpowers/SKILL.md",
+        "codex": "skills/codex/using-superpowers/SKILL.md"
+      },
+      "sourcePath": "skills/claude/using-superpowers/SKILL.md",
       "excerpt": "<SUBAGENT-STOP> If you were dispatched as a subagent to execute a specific task, skip this skill. </SUBAGENT-STOP> <EXTREMELY-IMPORTANT> If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill. IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT"
     },
     {
@@ -665,7 +1365,15 @@
       "name": "valkey-spike",
       "description": "Analyze a repository for Valkey integration opportunities and empirically verify feasibility. Combines static codebase analysis (existing Redis/cache usage, command compatibility, vector search potential) with a live spike against a running Valkey instance to prove the riskiest assumptions before committing to a full implementation. Use when evaluating whether a project is a good candidate for Valkey integration.",
       "category": "Valkey & GLIDE",
-      "sourcePath": "skills/valkey-spike/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/valkey-spike/SKILL.md"
+      },
+      "sourcePath": "skills/universal/valkey-spike/SKILL.md",
       "excerpt": "Valkey Spike Analyze the repository `$ARGUMENTS` (or the current working directory if blank) for Valkey integration opportunities, then **prove the riskiest assumptions work** against a live Valkey instance. This is a four-phase workflow: 1. **Evidence Collection** - scan the codebase 2. **Compatibi"
     },
     {
@@ -674,7 +1382,15 @@
       "name": "verification-before-completion",
       "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
       "category": "Development Workflows",
-      "sourcePath": "skills/verification-before-completion/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/verification-before-completion/SKILL.md"
+      },
+      "sourcePath": "skills/universal/verification-before-completion/SKILL.md",
       "excerpt": "Verification Before Completion Overview Claiming work is complete without verification is dishonesty, not efficiency. **Core principle:** Evidence before claims, always. **Violating the letter of this rule is violating the spirit of this rule.** The Iron Law ``` NO COMPLETION CLAIMS WITHOUT FRESH VE"
     },
     {
@@ -683,7 +1399,16 @@
       "name": "write-narrative",
       "description": "Given a Jira issue key, fetch the issue, research the topic with a research subagent, and draft a humanized technical narrative. Saves to ~/Documents/work/narratives/ and outputs in chat. Use when asked to write a narrative, technical assessment, or compatibility analysis for a Jira ticket. Do NOT use for PR descriptions (use write-pr), code reviews, or general documentation.",
       "category": "Writing & Documentation",
-      "sourcePath": "skills/write-narrative/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/write-narrative/SKILL.md",
+        "codex": "skills/codex/write-narrative/SKILL.md"
+      },
+      "sourcePath": "skills/claude/write-narrative/SKILL.md",
       "excerpt": "Write Narrative Given a Jira issue key in `$ARGUMENTS` (e.g. `AEA-468`), fetch the issue, research the topic, and draft a Narrative for me and send it in the chat, and also create the file (see Phase 4). Follow each phase in order. Do not skip phases. --- Phase 1: Fetch Jira Issue Use `mcp__atlassia"
     },
     {
@@ -692,7 +1417,15 @@
       "name": "write-pr",
       "description": "Generate a polished, human-sounding PR description from the current git changes. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repo's PR template (or a default), verifies accuracy, then humanizes the output.",
       "category": "Writing & Documentation",
-      "sourcePath": "skills/write-pr/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/write-pr/SKILL.md"
+      },
+      "sourcePath": "skills/universal/write-pr/SKILL.md",
       "excerpt": "Write PR Description Generate a polished, human-sounding PR description for the current changes. Follow each phase in order. Do not skip phases. Input `$ARGUMENTS` is optional and may contain: 1. A **commit range** (e.g. `HEAD~3`, `main..HEAD`). Default: the last commit plus any staged/unstaged chan"
     },
     {
@@ -701,7 +1434,16 @@
       "name": "write-pr-comments",
       "description": "Post inline PR review comments from an Obsidian review note as a pending review. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as a pending GitHub review (visible only to you until manually submitted).",
       "category": "Writing & Documentation",
-      "sourcePath": "skills/write-pr-comments/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/write-pr-comments/SKILL.md",
+        "codex": "skills/codex/write-pr-comments/SKILL.md"
+      },
+      "sourcePath": "skills/claude/write-pr-comments/SKILL.md",
       "excerpt": "Write PR Comments Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note. `$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/"
     },
     {
@@ -710,7 +1452,16 @@
       "name": "writing-plans",
       "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
       "category": "Planning & Orchestration",
-      "sourcePath": "skills/writing-plans/SKILL.md",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/writing-plans/SKILL.md",
+        "codex": "skills/codex/writing-plans/SKILL.md"
+      },
+      "sourcePath": "skills/claude/writing-plans/SKILL.md",
       "excerpt": "Writing Plans Overview Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole"
     },
     {
@@ -719,8 +1470,17 @@
       "name": "writing-skills",
       "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
       "category": "Meta",
-      "sourcePath": "skills/writing-skills/SKILL.md",
-      "excerpt": "Writing Skills Overview **Writing skills IS Test-Driven Development applied to process documentation.** **Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** You write test cases (pressure scenarios with subagents), watch them fail"
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "variants",
+      "sources": {
+        "claude": "skills/claude/writing-skills/SKILL.md",
+        "codex": "skills/codex/writing-skills/SKILL.md"
+      },
+      "sourcePath": "skills/claude/writing-skills/SKILL.md",
+      "excerpt": "Writing Skills Overview **Writing skills IS Test-Driven Development applied to process documentation.** **Claude skills are installed in `~/.claude/skills` or the project-local `.claude/skills` directory.** You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior)"
     },
     {
       "id": "shared-ref:async-dispatch-protocols",
@@ -740,7 +1500,7 @@
       "id": "shared-ref:five-root-sync",
       "type": "shared-ref",
       "name": "five-root-sync",
-      "description": "Shared reference used by `update-skill`, `update-agent`, and `create-skill`. Not a standalone skill. Single source of truth for the five-location sync rule and the paths involved.",
+      "description": "This reference is used by `create-skill`, `update-skill`, and `update-agent`.",
       "sourcePath": "skills/_shared/five-root-sync.md"
     },
     {
@@ -1595,29 +2355,44 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 39,
+      "skills": 40,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
     },
+    "profileDistribution": {
+      "sonnet": 12,
+      "haiku": 3,
+      "opus": 2
+    },
     "modelDistribution": {
-      "claude-sonnet-5": 11,
-      "claude-haiku-4.5": 3,
-      "unspecified": 1,
-      "claude-opus-4.8": 2
+      "claude": {
+        "sonnet": 12,
+        "haiku": 3,
+        "opus": 2
+      },
+      "codex": {
+        "openai.gpt-5.6-luna": 15,
+        "openai.gpt-5.6-sol": 2
+      },
+      "kiro": {
+        "claude-sonnet-5": 11,
+        "claude-haiku-4.5": 3,
+        "claude-opus-4.8": 2
+      }
     },
     "agentCategories": {
-      "Implementation": 3,
-      "Quality Assurance": 5,
-      "Orchestration": 3,
-      "Documentation": 1,
-      "Research": 4,
-      "Valkey & GLIDE": 1
+      "implementation": 3,
+      "quality-assurance": 5,
+      "orchestration": 3,
+      "documentation": 1,
+      "research": 4,
+      "valkey-glide": 1
     },
     "skillCategories": {
       "Development Workflows": 7,
       "Code Review": 8,
-      "Other": 4,
+      "Other": 5,
       "Meta": 6,
       "Valkey & GLIDE": 5,
       "Planning & Orchestration": 4,

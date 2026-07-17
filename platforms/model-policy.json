@@ -1,0 +1,17 @@
+{
+  "minimumClaudeEffort": "medium",
+  "profiles": {
+    "haiku": {
+      "claude": {"model": "haiku", "effort": "medium"},
+      "codex": {"model": "openai.gpt-5.6-luna", "effort": "xhigh"}
+    },
+    "sonnet": {
+      "claude": {"model": "sonnet", "effort": "medium"},
+      "codex": {"model": "openai.gpt-5.6-luna", "effort": "xhigh"}
+    },
+    "opus": {
+      "claude": {"model": "opus", "effort": "high"},
+      "codex": {"model": "openai.gpt-5.6-sol", "effort": "high"}
+    }
+  }
+}

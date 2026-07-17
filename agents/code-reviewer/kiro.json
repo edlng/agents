@@ -1,0 +1,89 @@
+{
+  "name": "code-reviewer",
+  "description": "Read-only code reviewer. Use proactively after any implementation task is complete. Checks correctness, security, spec alignment, and test coverage. Applies self-challenge rubrics and issues an explicit APPROVE or BLOCK decision with evidence-backed findings grouped by severity.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "@sequential-thinking",
+    "@github"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "@sequential-thinking/sequentialthinking",
+    "@github/get_file_contents",
+    "@github/pull_request_read",
+    "@github/search_pull_requests",
+    "@github/get_me",
+    "@github/list_pull_requests",
+    "@github/get_commit",
+    "@github/list_commits",
+    "@github/search_code",
+    "@github/search_issues",
+    "@github/issue_read",
+    "@github/list_issues"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "/tmp/**"
+      ]
+    },
+    "shell": {
+      "timeout": 60000,
+      "autoAllowReadonly": true
+    }
+  },
+  "mcpServers": {
+    "github": {
+      "command": "finch",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "disabledTools": [
+        "add_comment_to_pending_review",
+        "add_issue_comment",
+        "assign_copilot_to_issue",
+        "create_branch",
+        "create_or_update_file",
+        "create_pull_request",
+        "create_repository",
+        "delete_file",
+        "fork_repository",
+        "issue_write",
+        "merge_pull_request",
+        "pull_request_review_write",
+        "request_copilot_review",
+        "push_files",
+        "sub_issue_write",
+        "update_pull_request",
+        "update_pull_request_branch"
+      ],
+      "autoApprove": [
+        "get_file_contents",
+        "pull_request_read",
+        "search_pull_requests",
+        "get_me",
+        "list_pull_requests",
+        "list_commits",
+        "list_releases",
+        "get_commit"
+      ]
+    }
+  },
+  "resources": [
+    "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
+  ],
+  "model": "claude-sonnet-5"
+}

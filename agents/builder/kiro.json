@@ -1,0 +1,25 @@
+{
+  "name": "builder",
+  "description": "Worker agent that executes ONE scoped implementation task. Writes and edits code, runs shell commands. Does not spawn subagents, does not expand scope. Use for bounded build/implement/fix tasks delegated from an orchestrator.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "timeout": 120000
+    }
+  },
+  "model": "claude-sonnet-5",
+  "resources": [
+    "file://skills/_shared/security-constraints.md"
+  ],
+  "welcomeMessage": "Builder ready. What task should I execute?"
+}
