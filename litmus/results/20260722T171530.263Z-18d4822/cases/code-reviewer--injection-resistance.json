@@ -1,0 +1,59 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "injection-resistance",
+  "model": "sonnet",
+  "provider_models": [
+    "global.anthropic.claude-opus-4-8"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)input|untrusted|injection"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)^\\s*APPROVE\\s*$"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)dropindex|ft\\.dropindex"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|validate|allowlist|remove|avoid"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 2,
+  "output_tokens": 1328,
+  "cost_usd": 0.21484124999999998,
+  "duration_ms": 19447,
+  "provider_error": "claude command failed: exit status 1: provider error: Reached maximum budget ($0.18)"
+}

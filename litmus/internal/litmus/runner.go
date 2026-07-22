@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -65,21 +66,26 @@ const (
 )
 
 type CaseResult struct {
-	Agent            string            `json:"agent"`
-	CaseID           string            `json:"case_id"`
-	Model            string            `json:"model,omitempty"`
-	PromptHash       string            `json:"prompt_hash,omitempty"`
-	FixtureHash      string            `json:"fixture_hash,omitempty"`
-	Output           string            `json:"output"`
-	AssertionResults []AssertionResult `json:"assertion_results"`
-	ValidatorResults []ValidatorResult `json:"validator_results,omitempty"`
-	Status           CaseStatus        `json:"status,omitempty"`
-	Passed           bool              `json:"passed"`
-	InputTokens      int               `json:"input_tokens"`
-	OutputTokens     int               `json:"output_tokens"`
-	CostUSD          float64           `json:"cost_usd"`
-	DurationMS       int64             `json:"duration_ms"`
-	ProviderError    string            `json:"provider_error,omitempty"`
+	Agent                string                                `json:"agent"`
+	CaseID               string                                `json:"case_id"`
+	Model                string                                `json:"model,omitempty"`
+	ProviderModels       []string                              `json:"provider_models,omitempty"`
+	ProviderRequestModel string                                `json:"provider_request_model,omitempty"`
+	ProviderResponseID   string                                `json:"provider_response_id,omitempty"`
+	ProviderSessionID    string                                `json:"provider_session_id,omitempty"`
+	ProviderModelUsage   map[string]map[string]json.RawMessage `json:"provider_model_usage,omitempty"`
+	PromptHash           string                                `json:"prompt_hash,omitempty"`
+	FixtureHash          string                                `json:"fixture_hash,omitempty"`
+	Output               string                                `json:"output"`
+	AssertionResults     []AssertionResult                     `json:"assertion_results"`
+	ValidatorResults     []ValidatorResult                     `json:"validator_results,omitempty"`
+	Status               CaseStatus                            `json:"status,omitempty"`
+	Passed               bool                                  `json:"passed"`
+	InputTokens          int                                   `json:"input_tokens"`
+	OutputTokens         int                                   `json:"output_tokens"`
+	CostUSD              float64                               `json:"cost_usd"`
+	DurationMS           int64                                 `json:"duration_ms"`
+	ProviderError        string                                `json:"provider_error,omitempty"`
 }
 
 type ProviderRequest struct {
@@ -94,11 +100,15 @@ type ProviderRequest struct {
 }
 
 type ProviderResponse struct {
-	Output       string
-	InputTokens  int
-	OutputTokens int
-	CostUSD      float64
-	Duration     time.Duration
+	Output             string
+	ProviderModels     []string
+	ProviderResponseID string
+	ProviderSessionID  string
+	ProviderModelUsage map[string]map[string]json.RawMessage
+	InputTokens        int
+	OutputTokens       int
+	CostUSD            float64
+	Duration           time.Duration
 }
 
 type Executor interface {
@@ -177,8 +187,20 @@ func LoadManifest(root, name string) (Manifest, error) {
 		return Manifest{}, err
 	}
 
+	return loadManifestFile(root, filepath.Join("litmus", "manifests", name+".json"))
+}
+
+func LoadManifestPath(root, relativePath string) (Manifest, error) {
+	cleanPath, err := validateManifestPath(relativePath)
+	if err != nil {
+		return Manifest{}, err
+	}
+	return loadManifestFile(root, cleanPath)
+}
+
+func loadManifestFile(root, relativePath string) (Manifest, error) {
 	var manifest Manifest
-	if err := loadJSON(root, filepath.Join(root, "litmus", "manifests", name+".json"), &manifest); err != nil {
+	if err := loadJSON(root, filepath.Join(root, relativePath), &manifest); err != nil {
 		return Manifest{}, err
 	}
 	if len(manifest.Cases) == 0 {
@@ -193,6 +215,21 @@ func LoadManifest(root, name string) (Manifest, error) {
 		}
 	}
 	return manifest, nil
+}
+
+func validateManifestPath(path string) (string, error) {
+	if strings.TrimSpace(path) == "" {
+		return "", fmt.Errorf("manifest path is required")
+	}
+	if filepath.IsAbs(path) {
+		return "", fmt.Errorf("manifest path must be relative to the repository root")
+	}
+	cleanPath := filepath.Clean(path)
+	if cleanPath == "." || cleanPath == ".." ||
+		strings.HasPrefix(cleanPath, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("manifest path must remain within the repository root")
+	}
+	return cleanPath, nil
 }
 
 func EffectiveBudget(caseLimit, runLimit, spent float64) (float64, error) {
@@ -731,15 +768,20 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 	response, providerErr := executor.Execute(ctx, request)
 
 	result := CaseResult{
-		Agent:        testCase.Agent,
-		CaseID:       testCase.ID,
-		Model:        model,
-		PromptHash:   fmt.Sprintf("%x", promptDigest),
-		Output:       response.Output,
-		InputTokens:  response.InputTokens,
-		OutputTokens: response.OutputTokens,
-		CostUSD:      response.CostUSD,
-		DurationMS:   response.Duration.Milliseconds(),
+		Agent:                testCase.Agent,
+		CaseID:               testCase.ID,
+		Model:                model,
+		ProviderModels:       response.ProviderModels,
+		ProviderRequestModel: providerModel(request.Model),
+		ProviderResponseID:   response.ProviderResponseID,
+		ProviderSessionID:    response.ProviderSessionID,
+		ProviderModelUsage:   response.ProviderModelUsage,
+		PromptHash:           fmt.Sprintf("%x", promptDigest),
+		Output:               response.Output,
+		InputTokens:          response.InputTokens,
+		OutputTokens:         response.OutputTokens,
+		CostUSD:              response.CostUSD,
+		DurationMS:           response.Duration.Milliseconds(),
 	}
 	result.AssertionResults = EvaluateAssertions(result.Output, workspace, testCase.Assertions)
 	result.ValidatorResults = EvaluateValidators(result.Output, workspace, testCase.Validators)
@@ -803,7 +845,7 @@ func claudeArgs(request ProviderRequest) ([]string, error) {
 	args := []string{
 		"-p",
 		"--output-format", "json",
-		"--model", request.Model,
+		"--model", providerModel(request.Model),
 		"--max-budget-usd", fmt.Sprintf("%.2f", budget),
 		"--system-prompt", request.SystemPrompt,
 	}
@@ -814,6 +856,13 @@ func claudeArgs(request ProviderRequest) ([]string, error) {
 		args = append(args, "--json-schema", request.JSONSchema)
 	}
 	return args, nil
+}
+
+func providerModel(model string) string {
+	if strings.EqualFold(strings.TrimSpace(model), "sonnet") {
+		return "claude-sonnet-5"
+	}
+	return model
 }
 
 func providerBudget(requested float64) (float64, error) {
@@ -952,14 +1001,12 @@ func decodeProviderResponse(contents []byte) (ProviderResponse, error) {
 	if err != nil {
 		return response, err
 	}
-	result, ok := raw["result"]
-	if !ok {
-		return response, fmt.Errorf("response result is required")
+	result, hasResult := raw["result"]
+	if hasResult {
+		if err := json.Unmarshal(result, &response.Output); err != nil {
+			return response, fmt.Errorf("response result must be a string: %w", err)
+		}
 	}
-	if err := json.Unmarshal(result, &response.Output); err != nil {
-		return response, fmt.Errorf("response result must be a string: %w", err)
-	}
-
 	isError, err := optionalBool(raw, "is_error")
 	if err != nil {
 		return response, err
@@ -974,17 +1021,32 @@ func decodeProviderResponse(contents []byte) (ProviderResponse, error) {
 		}
 		return response, fmt.Errorf("provider error: %s", providerErrors)
 	}
+	if !hasResult {
+		return response, fmt.Errorf("response result is required")
+	}
 	return response, nil
 }
 
 func responseMetrics(raw map[string]json.RawMessage) (ProviderResponse, error) {
 	var response ProviderResponse
+	var err error
+	response.ProviderResponseID, err = optionalString(raw, "uuid")
+	if err != nil {
+		return response, err
+	}
+	response.ProviderSessionID, err = optionalString(raw, "session_id")
+	if err != nil {
+		return response, err
+	}
 	if value, ok := raw["modelUsage"]; ok {
 		var usage map[string]map[string]json.RawMessage
 		if err := json.Unmarshal(value, &usage); err != nil {
 			return response, fmt.Errorf("response modelUsage must be an object: %w", err)
 		}
+		response.ProviderModelUsage = usage
+		response.ProviderModels = make([]string, 0, len(usage))
 		for model, totals := range usage {
+			response.ProviderModels = append(response.ProviderModels, model)
 			input, err := optionalNonNegativeInt(totals, "inputTokens")
 			if err != nil {
 				return response, fmt.Errorf("response modelUsage %q: %w", model, err)
@@ -999,6 +1061,7 @@ func responseMetrics(raw map[string]json.RawMessage) (ProviderResponse, error) {
 			response.InputTokens += input
 			response.OutputTokens += output
 		}
+		sort.Strings(response.ProviderModels)
 	}
 	if value, ok := raw["total_cost_usd"]; ok {
 		cost, err := nonNegativeFloat(value, "response total_cost_usd")
@@ -1066,6 +1129,18 @@ func optionalBool(raw map[string]json.RawMessage, key string) (bool, error) {
 	var result bool
 	if err := json.Unmarshal(value, &result); err != nil {
 		return false, fmt.Errorf("response %s must be a boolean: %w", key, err)
+	}
+	return result, nil
+}
+
+func optionalString(raw map[string]json.RawMessage, key string) (string, error) {
+	value, ok := raw[key]
+	if !ok {
+		return "", nil
+	}
+	var result string
+	if err := json.Unmarshal(value, &result); err != nil {
+		return "", fmt.Errorf("response %s must be a string: %w", key, err)
 	}
 	return result, nil
 }

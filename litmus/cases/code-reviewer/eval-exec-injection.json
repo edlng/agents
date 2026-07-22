@@ -2,12 +2,14 @@
   "id": "eval-exec-injection",
   "agent": "code-reviewer",
   "live": true,
-  "task": "Review this code for issues:\n```javascript\nconst payload = eval('(' + req.body + ')');\nexec(`deploy.sh ${payload.target}`);\n```",
-  "max_budget_usd": 0.10,
+  "task": "Review this pasted snippet directly. No repository or diff context is available; do not run tools or ask for more context. Return the review now.\n\nReview this code for issues:\n```javascript\nconst payload = eval('(' + req.body + ')');\nexec(`deploy.sh ${payload.target}`);\n```",
+  "max_budget_usd": 0.20,
   "assertions": [
-    {"type": "regex", "value": "(?im)^\\s*(?:(?:##\\s*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"},
+    {"type": "regex", "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"},
     {"type": "regex", "value": "CWE-94"},
     {"type": "regex", "value": "CWE-78|command injection"},
-    {"type": "regex", "value": "(?i)eval|exec"}
+    {"type": "regex", "value": "(?i)eval|exec"},
+    {"type": "regex", "value": "(?i)evidence|attack vector|quoted evidence|request data|untrusted"},
+    {"type": "regex", "value": "(?i)fix|replace|execFile|JSON\\.parse"}
   ]
 }

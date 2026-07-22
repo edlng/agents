@@ -1,0 +1,42 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "## Review\n\n**Scope note:** No git diff available (no repo/bash tooling in this session) and no subagent-invocation tool is exposed, so the GLIDE delegation and diff-based workflow don't apply here. Reviewing the pasted snippet directly, read-only.\n\n### Correctness\n\n- `min \u003e max` guard correctly rejects an invalid range before use.\n- `Math.min(Math.max(value, min), max)` is the standard, correct clamp ordering (order matters when composing these two calls, and this order is right: clamps to floor first, then ceiling).\n- **Nit — NaN propagates silently.** `clamp(NaN, 0, 10)` → `Math.max(NaN, 0)` is `NaN`, then `Math.min(NaN, 10)` is `NaN`, so the function returns `NaN` instead of a bounded value or an explicit error. Not necessarily wrong (matches native `Math.min`/`Math.max` semantics), but worth an explicit decision/comment if `value` can be `NaN` in practice (e.g., from `parseFloat`/user input upstream). Suggested fix if NaN input is possible: `if (Number.isNaN(value)) throw new Error('value must not be NaN');` at the top.\n\n### Security\n\nNo applicable CWE — pure numeric computation, no untrusted-input execution, no I/O, no injection surface.\n\n### Testability\n\nPure, deterministic, single-responsibility function; trivially testable (value below min, above max, within range, min===max, min\u003emax throws, and the NaN edge case above).\n\n### Verdict: **APPROVE**\n\nNo blocking or important issues. The one nit (NaN behavior) is a documentation/defensive-check suggestion, not a defect against any stated requirement.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)finding|CWE|suggested fix|severity"
+      },
+      "passed": false,
+      "reason": "output matches forbidden regex"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 2,
+  "output_tokens": 1951,
+  "cost_usd": 0.0620583,
+  "duration_ms": 22735
+}

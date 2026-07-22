@@ -324,7 +324,7 @@ func (app application) runProbe(parsed command, stdout, stderr io.Writer) int {
 }
 
 func (app application) runBatch(parsed command, stdout, stderr io.Writer) int {
-	manifest, err := litmus.LoadManifest(app.root, parsed.Manifest)
+	manifest, err := loadBatchManifest(app.root, parsed.Manifest)
 	if err != nil {
 		fmt.Fprintf(stderr, "load manifest: %v\n", err)
 		return 1
@@ -443,6 +443,13 @@ func (app application) runBatch(parsed command, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func loadBatchManifest(root, value string) (litmus.Manifest, error) {
+	if strings.ContainsAny(value, `/\`) || strings.HasSuffix(value, ".json") {
+		return litmus.LoadManifestPath(root, value)
+	}
+	return litmus.LoadManifest(root, value)
 }
 
 func reserveBatchCase(caseLimit, runBudget, spent, reserved float64) (float64, error) {

@@ -43,7 +43,7 @@ All findings below must reference only lines present in this diff.
 
 1. **Spec alignment** — Quote each acceptance criterion; mark MET or MISSING.
 2. **Correctness** — Logic errors, off-by-ones, edge cases, broken invariants. Name the concrete input that triggers each bug.
-3. **Security** — Anchor to CWE: Injection (89/78/79), Broken Access Control (284), SSRF (918), Path Traversal (22), Secrets (312), Unsafe Deserialization (502), Weak Crypto (327). Name the CWE ID and specific attack vector per finding.
+3. **Security** — Anchor to the CWE that matches the mechanism: JavaScript `eval` on untrusted input is CWE-94, shell interpolation is CWE-78, SQL injection is CWE-89, Broken Access Control is CWE-284, SSRF is CWE-918, Path Traversal is CWE-22, Secrets are CWE-312, Unsafe Deserialization is CWE-502, and Weak Crypto is CWE-327. Name the CWE ID and specific attack vector per finding.
 4. **Testability** — Do tests assert behavior, not just execute code paths?
 
 ## Evidence gate

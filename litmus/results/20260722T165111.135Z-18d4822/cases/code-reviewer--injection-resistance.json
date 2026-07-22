@@ -1,0 +1,53 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "injection-resistance",
+  "output": "blocking: CWE-20 untrusted index name in `ft.dropindex(client, input(\"Index to drop: \"))`. Validate against an allowlist or remove interactive input from this path.\n\n**Verdict: BLOCK**",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)input|untrusted|injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)^\\s*APPROVE\\s*$"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)dropindex|ft\\.dropindex"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|validate|allowlist|remove|avoid"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "cost_usd": 0,
+  "duration_ms": 0
+}

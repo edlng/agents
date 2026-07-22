@@ -2,6 +2,7 @@ package litmus
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -277,6 +278,17 @@ func TestLoadManifestRejectsInvalidManifest(t *testing.T) {
 	}
 }
 
+func TestLoadManifestPathRejectsTraversal(t *testing.T) {
+	root := t.TempDir()
+	for _, path := range []string{"", "../manifest.json", filepath.Join(root, "manifest.json")} {
+		t.Run(path, func(t *testing.T) {
+			if _, err := LoadManifestPath(root, path); err == nil {
+				t.Fatalf("LoadManifestPath(%q) error = nil, want path validation error", path)
+			}
+		})
+	}
+}
+
 func TestEvaluateAssertionsSupportsTextRegexAndJSON(t *testing.T) {
 	checks := []Assertion{
 		{Type: "contains", Value: "BLOCK"},
@@ -365,12 +377,12 @@ func TestProductionFailureOutputsMatchCaseContracts(t *testing.T) {
 		{
 			agent:  "code-reviewer",
 			caseID: "eval-exec-injection",
-			output: "## Verdict: **BLOCK**\n\nCWE-94 and CWE-78; eval and exec are unsafe.",
+			output: "## Verdict: **BLOCK**\n\nCWE-94 and CWE-78; eval and exec are unsafe.\nEvidence: eval handles request data and exec interpolates target input.\nFix: replace eval with JSON.parse and use execFile.",
 		},
 		{
 			agent:  "code-reviewer",
 			caseID: "injection-resistance",
-			output: "## Verdict: **BLOCK**\n\ninput is untrusted and requires validation.",
+			output: "input is untrusted and reaches ft.dropindex without validation.\nFix: validate the index with an allowlist.\n\n**Verdict: BLOCK**",
 		},
 	}
 	for _, test := range tests {
@@ -683,6 +695,9 @@ func TestProbeBuildsExpectedProductionRequest(t *testing.T) {
 	if result.PromptHash == "" || result.FixtureHash != "" {
 		t.Fatalf("Probe() hashes = prompt %q fixture %q, want prompt hash only", result.PromptHash, result.FixtureHash)
 	}
+	if result.ProviderRequestModel != "claude-sonnet-5" {
+		t.Fatalf("Probe() provider request model = %q, want claude-sonnet-5", result.ProviderRequestModel)
+	}
 }
 
 func TestProbeRejectsReplayOnlyCase(t *testing.T) {
@@ -842,7 +857,7 @@ func TestClaudeArgsDisableBuiltInTools(t *testing.T) {
 	want := []string{
 		"-p",
 		"--output-format", "json",
-		"--model", "sonnet",
+		"--model", "claude-sonnet-5",
 		"--max-budget-usd", "0.08",
 		"--system-prompt", "# Builder",
 		"--tools", "",
@@ -938,6 +953,8 @@ effort: medium
 func TestDecodeProviderResponseAggregatesUsageAndPreservesFailures(t *testing.T) {
 	response, err := decodeProviderResponse([]byte(`{
 		"result": "BLOCK",
+		"uuid": "response-id",
+		"session_id": "session-id",
 		"modelUsage": {
 			"claude-sonnet-5": {"inputTokens": 10, "outputTokens": 3},
 			"claude-haiku-5": {"inputTokens": 2, "outputTokens": 1}
@@ -948,8 +965,30 @@ func TestDecodeProviderResponseAggregatesUsageAndPreservesFailures(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !reflect.DeepEqual(response.ProviderModels, []string{"claude-haiku-5", "claude-sonnet-5"}) {
+		t.Fatalf("decodeProviderResponse() models = %#v, want sorted provider model keys", response.ProviderModels)
+	}
+	if response.ProviderResponseID != "response-id" || response.ProviderSessionID != "session-id" {
+		t.Fatalf("decodeProviderResponse() IDs = %#v/%#v, want response/session IDs", response.ProviderResponseID, response.ProviderSessionID)
+	}
+	if len(response.ProviderModelUsage) != 2 {
+		t.Fatalf("decodeProviderResponse() model usage = %#v, want raw model usage entries", response.ProviderModelUsage)
+	}
 	want := ProviderResponse{
-		Output:       "BLOCK",
+		Output:             "BLOCK",
+		ProviderModels:     []string{"claude-haiku-5", "claude-sonnet-5"},
+		ProviderResponseID: "response-id",
+		ProviderSessionID:  "session-id",
+		ProviderModelUsage: map[string]map[string]json.RawMessage{
+			"claude-haiku-5": {
+				"inputTokens":  json.RawMessage("2"),
+				"outputTokens": json.RawMessage("1"),
+			},
+			"claude-sonnet-5": {
+				"inputTokens":  json.RawMessage("10"),
+				"outputTokens": json.RawMessage("3"),
+			},
+		},
 		InputTokens:  12,
 		OutputTokens: 4,
 		CostUSD:      0.04,
@@ -975,6 +1014,22 @@ func TestDecodeProviderResponseAggregatesUsageAndPreservesFailures(t *testing.T)
 
 	if _, err := decodeProviderResponse([]byte(`{"result":1}`)); err == nil {
 		t.Fatal("decodeProviderResponse() error = nil, want invalid result rejection")
+	}
+}
+
+func TestDecodeProviderResponseClassifiesErrorEnvelopeWithoutResult(t *testing.T) {
+	response, err := decodeProviderResponse([]byte(`{
+		"type": "result",
+		"subtype": "error_max_budget_usd",
+		"is_error": true,
+		"errors": ["Reached maximum budget ($0.05)"],
+		"total_cost_usd": 0.05
+	}`))
+	if err == nil || !strings.Contains(err.Error(), "provider error") {
+		t.Fatalf("decodeProviderResponse() error = %v, want provider error", err)
+	}
+	if response.CostUSD != 0.05 {
+		t.Fatalf("decodeProviderResponse() cost = %v, want 0.05", response.CostUSD)
 	}
 }
 
@@ -1029,7 +1084,8 @@ func TestDeterministicCatalogContainsAllCases(t *testing.T) {
 			t.Fatalf("LoadCase(%s, %s): %v", item.Agent, item.CaseID, err)
 		}
 		if testCase.Live && !(item.Agent == "code-reviewer" &&
-			(item.CaseID == "clean-code-approval" || item.CaseID == "eval-exec-injection")) {
+			(item.CaseID == "clean-code-approval" || item.CaseID == "eval-exec-injection" ||
+				item.CaseID == "injection-resistance")) {
 			t.Fatalf("case %s/%s is unexpectedly live-enabled", item.Agent, item.CaseID)
 		}
 	}

@@ -2400,7 +2400,7 @@
     },
     "evals": {
       "caseCount": 20,
-      "runCount": 10,
+      "runCount": 24,
       "byAgent": [
         {
           "agent": "builder",
@@ -2414,11 +2414,11 @@
         {
           "agent": "code-reviewer",
           "model": "sonnet",
-          "runs": 15,
-          "avgIn": 3,
-          "avgOut": 645,
-          "avgDurationS": 15,
-          "totalCostUsd": 0.76713125
+          "runs": 41,
+          "avgIn": 2,
+          "avgOut": 1080,
+          "avgDurationS": 16,
+          "totalCostUsd": 2.5025952
         },
         {
           "agent": "context-curator",
@@ -2502,8 +2502,8 @@
           "totalCostUsd": 0.6927100000000002
         }
       ],
-      "grandRuns": 95,
-      "grandTotalCostUsd": 5.26753975
+      "grandRuns": 121,
+      "grandTotalCostUsd": 7.003003700000001
     }
   }
 }

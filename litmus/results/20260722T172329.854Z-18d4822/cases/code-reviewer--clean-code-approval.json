@@ -1,0 +1,42 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "No repository/diff context or acceptance criteria were provided, only a standalone snippet. Reviewing it directly (no shell access available to run `git diff`, and no Valkey GLIDE usage present, so the GLIDE subagent delegation is not applicable).\n\n**Correctness**\n- Guard `min \u003e max` throws before computing, preventing an inverted-range silent bug (e.g., `clamp(5, 10, 1)` would otherwise return `1` incorrectly without the guard). Correct.\n- `Math.min(Math.max(value, min), max)` is the standard correct clamp order; verified against edge cases: `value \u003c min` → returns `min`; `value \u003e max` → returns `max`; `min === max` → returns that value; `NaN` input propagates `NaN` (consistent with `Math.min`/`Math.max` semantics, not a defect).\n- No off-by-one or boundary errors found.\n\n**Security**\n- Pure numeric function, no untrusted input sinks (no injection, path, crypto, or deserialization surface). No applicable CWE.\n\n**Testability**\n- No tests included in this snippet to assess.\n\n**Verdict: APPROVE** — no correctness or security issues found in the given code.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?APPROVE(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?im)^\\s*[-*]\\s*(?:\\*\\*)?(?:blocking|important|critical)\\b"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 1613,
+  "cost_usd": 0.0576492,
+  "duration_ms": 19737
+}

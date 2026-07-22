@@ -57,15 +57,16 @@ type runTotals struct {
 }
 
 type summaryCase struct {
-	Agent        string     `json:"agent"`
-	CaseID       string     `json:"case_id"`
-	Status       CaseStatus `json:"status"`
-	Passed       bool       `json:"passed"`
-	InputTokens  int        `json:"input_tokens"`
-	OutputTokens int        `json:"output_tokens"`
-	CostUSD      float64    `json:"cost_usd"`
-	DurationMS   int64      `json:"duration_ms"`
-	DetailPath   string     `json:"detail_path"`
+	Agent          string     `json:"agent"`
+	CaseID         string     `json:"case_id"`
+	ProviderModels []string   `json:"provider_models,omitempty"`
+	Status         CaseStatus `json:"status"`
+	Passed         bool       `json:"passed"`
+	InputTokens    int        `json:"input_tokens"`
+	OutputTokens   int        `json:"output_tokens"`
+	CostUSD        float64    `json:"cost_usd"`
+	DurationMS     int64      `json:"duration_ms"`
+	DetailPath     string     `json:"detail_path"`
 }
 
 func NewRun(now time.Time, revision string, budgetUSD float64, cases []CaseResult) Run {
@@ -447,15 +448,16 @@ func summaryFor(run Run) runSummary {
 		summary.Totals.CostUSD += result.CostUSD
 		summary.Totals.DurationMS += result.DurationMS
 		summary.Cases = append(summary.Cases, summaryCase{
-			Agent:        result.Agent,
-			CaseID:       result.CaseID,
-			Status:       result.Status,
-			Passed:       result.Passed,
-			InputTokens:  result.InputTokens,
-			OutputTokens: result.OutputTokens,
-			CostUSD:      result.CostUSD,
-			DurationMS:   result.DurationMS,
-			DetailPath:   filepath.ToSlash(filepath.Join("cases", caseDetailName(result))),
+			Agent:          result.Agent,
+			CaseID:         result.CaseID,
+			ProviderModels: result.ProviderModels,
+			Status:         result.Status,
+			Passed:         result.Passed,
+			InputTokens:    result.InputTokens,
+			OutputTokens:   result.OutputTokens,
+			CostUSD:        result.CostUSD,
+			DurationMS:     result.DurationMS,
+			DetailPath:     filepath.ToSlash(filepath.Join("cases", caseDetailName(result))),
 		})
 	}
 	summary.Totals.TotalTokens = summary.Totals.InputTokens + summary.Totals.OutputTokens

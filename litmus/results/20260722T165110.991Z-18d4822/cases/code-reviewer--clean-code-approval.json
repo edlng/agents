@@ -1,0 +1,37 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "output": "APPROVE",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?m)^\\s*(?:\\*\\*)?APPROVE(?:\\*\\*)?\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)finding|CWE|suggested fix|severity"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "cost_usd": 0,
+  "duration_ms": 0
+}

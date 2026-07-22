@@ -250,6 +250,38 @@ func TestRunBatchStopsBeforeExhaustedBudget(t *testing.T) {
 	}
 }
 
+func TestRunBatchLoadsRelativeManifestPath(t *testing.T) {
+	root := testRoot(t)
+	writeAgent(t, root, "case")
+	writeCase(t, root, "case", "case", `{
+		"id": "case",
+		"agent": "case",
+		"live": true,
+		"task": "review this",
+		"max_budget_usd": 0.10,
+		"assertions": [{"type": "contains", "value": "APPROVE"}]
+	}`)
+	writeFile(t, filepath.Join(root, "certification", "stage3", "manifest.json"), `{
+		"cases": [{"agent": "case", "case": "case"}]
+	}`)
+	executor := &fakeExecutor{response: litmus.ProviderResponse{
+		Output: "APPROVE", CostUSD: 0.04,
+	}}
+
+	var stdout, stderr bytes.Buffer
+	code := testApplication(root, executor).run(
+		[]string{"batch", "certification/stage3/manifest.json", "--budget", "0.10"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("run(batch path) = %d, stderr = %s", code, stderr.String())
+	}
+	if executor.calls != 1 {
+		t.Fatalf("executor calls = %d, want 1", executor.calls)
+	}
+}
+
 func TestRunBatchIncludesReplayOnlyCaseWhenRequested(t *testing.T) {
 	root := testRoot(t)
 	writeAgent(t, root, "reviewer")

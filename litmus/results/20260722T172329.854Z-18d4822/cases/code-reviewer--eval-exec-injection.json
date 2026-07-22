@@ -1,0 +1,66 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "eval-exec-injection",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "prompt_hash": "a02cc5410b11db1a62c0d90f21c97a686eacb0bb19a0a3793c982827e634dda2",
+  "output": "## Review\n\nNo git diff available (this is a pasted snippet, not a repository changeset) — reviewing the provided code directly.\n\n**GLIDE delegation**: Not applicable — this snippet has no relation to Valkey GLIDE; self-gated, no findings to incorporate.\n\n### 1. Spec alignment\nNo acceptance criteria were provided. N/A.\n\n### 2. Security\n\n**BLOCKING — CWE-94 (Code Injection via eval)**\n`const payload = eval('(' + req.body + ')');`\n`req.body` is attacker-controlled HTTP request data fed directly into `eval`. Any request body such as `\"); require('child_process').exec('rm -rf /'); (\"` (or simpler JS payloads) executes arbitrary code in the server process.\nFix: use `JSON.parse(req.body)` inside a try/catch, and configure the framework's JSON body parser instead of hand-rolling parsing.\n\n**BLOCKING — CWE-78 (OS Command Injection)**\n`exec(\\`deploy.sh ${payload.target}\\`);`\n`payload.target` is derived from the same untrusted `req.body` and is interpolated directly into a shell command string with no sanitization or escaping. A body like `{\"target\":\"; rm -rf / #\"}` (once parsed) executes arbitrary shell commands.\nFix: avoid `exec` with string interpolation — use `execFile`/`spawn` with an argument array (e.g. `execFile('deploy.sh', [payload.target])`), and validate `payload.target` against a strict allowlist (e.g. known deployment target names) before use.\n\n### 3. Correctness\n- `'(' + req.body + ')'` assumes `req.body` is a raw string. If a JSON body-parser middleware is in use, `req.body` is already an object and string concatenation would produce `\"([object Object])\"`, causing `eval` to throw a `SyntaxError` at runtime rather than parse the payload — the code likely doesn't work as intended for typical Express setups. Confirm what middleware parses `req.body`; if none, this is dead-on-arrival for anything but literal strings.\n- No validation that `payload.target` exists or is a non-empty string before use in `exec`; `undefined` target produces `deploy.sh undefined`.\n\n### 4. Testability\nNo tests included with this snippet — cannot assess.\n\n## Verdict: BLOCK\n\nTwo critical, directly exploitable vulnerabilities (CWE-94 arbitrary code execution, CWE-78 command injection) from untrusted `req.body` data. Must not ship.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?BLOCK(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-94"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "CWE-78|command injection"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)eval|exec"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)evidence|attack vector"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)fix|replace|execFile|JSON\\.parse"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 2,
+  "output_tokens": 2315,
+  "cost_usd": 0.0652185,
+  "duration_ms": 27280
+}
