@@ -6,6 +6,8 @@ description: Use when the user wants to update or modify an existing skill for t
 > **Codex runtime:** Use Codex-native agent dispatch, task plans, user-input requests, MCP capabilities, and skill loading. Resolve agents from `~/.codex/agents` or `.codex/agents`; resolve skills from `~/.agents/skills` or `.agents/skills`.
 >
 > Match work to catalog roles: low effort uses `context-curator`, `explore`, or `documenter`; medium uses `builder`, `code-reviewer`, `tester`, or `researcher`; high uses `validator` or `superhuman`.
+>
+> **Codex model contract:** Skills do not select models directly. When a skill dispatches an agent, resolve that role through its native TOML and verify the exact provider-qualified `model` plus `model_reasoning_effort` pair from `platforms/model-policy.json`. Do not hardcode shortened aliases such as `gpt-5.6-luna` when the active provider requires `openai.gpt-5.6-luna`.
 
 # Update Skill
 
