@@ -1,0 +1,25 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "AI maturity journal prompt capture",
+      "trigger": "UserPromptSubmit",
+      "action": {
+        "type": "command",
+        "command": "/Users/liawedwa/.kiro/scripts/ai-maturity/kiro-ide-journal-prompt.sh"
+      },
+      "timeout": 5,
+      "enabled": true
+    },
+    {
+      "name": "AI maturity journal after turn",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "/Users/liawedwa/.kiro/scripts/ai-maturity/kiro-ide-journal-stop.sh"
+      },
+      "timeout": 5,
+      "enabled": true
+    }
+  ]
+}

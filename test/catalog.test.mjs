@@ -87,6 +87,7 @@ const UNIVERSAL_SKILL_NAMES = [
   'systematic-debugging',
   'test-driven-development',
   'test-valkey',
+  'update-sysprompts',
   'using-git-worktrees',
   'valkey-spike',
   'verification-before-completion',
@@ -172,6 +173,7 @@ const UNIVERSAL_SOURCE_SNAPSHOT = [
   'test-driven-development/SKILL.md 7dee67b4af6bdccc7a914ca34533184d64592d0f5b23aeae631538168db14994 0644',
   'test-driven-development/testing-anti-patterns.md bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283 0644',
   'test-valkey/SKILL.md 19afde7488d288f0fdcc0677b77522ef7d8bdfdb8313d6ccd735759bf5bb9596 0644',
+  'update-sysprompts/SKILL.md 65289f52ff11071345d06eb7366d1062d2935618f6e79bf934a6836958d5387b 0644',
   'using-git-worktrees/SKILL.md 085a45ee3de432bdb2768011591d9a882cb6c759e2317f379226451c5618fe8e 0644',
   'valkey-spike/SKILL.md 81427d95b8bee0b3dbcca1209819ab348657eeb078e250aef4f206199fdad17b 0644',
   'verification-before-completion/SKILL.md ea52d15aabaf72bc6b558efe2c126f161b53961090ddcd712000273bfe8c7b6c 0644',
@@ -353,7 +355,7 @@ developer_instructions = "Test the fixture."
 `);
   }
 
-  for (let index = 1; index <= 16; index += 1) {
+  for (let index = 1; index <= 17; index += 1) {
     const name = `universal-${String(index).padStart(2, '0')}`;
     await writeFixtureFile(root, `skills/universal/${name}/SKILL.md`, `---
 name: ${name}
@@ -591,7 +593,7 @@ test('production universal skills preserve the complete source snapshot for both
   );
   assert.equal(
     universal.reduce((count, variant) => count + variant.files.length, 0),
-    82,
+    83,
   );
 
   const expectedFiles = UNIVERSAL_SOURCE_SNAPSHOT.map((source) => ({
@@ -663,11 +665,25 @@ test('production universal skills preserve the complete source snapshot for both
       };
     })
     .sort((left, right) => left.source.localeCompare(right.source));
-  assert.equal(claudeFiles.length, 82);
+  assert.equal(claudeFiles.length, 83);
   assert.deepEqual(claudeFiles, expectedInstallFiles);
   assert.deepEqual(claudeFiles, codexFiles);
 
   for (const name of UNIVERSAL_SKILL_NAMES) {
+    if (name === 'update-sysprompts') {
+      assert.deepEqual(
+        await readFile(
+          path.join(REPOSITORY_ROOT, 'skills', name, 'SKILL.md'),
+          'utf8',
+        ),
+        await readFile(
+          path.join(REPOSITORY_ROOT, 'skills', 'universal', name, 'SKILL.md'),
+          'utf8',
+        ),
+        'update-sysprompts direct sync source must match the catalog source',
+      );
+      continue;
+    }
     await assert.rejects(
       stat(path.join(REPOSITORY_ROOT, 'skills', name)),
       { code: 'ENOENT' },
@@ -1055,7 +1071,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 17 agents, 40 skills (17 universal, 23 Claude, 23 Codex)\n',
+    'Catalog valid: 17 agents, 41 skills (18 universal, 23 Claude, 23 Codex)\n',
   );
 });
 

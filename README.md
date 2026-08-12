@@ -7,7 +7,7 @@ and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
 - 17 agent roles with Claude, Codex, and Kiro definitions.
-- 17 universal skills shared by Claude and Codex.
+- 18 universal skills shared by Claude and Codex.
 - 23 Claude skills and 23 Codex skills for workflows whose tools or models
   differ.
 - A validated installer, site catalog, and Litmus checks.
