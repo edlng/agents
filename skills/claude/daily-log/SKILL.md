@@ -102,11 +102,11 @@ Review every Markdown file in `goals/roles/`, including the overview file. Befor
 - The exact daily entry written in Phase 6 and its Notes path
 - The evidence and status rules below
 
-Every evaluator must receive and inspect this same complete snapshot, either inline or through the same shared read-only reference. Do not provide different or partial summaries of the role ladder.
+Every evaluator/writer must receive and inspect this same complete snapshot, either inline or through the same shared snapshot reference. Do not provide different or partial summaries of the role ladder.
 
-Parallelize only when the runtime can start subagents, provide the complete snapshot to each one, and collect every result before any role-file write. Partition status-bearing criteria into disjoint assignments, preferably by shared section across role levels so related cumulative criteria have one owner. Assign each `(file path, exact criterion bullet)` to exactly one evaluator. Exclude overview vocabulary or ladder-description lines unless they are actual status-bearing criteria.
+Parallelize when the runtime can start subagents and provide the complete snapshot to each one. Partition status-bearing criteria into disjoint assignments, preferably assigning one whole role file to one subagent so no two agents can write the same file. Assign each `(file path, exact criterion bullet)` to exactly one evaluator/writer. Exclude overview vocabulary or ladder-description lines unless they are actual status-bearing criteria.
 
-Subagents are read-only. They may propose changes only for their assigned criteria and must not edit the journal, current-month Notes file, or role files. The coordinator is the sole writer. If these parallelization conditions are unavailable, perform the same evaluation sequentially.
+Subagents may edit only the role files and exact criteria assigned to them. They must not edit the journal, current-month Notes file, or unassigned role files. Before writing, each subagent must re-read its assigned live role file and verify that the targeted content still matches the immutable snapshot; if it changed, the subagent must stop that edit and report a conflict rather than overwrite newer content. Because write scopes are disjoint, assigned subagents may write their role files concurrently. The coordinator owns snapshot creation, assignment, conflict resolution, and final verification. If the runtime cannot provide the complete snapshot or disjoint write scopes, perform the same evaluation and writing sequentially.
 
 For each role criterion bullet that has a status in brackets:
 
@@ -119,19 +119,20 @@ For each role criterion bullet that has a status in brackets:
    - `[not yet]`: no direct supporting evidence is present
 5. Do not infer qualifications, years of experience, recruitment, travel, customer relationships, formal people leadership, company-wide adoption, or external-community leadership from unrelated technical work. Keep `[partial]` when the note itself says the broader requirement is not established.
 
-Each evaluator must return proposals only, using one record per proposed criterion change:
+Each evaluator/writer must return an edit report using one record per proposed criterion change:
 
 - `file`: exact role-file path
 - `criterion`: exact current criterion bullet
 - `evidence`: exact evidence bullet to add or extend, or `none`
 - `status`: current status and proposed status, or `unchanged`
 - `reason`: one concise sentence tied to the source evidence
+- `write`: `applied`, `skipped`, or `conflict`
 
-The evaluator must also identify every assigned criterion or file for which no change is proposed.
+The evaluator/writer must also identify every assigned criterion or file for which no change is proposed and must report any write conflict or scope violation.
 
-Wait for all assignments before aggregation. If a result is missing, malformed, or outside its assignment, the coordinator evaluates that assignment directly from the shared snapshot. Merge proposals by `(file, criterion)`. Deduplicate identical proposals. Treat non-identical proposals for the same key or contradictory factual claims as conflicts; resolve them against the complete snapshot and the rules above, never by voting or averaging. Reusing the same evidence for separate cumulative criteria is not a conflict by itself. If a conflict remains unresolved, preserve the current status, omit the disputed edit, and report it.
+Wait for all assignments before final aggregation and verification. If a result is missing, malformed, or outside its assignment, the coordinator audits that assignment directly from the shared snapshot and applies any missing changes without overwriting newer content. Merge reports by `(file, criterion)`. Deduplicate identical reports. Treat non-identical reports for the same key or contradictory factual claims as conflicts; resolve them against the complete snapshot and the rules above, never by voting or averaging. Reusing the same evidence for separate cumulative criteria is not a conflict by itself. If a conflict remains unresolved, preserve the current status, omit the disputed edit, and report it.
 
-Before writing, re-read every target file. If its targeted criterion, status, or evidence changed after the snapshot was created, re-evaluate the affected proposal instead of overwriting newer content. Apply accepted changes one role file at a time; never perform concurrent role-file writes.
+After all subagents finish, re-read every target role file. Confirm that each change is inside its assigned scope, that the targeted criterion/status/evidence was not overwritten, and that no duplicate evidence or unassigned edits were introduced. Apply any coordinator fallback or conflict repair sequentially; otherwise concurrent writes are valid only across disjoint role files.
 
 Make the smallest possible edits, preserve existing evidence and Markdown structure, and leave files unchanged when today's work provides no new evidence. The overview file normally only documents the status vocabulary and role ladder; do not add evidence to it unless it contains an actual status-bearing criterion.
 

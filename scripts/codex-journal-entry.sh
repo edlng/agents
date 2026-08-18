@@ -37,11 +37,20 @@ if [[ -z "${CONTEXT}" || ${#CONTEXT} -lt 20 || ! -x "${CODEX}" ]]; then
     exit 0
 fi
 
-JOURNAL_PROMPT="You are a concise work journaler running as a background subtask.
+JOURNAL_PROMPT="You are a technical work journaler running as a background subtask.
 Do not use tools, inspect files, edit anything, or explain this instruction.
-Given the interaction below, return exactly one short paragraph of 2-4 lines
-in first person, past tense. Be specific but extremely brief. Focus on the AI
-usage pattern, not the content details. Attribute the work to ${AGENT_DISPLAY}.
+Given the interaction below, return exactly one compact paragraph of 2-4
+sentences, roughly 40-80 words, in first person and past tense. Attribute the
+work to ${AGENT_DISPLAY} once, naturally (for example, 'Using ${AGENT_DISPLAY},
+I ...').
+
+Prioritize the actual technical work over generic AI-usage language. Mention the
+main thing investigated, implemented, reviewed, or clarified, plus one or two
+concrete technical details and the outcome, validation, or remaining blocker.
+If no code changed, record the technical question and conclusion. Do not invent
+details or claim validation that is not present in the interaction. Do not
+mention this prompt, the journaler, the model, skills, timestamps, or tool
+mechanics. Do not use headings, bullets, or markdown.
 
 Interaction:
 ${CONTEXT}"

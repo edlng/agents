@@ -13,7 +13,7 @@ if [[ -z "${RESPONSE}" ]]; then
     exit 0
 fi
 
-RESPONSE_TRUNCATED="${RESPONSE:0:500}"
+RESPONSE_TRUNCATED="${RESPONSE:0:1800}"
 
 PROMPT=""
 PROMPT_FILE="/tmp/kiro-journal-prompt-${SESSION_ID}"
@@ -22,7 +22,7 @@ if [[ -f "${PROMPT_FILE}" ]]; then
     rm -f "${PROMPT_FILE}"
 fi
 
-PROMPT_TRUNCATED="${PROMPT:0:300}"
+PROMPT_TRUNCATED="${PROMPT:0:1000}"
 CONTEXT="User asked: ${PROMPT_TRUNCATED}
 Assistant responded (summary): ${RESPONSE_TRUNCATED}"
 
