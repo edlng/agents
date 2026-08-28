@@ -1432,7 +1432,7 @@
       "id": "skill:write-pr",
       "type": "skill",
       "name": "write-pr",
-      "description": "Generate a polished, human-sounding PR description from the current git changes. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repo's PR template (or a default), verifies accuracy, then humanizes the output.",
+      "description": "Generate a concise, human-sounding PR description from current git changes in a reviewer-first format. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a structured default), verifies accuracy, then humanizes the output.",
       "category": "Writing & Documentation",
       "platforms": [
         "claude",
@@ -1443,7 +1443,7 @@
         "universal": "skills/universal/write-pr/SKILL.md"
       },
       "sourcePath": "skills/universal/write-pr/SKILL.md",
-      "excerpt": "Write PR Description Generate a polished, human-sounding PR description for the current changes. Follow each phase in order. Do not skip phases. Input `$ARGUMENTS` is optional and may contain: 1. A **commit range** (e.g. `HEAD~3`, `main..HEAD`). Default: the last commit plus any staged/unstaged chan"
+      "excerpt": "Write PR Description Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follo"
     },
     {
       "id": "skill:write-pr-comments",

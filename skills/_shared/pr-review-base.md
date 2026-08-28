@@ -19,6 +19,7 @@ Cache keys for this run (TTL 6h), where `$RUNID` = `<owner>-<repo>-<pr-number>`:
 - `pr:$RUNID:metadata` — PR title, body, branches, author, file list, additions/deletions
 - `pr:$RUNID:requirements` — Requirements Document (Jira + PR description)
 - `pr:$RUNID:codebase_context` — patterns/conventions of touched files
+- `pr:$RUNID:photon_client_consistency` — evidence-backed comparisons with other clients; populated only for `awslabs/photon`
 - `pr:$RUNID:findings_v<n>` — findings JSON, versioned per validator pass
 
 ---
@@ -44,6 +45,18 @@ Use `mcp__atlassian__getJiraIssue` for the linked issue (if any). Combine with t
 ### 1e. Build Codebase Context
 Follow `_shared/codebase-context-checklist.md`. For each touched file, fetch its current state from the PR's head ref using `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d` (or `gh pr checkout <number> --detach` in a temp worktree if bulk reads are needed — do NOT modify the user's working tree). Write to `pr:$RUNID:codebase_context`.
 
+### 1f. Build Photon Cross-Client Context (only `awslabs/photon`)
+Normalize `<owner/repo>` to lowercase. Run this phase only when it equals `awslabs/photon`; skip it for every downstream repository.
+
+Identify the changed client and each externally observable behavior affected by the diff. For every behavior:
+
+1. Resolve the current `main` commit with `gh api repos/awslabs/photon/commits/main --jq .sha`. Inspect other client implementations on that commit with `gh api`. Record an exact source snippet, path, line or line range, observed behavior, and an immutable link of the form `https://github.com/awslabs/photon/blob/<main_sha>/<path>#L<start>-L<end>`.
+2. List open PR metadata with `gh pr list --repo awslabs/photon --state open --json number,title,body,headRefName`. Shortlist only PRs whose stated purpose plausibly concerns the same behavior. For each plausible candidate, use `gh pr view <number> --repo awslabs/photon --json files,headRefOid` to check its changed paths. Fetch its diff only when the purpose and changed paths establish relevance. Do not inspect unrelated PR diffs, and do not treat a shared keyword alone as relevance.
+3. Record one verdict per compared client and behavior: `ALIGNS`, `DIVERGES`, `MIXED`, or `INSUFFICIENT_EVIDENCE`.
+4. Include a stable evidence ID, compared client, behavior or contract, source type (`main` or relevant PR), commit SHA or PR number and head SHA, path and lines, exact source snippet, immutable GitHub URL, observed behavior, verdict, and reasoning.
+
+Absence of an implementation is not divergence unless the shared contract requires that client to implement it. Unavailable files, ambiguous behavior, contradictory evidence, or a lack of relevant clients produce `INSUFFICIENT_EVIDENCE`, not a guess. Write the records to `pr:$RUNID:photon_client_consistency`.
+
 ---
 
 ## Phase 2: Initial Review
@@ -52,8 +65,10 @@ Follow `_shared/codebase-context-checklist.md`. For each touched file, fetch its
 - `<= 500`: spawn ONE `code-reviewer` subagent, all lenses in one pass.
 - `> 500`: spawn **4 `code-reviewer` subagents in parallel** — one per lens (see below). Each re-reads the same Valkey cache keys, so only use this tier when a single agent would genuinely lose the thread across 500+ lines.
 
+**Photon context for both size paths:** For an `awslabs/photon` review, every subagent that emits findings must also read `pr:$RUNID:photon_client_consistency`. After each finding's normal evidence and reasoning, append a `client_consistency` object with `verdict`, `reasoning`, and the exact comparison-record evidence IDs. Cross-client behavior is supporting context; it does not prove the underlying finding. Use `INSUFFICIENT_EVIDENCE` when the records do not establish alignment or divergence.
+
 **Prompt for the single-agent path (`<= 500`):**
-> Read `pr:$RUNID:diff`, `pr:$RUNID:requirements`, and `pr:$RUNID:codebase_context` from Valkey at `localhost:8888`. If you need a file beyond the cached context, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do not invent file contents.
+> Read `pr:$RUNID:diff`, `pr:$RUNID:requirements`, `pr:$RUNID:codebase_context`, and `pr:$RUNID:photon_client_consistency` when present from Valkey at `localhost:8888`. If you need a file beyond the cached context, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do not invent file contents.
 >
 > Use the `code-review-excellence` skill as your reasoning frame. Apply the four lenses in `_shared/review-findings-schema.md` in order — **Codebase Alignment first** (primary lens), then Correctness & Security, then Requirements, then Testability. Only flag codebase-alignment issues that conflict with patterns visible in `pr:$RUNID:codebase_context`. Write the findings JSON to `pr:$RUNID:findings_v1`.
 
@@ -75,52 +90,104 @@ Spawn ONE `validator` subagent (Opus). Pass it the merged findings from `pr:$RUN
 
 Follow the self-challenge rubric in `_shared/validator-skeptic-pass.md`. The validator reads only the findings list and the codebase context (`pr:$RUNID:codebase_context`) to verify claims — it does not re-read the full diff. Write the validated findings to `pr:$RUNID:findings_v2`.
 
+For `awslabs/photon`, the validator must also read `pr:$RUNID:photon_client_consistency`. Verify that every client-consistency statement follows from its cited path, lines, and source snippet; that cited open PRs concern the same behavior; that links use the recorded immutable commit SHA; and that one client's behavior is not generalized to all clients. Replace an unsupported consistency conclusion with `INSUFFICIENT_EVIDENCE`. Apply the normal reject/downgrade rules to the underlying finding independently.
+
 ---
 
 ## Phase 4: Final Report (local only)
 
-Spawn a `documenter` subagent. Pass `$RUNID` and the final findings version.
+Spawn a `documenter` subagent. Pass `$RUNID`, the final findings version, and whether `pr:$RUNID:photon_client_consistency` exists.
 
-Prompt:
-> "Read `pr:$RUNID:findings_v<final>` from Valkey. Drop all `verdict: REJECTED` findings entirely. Group remaining findings by severity (use the post-downgrade severity if `DOWNGRADE`). Produce markdown:
->
-> ```
-> # PR Review: <PR title>
->
-> **Author:** <author> | **Files:** <count> | **+<additions> / -<deletions>** | **Jira:** <key or none>
->
-> ---
->
-> ## Blocking (<N>)
-> For each blocking finding:
-> - **`<file>:<line_range>`** — <claim>
->   - `<evidence>`
->   - <suggested_fix>
->
-> ## Recommended (<N>)
-> <same format, severity=suggestion>
->
-> ## Nits (<N>)
-> <same format, severity=nit — one line per finding, omit evidence>
->
-> ---
->
-> ## Summary
-> <one paragraph — overall state of the PR>
->
-> ## Action
-> <Approve | Request changes | Comment only>
-> ```
->
-> Tone: this is for the user to decide whether to post. Be direct but not condescending. State facts, not judgments. Avoid 'simply', 'just', 'obviously'."
+The documenter reads these cache keys:
+- `pr:$RUNID:metadata`
+- `pr:$RUNID:requirements`
+- `pr:$RUNID:codebase_context`
+- `pr:$RUNID:findings_v<final>`
+- `pr:$RUNID:photon_client_consistency` when present
 
-Print the final markdown directly in chat.
+Drop every `verdict: REJECTED` finding. Use the post-downgrade severity for `DOWNGRADE` findings.
 
-After printing, save the same markdown as an Obsidian note using `mcp__obsidian__write_note`:
-- Path: `PRs/<repo>-<PR title>-<author>.md` (sanitize: lowercase, replace spaces and `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|` with `-`, collapse consecutive `-` into one)
-- Content: the full markdown output
+### 4a. Chat report
+Print the review directly in chat, with findings first and ordered by severity:
 
-Confirm to the user that the note was saved, including the path used.
+```markdown
+# PR Review: <PR title>
+
+**Action:** <Approve | Request changes | Comment only>
+**Author:** <author> | **Files:** <count> | **+<additions> / -<deletions>** | **Jira:** <key or none>
+
+## Blocking (<N>)
+For each blocking finding:
+- **`<file>:<line_range>` — <claim>**
+  - Evidence: <exact evidence>
+  - Reasoning: <why the evidence proves the claim>
+  - Suggested fix: <specific fix>
+  - Photon consistency: <ALIGNS | DIVERGES | MIXED | INSUFFICIENT_EVIDENCE> — <reasoning after the finding reasoning>
+  - Client evidence: <immutable main or relevant-PR links with client, path, and lines>
+
+## Recommended (<N>)
+<same complete format for severity=suggestion>
+
+## Nits (<N>)
+<one line per severity=nit finding; include Photon verdict and evidence link when applicable>
+
+## What This PR Does
+<concise explanation of the implementation and its structure>
+
+## Summary
+<overall state, residual risk, and test coverage>
+```
+
+For non-Photon repositories, omit the Photon consistency and client evidence lines. For Photon findings, state the normal evidence and reasoning before the consistency verdict. Never use another client's behavior as the sole proof of a finding. If there are no accepted findings, say so explicitly and still summarize the PR and residual test risk.
+
+Choose the action consistently:
+- Any blocking finding: `Request changes`
+- No blocking findings but at least one suggestion: `Comment only`
+- Only nits or no findings: `Approve`
+
+Tone: direct, factual, and non-condescending. Avoid "simply", "just", and "obviously".
+
+### 4b. Temporary HTML report
+Create one complete HTML5 document at `/tmp/pr-review-<repo>-<number>-<timestamp>.html`, where `<repo>` is the lowercase repository basename with non-alphanumeric runs replaced by `-`, and `<timestamp>` is UTC `YYYYMMDD-HHMMSS`. Do not create companion files.
+
+The report is an evidence dashboard, ordered as follows:
+
+1. PR title, metadata, recommended action, and severity counts.
+2. "What this PR does": intent, requirements, and implementation summary.
+3. Change map grouped by subsystem or directory, including each group's role.
+4. Validated findings ordered by severity.
+5. Test coverage, untested behavior, and residual risk.
+6. Photon client consistency matrix when the cache key exists.
+7. Methodology and source links.
+
+Every non-nit finding displays its source location, claim, exact evidence, reasoning, suggested fix, validator disposition, and Photon consistency verdict/evidence when applicable. The Photon matrix displays behavior, compared client, source type, verdict, reasoning, exact source snippet, and immutable `main` or relevant-PR link. A link without path-and-line evidence is not sufficient.
+
+Use a restrained, high-contrast technical-report design:
+- System font stack, compact type, and zero letter spacing.
+- Neutral page background with white content surfaces; red, amber, green, and blue reserved for distinct semantic states rather than a one-hue palette.
+- Maximum content width around 1280px, a stable two-column desktop summary, and a single-column layout below 760px.
+- Borders and spacing for hierarchy; card radius no greater than 8px.
+- No gradients, decorative blobs, nested cards, oversized hero text, external fonts, or decorative images.
+- Long paths, snippets, titles, and URLs must wrap without overlapping adjacent content.
+- Print styles must remove sticky positioning and preserve evidence text and links.
+
+The file must be portable and safe:
+- Put all CSS and any optional enhancement JavaScript inline. Use no remote fonts, scripts, stylesheets, images, or other runtime assets.
+- The complete report must remain readable with JavaScript disabled and when opened directly from disk.
+- HTML-escape `&`, `<`, `>`, `"`, and `'` in every value originating from GitHub, Jira, source code, cache records, or findings before interpolation.
+- Allow only `https://` source-link destinations. Attribute-escape URLs and add `rel="noreferrer noopener"` to links opened in a new tab.
+- Do not interpolate untrusted values into `<style>`, `<script>`, event-handler attributes, or raw HTML.
+
+After writing, verify that the file is non-empty, starts with `<!doctype html>`, contains the PR title and all accepted finding IDs, and has no external asset tags. Open it in the default browser when the environment supports that operation. If browser launch is unavailable or fails, preserve the file and provide its absolute path.
+
+### 4c. Failure behavior
+- Photon evidence fetch failure: continue the review and use `INSUFFICIENT_EVIDENCE`.
+- Relevant PR read failure: identify that PR and state that its behavior could not be verified.
+- Browser launch failure: preserve the generated HTML file and report its path.
+- HTML generation or validation failure: still print the complete chat report and state the local-output failure.
+- Never fall back to another note system and never write to GitHub.
+
+Finish by giving the user the HTML path and the recommended action.
 
 ---
 

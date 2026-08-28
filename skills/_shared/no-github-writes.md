@@ -2,7 +2,7 @@
 
 > Shared reference used by the local-only review skills (`review-pr`, `review-cookbook-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.
 
-The review is **local-only**. Print it in chat and (where the skill specifies) save it to Obsidian. **DO NOT** perform any write operation against GitHub. The user will copy and post manually after reviewing the output.
+The review is **local-only**. Print it in chat and create only the local artifact specified by the consuming skill. **DO NOT** perform any write operation against GitHub. The user will decide what to post after reviewing the output.
 
 ## Prohibited write operations
 

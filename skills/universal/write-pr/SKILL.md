@@ -1,11 +1,11 @@
 ---
 name: write-pr
-description: Generate a polished, human-sounding PR description from the current git changes. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repo's PR template (or a default), verifies accuracy, then humanizes the output.
+description: Generate a concise, human-sounding PR description from current git changes in a reviewer-first format. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a structured default), verifies accuracy, then humanizes the output.
 ---
 
 # Write PR Description
 
-Generate a polished, human-sounding PR description for the current changes. Follow each phase in order. Do not skip phases.
+Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follow each phase in order.
 
 ## Input
 
@@ -39,107 +39,67 @@ Read through the diff carefully. Understand:
 
 ---
 
-## Phase 2: Draft PR Description
+## Phase 2: Draft the PR Description
 
 ### Template Selection
 1. If the user provided a template path, read that file.
 2. Otherwise, check for `.github/pull_request_template.md` or files in `.github/PULL_REQUEST_TEMPLATE/` in the repo root.
-3. If no template exists, use this default:
+3. If no template exists, use this default shape:
 
 ```markdown
 ## Summary
-<!-- 2-3 sentences: what this PR does and why. -->
+<!-- Explain the problem, its impact, and the approach in 1-2 short paragraphs. -->
 
-## Issue
-<!-- Link or reference to the Jira/GitHub issue, e.g. AEA-123. Write "N/A" if none. -->
+## What's in it
+<!-- Group related changes by module or area. Do not list every file separately. -->
+| Area | Change |
+|---|---|
+| `path/to/module` | ... |
 
-## Changes
-<!-- For each file (or logical group of files), one bullet explaining what changed and why. -->
-- `path/to/file.py` — reason for change
+## Design decisions
+<!-- Include only decisions a reviewer may question. Omit when there are none. -->
 
 ## Tests
-<!-- What tests were added or modified? How can a reviewer verify correctness? -->
+<!-- State commands/results, coverage when available, and meaningful edge cases. -->
 
-## Blockers / Future work
-<!-- Optional. Known limitations, follow-up tasks, or things intentionally left out of this PR. Remove this section if not applicable. -->
-
-## Additional context
-<!-- Optional. Screenshots, benchmarks, migration notes, links to design docs, or anything else a reviewer should know. Remove this section if not applicable. -->
+## Not in this PR
+<!-- State explicit follow-ups or intentional limits. Omit when there are none. -->
 ```
+
+If the repository template has required sections, preserve them. Use the structure above within the template where it fits. Do not add an `Issue` section with `N/A` unless the template requires it.
 
 ### Drafting
-Fill in every section of the chosen template based on the actual changes. Be specific and accurate:
-- Reference concrete file names, functions, and behaviors — not vague generalities
-- Explain **why**, not just **what**
-- If the template has checkboxes or optional sections, fill in only the ones that apply
-- Keep it concise — a reviewer should be able to skim it in under a minute
 
----
+Organize the body around the questions a reviewer will have:
 
-## Phase 3: Generate Commit Title and Branch Name
+- **Summary:** Start with the behavior or problem that motivated the change. Explain the impact, then say what the implementation does. When behavior changes, add a small `Before`/`After` table. Keep it concrete.
+- **What's in it:** Group files into logical modules or areas and explain each role. Mention new files, changed interfaces, compatibility behavior, migrations, and paired changes where they matter. A short JSON, protocol, or API example is useful when it makes a contract unambiguous.
+- **Design decisions:** Include only non-obvious choices, tradeoffs, failure behavior, rollout constraints, or compatibility rules. Use short subsections when there are multiple decisions. Do not restate the implementation line by line.
+- **Testing:** Report the actual commands, results, counts, coverage, and important edge cases. Include failure-path or regression tests when they are part of the change. Never invent a test result, coverage number, benchmark, or manual verification step.
+- **Not in this PR:** Name deferred work, known limitations, or required follow-ups when they affect how the change should be reviewed or shipped. Omit the section when there is nothing meaningful to say.
 
-Infer the project's naming conventions from git history, then produce a commit title and branch name that fit them.
+Use concrete file names, functions, interfaces, and behaviors. Explain why a change exists, not just what moved. Prefer grouped tables and short paragraphs over a long file-by-file checklist. Include an issue, design document, rollout note, or external dependency only when it is present in the repository context or the supplied template. Keep the body as short as the scope allows; expand for a real protocol, migration, or compatibility contract rather than padding the summary.
 
-### 3a: Inspect conventions
+Do not generate a commit title or branch name unless the user explicitly asks for them. The normal output is the PR body only.
 
-```bash
-# Recent commit titles — infer format (conventional commits, imperative, ticket-prefixed, etc.)
-git log --oneline -20
+## Phase 3: Humanize
 
-# Recent branch names — infer prefix/separator/casing patterns
-git branch -a --sort=-committerdate | head -20
-```
-
-Look for:
-- **Commit title format**: conventional commits (`feat(scope): msg`), ticket prefix (`[STG-123]`), plain imperative, or other patterns
-- **Scope conventions**: what scopes appear in the log (e.g. `cache`, `ci`, `evals`)
-- **Branch naming**: prefix style (`feat/`, `fix/`, `STG-123-`), separator (`-` vs `/`), casing
-
-### 3b: Draft commit title
-
-Write a single commit title that:
-- Follows the detected format exactly (type, scope, separator, casing)
-- Uses the imperative mood in the subject
-- Stays under 72 characters
-- Accurately describes the primary change
-
-### 3c: Draft branch name
-
-Write a branch name that:
-- Follows the detected naming convention (prefix, separator, casing)
-- Is kebab-case after the prefix
-- Omits stop words (`a`, `the`, `and`) to keep it short
-- Is unique enough to identify the work at a glance
-
-### 3d: Output (inline, before PR description)
-
-Print:
-```
-Commit title: <title>
-Branch name:  <branch-name>
-```
-
----
+Apply the `humanizer` skill to the completed draft. The `humanizer` skill owns the humanization and anti-AI rules; do not duplicate or override those rules here. Preserve the draft's technical facts, structure, and reviewer-oriented detail. If humanization changes a factual claim, resolve it against the diff and test output during Phase 4.
 
 ## Phase 4: Verify Accuracy
 
-Review the draft against the actual diff. Check:
-- Every claim in the description is supported by the diff (no hallucinated changes)
-- No significant changes are omitted from the description
-- File names, function names, and behaviors mentioned are accurate
-- The description doesn't overstate or understate the scope
+Review the draft against the actual diff and test output. Check:
 
-If anything is inaccurate or missing, fix it before proceeding.
+- Every claim is supported by the diff, commit history, or observed command output
+- No significant logical change, compatibility constraint, or test result is omitted
+- File names, function names, interfaces, and behaviors are accurate
+- Before/after tables describe real behavior rather than intended behavior
+- The description does not overstate coverage, performance, rollout safety, or scope
+- Optional sections are removed when they contain no useful information
 
----
+Fix anything inaccurate, vague, repetitive, or missing before proceeding.
 
-## Phase 5: Humanize
-
-Apply the `humanizer` skill to the PR description. The goal is to make it read like a real developer wrote it, not an AI. The humanizer skill contains the comprehensive rule set — do not re-specify individual patterns here.
-
----
-
-## Phase 6: Final Output
+## Phase 5: Final Output
 
 Print the final PR description inside a single fenced markdown code block so the user can copy and paste it directly:
 
@@ -149,4 +109,4 @@ Print the final PR description inside a single fenced markdown code block so the
 ```
 ~~~
 
-Do not print anything after the code block.
+Do not print a preamble, commit metadata, or anything after the code block.
