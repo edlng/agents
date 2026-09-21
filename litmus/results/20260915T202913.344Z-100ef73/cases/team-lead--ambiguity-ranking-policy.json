@@ -1,0 +1,63 @@
+{
+  "agent": "team-lead",
+  "case_id": "ambiguity-ranking-policy",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "6cf8fbb2-cccc-4dc8-b975-a72d7cb6652a",
+  "provider_session_id": "657f7e3b-c688-4ae3-a8bc-739bcac34d55",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 71325,
+      "cacheReadInputTokens": 170168,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.2239201,
+      "inputTokens": 12,
+      "maxOutputTokens": 64000,
+      "outputTokens": 1155,
+      "provider": "bedrock",
+      "thinkingTokens": 0,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "This is a human decision punch-out, not an implementation task, so I'm not delegating any code changes. Let me verify the policy file state and run the required test.\n\nNow running the required test check.\n\n**Status: PENDING HUMAN CLARIFICATION — not proceeding, no changes made.**\n\n- Policy file `ambiguity/ranking-policy/policy.json` confirmed byte-for-byte unchanged (current content: `tie_breaker: \"created_at_asc\"`).\n- Conflicting approved choices:\n  1. **Analytics**: tie-break ties by newest `created_at` first (descending).\n  2. **Support**: tie-break ties by oldest `created_at` first (ascending), for fairness.\n- No authority or rollout rule in the policy resolves which team's preference wins.\n- Test run: `node --test checks/ranking-policy.test.mjs` → **PASS** (1/1), confirming the current policy state is stable and untouched.\n\n**Open question for a human:** who owns the tie-break decision, analytics or support, so the policy can be updated deliberately rather than by assistant judgment? I have not chosen a side or edited the policy pending that answer.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ambiguity/ranking-policy/policy.json"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(clarif|human|owner).*\\?"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/ranking-policy.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ ranking policy remains unchanged pending clarification (1.255083ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 67.092917"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 12,
+  "output_tokens": 1155,
+  "cost_usd": 0.2239201,
+  "duration_ms": 37921
+}

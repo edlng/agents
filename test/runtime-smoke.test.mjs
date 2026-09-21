@@ -19,8 +19,8 @@ test('parses a Claude child session with exact model and effort', () => {
       agent: 'context-curator',
       model: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',
       effort: 'medium',
-      loadedSkills: ['verification-before-completion'],
-      sourceLocators: ['.claude/skills/verification-before-completion/SKILL.md'],
+      loadedSkills: ['code-review-excellence'],
+      sourceLocators: ['.claude/skills/code-review-excellence/SKILL.md'],
     },
   ]);
 
@@ -29,14 +29,14 @@ test('parses a Claude child session with exact model and effort', () => {
     model: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',
     effort: 'medium',
     sandbox: null,
-    loadedSkills: ['verification-before-completion'],
-    sourceLocators: ['.claude/skills/verification-before-completion/SKILL.md'],
+    loadedSkills: ['code-review-excellence'],
+    sourceLocators: ['.claude/skills/code-review-excellence/SKILL.md'],
   });
 });
 
 test('parses a Codex child session with sandbox and source locator', () => {
   const parsed = parseCodexSession(`{"type":"session_meta","role":"parent","model":"openai.gpt-5.6-sol","model_reasoning_effort":"high"}
-{"type":"agent_spawned","role":"builder","model":"openai.gpt-5.6-luna","model_reasoning_effort":"xhigh","sandbox_mode":"workspace-write","loaded_skills":["using-superpowers"],"source_locators":[".agents/skills/using-superpowers/SKILL.md"]}
+{"type":"agent_spawned","role":"builder","model":"openai.gpt-5.6-luna","model_reasoning_effort":"xhigh","sandbox_mode":"workspace-write","loaded_skills":["crash-course"],"source_locators":[".agents/skills/crash-course/SKILL.md"]}
 `);
 
   assert.deepEqual(parsed, {
@@ -44,8 +44,8 @@ test('parses a Codex child session with sandbox and source locator', () => {
     model: 'openai.gpt-5.6-luna',
     effort: 'xhigh',
     sandbox: 'workspace-write',
-    loadedSkills: ['using-superpowers'],
-    sourceLocators: ['.agents/skills/using-superpowers/SKILL.md'],
+    loadedSkills: ['crash-course'],
+    sourceLocators: ['.agents/skills/crash-course/SKILL.md'],
   });
 });
 

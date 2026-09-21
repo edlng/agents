@@ -1,0 +1,19 @@
+{
+  "id": "node-duration-parser",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only node/duration-parser/index.mjs. Implement parseDuration(value) for positive integer components using d, h, m, s, and ms, with optional whitespace and compact forms. Sum components into milliseconds. Reject empty input, bare numbers, negative or decimal values, unknown units, duplicate units, and text that is not fully consumed; errors must mention duration. Do not repair unrelated tasks. Completion criteria: node --test node/duration-parser/test.mjs passes and the final report names the changed file and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "node/duration-parser/index.mjs"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test node/duration-parser/test.mjs"}
+  ]
+}

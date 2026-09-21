@@ -1,6 +1,7 @@
 package litmus
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -17,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"gopkg.in/yaml.v3"
 )
@@ -34,6 +36,8 @@ type Case struct {
 	Task         string             `json:"task"`
 	MaxBudgetUSD float64            `json:"max_budget_usd"`
 	Live         bool               `json:"live"`
+	Workflow     bool               `json:"workflow,omitempty"`
+	AllowTools   bool               `json:"allow_tools,omitempty"`
 	Fixture      string             `json:"fixture,omitempty"`
 	Assertions   []Assertion        `json:"assertions"`
 	Validators   []Validator        `json:"validators,omitempty"`
@@ -71,6 +75,7 @@ type CaseResult struct {
 	Model                string                                `json:"model,omitempty"`
 	ProviderModels       []string                              `json:"provider_models,omitempty"`
 	ProviderRequestModel string                                `json:"provider_request_model,omitempty"`
+	ProviderRequestID    string                                `json:"provider_request_id,omitempty"`
 	ProviderResponseID   string                                `json:"provider_response_id,omitempty"`
 	ProviderSessionID    string                                `json:"provider_session_id,omitempty"`
 	ProviderModelUsage   map[string]map[string]json.RawMessage `json:"provider_model_usage,omitempty"`
@@ -86,6 +91,9 @@ type CaseResult struct {
 	CostUSD              float64                               `json:"cost_usd"`
 	DurationMS           int64                                 `json:"duration_ms"`
 	ProviderError        string                                `json:"provider_error,omitempty"`
+	GitDiff              string                                `json:"git_diff,omitempty"`
+	GitStatus            string                                `json:"git_status,omitempty"`
+	Workflow             *WorkflowResult                       `json:"workflow,omitempty"`
 }
 
 type ProviderRequest struct {
@@ -96,12 +104,14 @@ type ProviderRequest struct {
 	BudgetUSD    float64
 	Workspace    string
 	AllowTools   bool
+	Workflow     bool
 	JSONSchema   string
 }
 
 type ProviderResponse struct {
 	Output             string
 	ProviderModels     []string
+	ProviderRequestID  string
 	ProviderResponseID string
 	ProviderSessionID  string
 	ProviderModelUsage map[string]map[string]json.RawMessage
@@ -109,6 +119,7 @@ type ProviderResponse struct {
 	OutputTokens       int
 	CostUSD            float64
 	Duration           time.Duration
+	TelemetryPresence  TelemetryPresence
 }
 
 type Executor interface {
@@ -160,6 +171,11 @@ func LoadCase(root, agent, id string) (Case, error) {
 		}
 		if validator.Type == "python_tests" && strings.TrimSpace(validator.Path) == "" {
 			return Case{}, fmt.Errorf("python_tests validator path is required")
+		}
+		if validator.Type == "command" || validator.Type == "workspace_command" {
+			if err := validateWorkspaceCommand(validator.Command); err != nil {
+				return Case{}, err
+			}
 		}
 	}
 	if testCase.ModelGrader != nil {
@@ -719,6 +735,70 @@ func copyDirectory(source, destination string) error {
 	})
 }
 
+func prepareWorkflowWorkspace(ctx context.Context, root, workspace string) error {
+	if _, err := runExternalCommand(ctx, workspace, "git", "init", "--quiet"); err != nil {
+		return fmt.Errorf("initialize workflow git repository: %w", err)
+	}
+	if _, err := runExternalCommand(
+		ctx,
+		root,
+		"node",
+		"scripts/install.mjs",
+		"claude",
+		"--scope",
+		"project",
+		"--target",
+		workspace,
+	); err != nil {
+		return fmt.Errorf("install workflow Claude agents: %w", err)
+	}
+	if _, err := runExternalCommand(ctx, workspace, "git", "add", "--all", "--force"); err != nil {
+		return fmt.Errorf("stage workflow baseline: %w", err)
+	}
+	if _, err := runExternalCommand(
+		ctx,
+		workspace,
+		"git",
+		"-c",
+		"user.name=Litmus",
+		"-c",
+		"user.email=litmus@example.invalid",
+		"-c",
+		"commit.gpgsign=false",
+		"commit",
+		"--quiet",
+		"--allow-empty",
+		"-m",
+		"litmus workflow baseline",
+	); err != nil {
+		return fmt.Errorf("commit workflow baseline: %w", err)
+	}
+	return nil
+}
+
+func captureGitWorkspace(ctx context.Context, workspace string) (string, string) {
+	diff, diffErr := runExternalCommand(ctx, workspace, "git", "diff", "--no-ext-diff", "--binary", "HEAD", "--")
+	status, statusErr := runExternalCommand(ctx, workspace, "git", "status", "--short", "--untracked-files=all")
+	if diffErr != nil || statusErr != nil {
+		return "", ""
+	}
+	return string(diff), string(status)
+}
+
+func runExternalCommand(ctx context.Context, directory, name string, args ...string) ([]byte, error) {
+	command := exec.CommandContext(ctx, name, args...)
+	command.Dir = directory
+	output, err := command.CombinedOutput()
+	if err != nil {
+		details := strings.TrimSpace(string(output))
+		if details == "" {
+			return output, err
+		}
+		return output, fmt.Errorf("%w: %s", err, details)
+	}
+	return output, nil
+}
+
 func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float64) (CaseResult, error) {
 	budget, err := EffectiveBudget(testCase.MaxBudgetUSD, runBudget, spent)
 	if err != nil {
@@ -749,6 +829,11 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		return CaseResult{}, err
 	}
 	defer cleanup()
+	if testCase.Workflow {
+		if err := prepareWorkflowWorkspace(ctx, r.Root, workspace); err != nil {
+			return CaseResult{}, err
+		}
+	}
 
 	promptDigest := sha256.Sum256([]byte(prompt))
 	request := ProviderRequest{
@@ -758,7 +843,8 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		Model:        model,
 		BudgetUSD:    budget,
 		Workspace:    workspace,
-		AllowTools:   false,
+		AllowTools:   testCase.Workflow || testCase.AllowTools,
+		Workflow:     testCase.Workflow,
 		JSONSchema:   string(testCase.JSONSchema),
 	}
 	executor := r.Executor
@@ -773,6 +859,7 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		Model:                model,
 		ProviderModels:       response.ProviderModels,
 		ProviderRequestModel: providerModel(request.Model),
+		ProviderRequestID:    response.ProviderRequestID,
 		ProviderResponseID:   response.ProviderResponseID,
 		ProviderSessionID:    response.ProviderSessionID,
 		ProviderModelUsage:   response.ProviderModelUsage,
@@ -782,6 +869,9 @@ func (r Runner) Probe(ctx context.Context, testCase Case, runBudget, spent float
 		OutputTokens:         response.OutputTokens,
 		CostUSD:              response.CostUSD,
 		DurationMS:           response.Duration.Milliseconds(),
+	}
+	if testCase.Workflow {
+		result.GitDiff, result.GitStatus = captureGitWorkspace(ctx, workspace)
 	}
 	result.AssertionResults = EvaluateAssertions(result.Output, workspace, testCase.Assertions)
 	result.ValidatorResults = EvaluateValidators(result.Output, workspace, testCase.Validators)
@@ -814,7 +904,13 @@ func (claudeExecutor) Execute(ctx context.Context, request ProviderRequest) (Pro
 	started := time.Now()
 	runErr := command.Run()
 
-	response, decodeErr := decodeProviderResponse(stdout.Bytes())
+	var response ProviderResponse
+	var decodeErr error
+	if request.Workflow {
+		response, decodeErr = decodeWorkflowProviderResponse(stdout.Bytes(), request.Agent, request.JSONSchema)
+	} else {
+		response, decodeErr = decodeProviderResponse(stdout.Bytes())
+	}
 	if response.Duration == 0 {
 		response.Duration = time.Since(started)
 	}
@@ -844,10 +940,26 @@ func claudeArgs(request ProviderRequest) ([]string, error) {
 	}
 	args := []string{
 		"-p",
-		"--output-format", "json",
 		"--model", providerModel(request.Model),
 		"--max-budget-usd", fmt.Sprintf("%.2f", budget),
-		"--system-prompt", request.SystemPrompt,
+	}
+	if request.Workflow {
+		if err := validateComponent("agent", request.Agent); err != nil {
+			return nil, err
+		}
+		args = append(args,
+			"--output-format", "stream-json",
+			"--verbose",
+			"--forward-subagent-text",
+			"--agent", request.Agent,
+			"--permission-mode", "auto",
+			"--permission-prompts", "none",
+		)
+	} else {
+		args = append(args,
+			"--output-format", "json",
+			"--system-prompt", request.SystemPrompt,
+		)
 	}
 	if !request.AllowTools {
 		args = append(args, "--tools", "")
@@ -1027,26 +1139,950 @@ func decodeProviderResponse(contents []byte) (ProviderResponse, error) {
 	return response, nil
 }
 
+func decodeWorkflowProviderResponse(contents []byte, agent, requestJSONSchema string) (ProviderResponse, error) {
+	scanner := bufio.NewScanner(bytes.NewReader(contents))
+	scanner.Buffer(make([]byte, 64*1024), 16*1024*1024)
+
+	var response ProviderResponse
+	var resultRaw map[string]json.RawMessage
+	var assistantText []string
+	var resultCount int
+	var lastEventType string
+	for scanner.Scan() {
+		line := bytes.TrimSpace(scanner.Bytes())
+		if len(line) == 0 {
+			continue
+		}
+		var raw map[string]json.RawMessage
+		decoder := json.NewDecoder(bytes.NewReader(line))
+		decoder.UseNumber()
+		if err := decoder.Decode(&raw); err != nil {
+			return response, fmt.Errorf("decode workflow JSONL: %w", err)
+		}
+		if raw == nil {
+			return response, fmt.Errorf("workflow JSONL event must be an object")
+		}
+		if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+			if err == nil {
+				return response, fmt.Errorf("workflow JSONL event contains multiple JSON values")
+			}
+			return response, fmt.Errorf("decode workflow JSONL trailing value: %w", err)
+		}
+		eventType, err := optionalString(raw, "type")
+		if err != nil {
+			return response, err
+		}
+		lastEventType = eventType
+		if eventType == "assistant" {
+			assistantText = append(assistantText, workflowTopLevelAssistantText(raw)...)
+		}
+		if eventType != "result" {
+			continue
+		}
+		resultCount++
+		if resultCount > 1 {
+			return response, fmt.Errorf("workflow response contains duplicate result events")
+		}
+		resultRaw = raw
+	}
+	if err := scanner.Err(); err != nil {
+		return response, fmt.Errorf("read workflow JSONL: %w", err)
+	}
+	if resultCount == 0 {
+		return response, fmt.Errorf("workflow response result is required")
+	}
+	if lastEventType != "result" {
+		return response, fmt.Errorf("workflow response result event must be terminal")
+	}
+	metrics, err := responseMetrics(resultRaw)
+	if err != nil {
+		return response, err
+	}
+	response.ProviderModels = metrics.ProviderModels
+	response.ProviderRequestID = metrics.ProviderRequestID
+	response.ProviderResponseID = metrics.ProviderResponseID
+	response.ProviderSessionID = metrics.ProviderSessionID
+	response.ProviderModelUsage = metrics.ProviderModelUsage
+	response.InputTokens = metrics.InputTokens
+	response.OutputTokens = metrics.OutputTokens
+	response.CostUSD = metrics.CostUSD
+	response.Duration = metrics.Duration
+	response.TelemetryPresence = metrics.TelemetryPresence
+
+	output, hasStructuredOutput := resultRaw["structured_output"]
+	var canonical []byte
+	if hasStructuredOutput {
+		canonical, err = validateWorkflowOutput(output, requestJSONSchema)
+		if err != nil {
+			return response, fmt.Errorf("workflow structured_output does not match request JSON schema: %w", err)
+		}
+	} else {
+		var fallbackErr error
+		extracted, extractErr := extractWorkflowAssistantJSON(assistantText)
+		if extractErr != nil {
+			fallbackErr = fmt.Errorf(
+				"workflow result structured_output is absent and assistant fallback is invalid: %w",
+				extractErr,
+			)
+		} else {
+			canonical, err = validateWorkflowOutput(extracted, requestJSONSchema)
+			if err != nil {
+				fallbackErr = fmt.Errorf(
+					"workflow assistant fallback does not match request JSON schema: %w",
+					err,
+				)
+				canonical = nil
+			}
+		}
+		if len(canonical) == 0 {
+			switch agent {
+			case "code-reviewer":
+				canonical, err = synthesizeCodeReviewerNativeOutput(assistantText, requestJSONSchema)
+			case "documenter":
+				canonical, err = synthesizeDocumenterNativeOutput(assistantText, requestJSONSchema)
+			default:
+				return response, fallbackErr
+			}
+			if err != nil {
+				if fallbackErr == nil {
+					fallbackErr = fmt.Errorf("workflow native fallback is invalid: %w", err)
+				} else {
+					fallbackErr = fmt.Errorf("%v; workflow native fallback is invalid: %w", fallbackErr, err)
+				}
+				return response, fallbackErr
+			}
+		}
+	}
+	response.Output = string(canonical)
+
+	isError, err := optionalBool(resultRaw, "is_error")
+	if err != nil {
+		return response, err
+	}
+	providerErrors, err := optionalErrors(resultRaw)
+	if err != nil {
+		return response, err
+	}
+	if isError || providerErrors != "" {
+		if providerErrors == "" {
+			providerErrors = "provider reported an error"
+		}
+		return response, fmt.Errorf("provider error: %s", providerErrors)
+	}
+	return response, nil
+}
+
+func synthesizeCodeReviewerNativeOutput(texts []string, requestJSONSchema string) ([]byte, error) {
+	report, err := nativeWorkflowReport(texts)
+	if err != nil {
+		return nil, err
+	}
+	decision, err := parseNativeCodeReviewerVerdict(report)
+	if err != nil {
+		return nil, err
+	}
+
+	findings := []string{}
+	if decision == "BLOCK" {
+		findings = []string{report}
+	}
+	raw, err := json.Marshal(map[string]any{
+		"decision": decision,
+		"reason":   report,
+		"findings": findings,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("encode native code-reviewer output: %w", err)
+	}
+	canonical, err := validateWorkflowOutput(raw, requestJSONSchema)
+	if err != nil {
+		return nil, fmt.Errorf("native code-reviewer output does not match request JSON schema: %w", err)
+	}
+	return canonical, nil
+}
+
+func synthesizeDocumenterNativeOutput(texts []string, requestJSONSchema string) ([]byte, error) {
+	report, err := nativeWorkflowReport(texts)
+	if err != nil {
+		return nil, err
+	}
+	path, err := extractDocumenterNativePath(report)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateDocumenterNativeCompletion(report); err != nil {
+		return nil, err
+	}
+
+	raw, err := json.Marshal(map[string]any{
+		"status":  "done",
+		"path":    path,
+		"summary": report,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("encode native documenter output: %w", err)
+	}
+	canonical, err := validateWorkflowOutput(raw, requestJSONSchema)
+	if err != nil {
+		return nil, fmt.Errorf("native documenter output does not match request JSON schema: %w", err)
+	}
+	return canonical, nil
+}
+
+func nativeWorkflowReport(texts []string) (string, error) {
+	if len(texts) == 0 {
+		return "", fmt.Errorf("no top-level assistant text events")
+	}
+	report := strings.TrimSpace(strings.Join(texts, "\n"))
+	if report == "" {
+		return "", fmt.Errorf("top-level assistant text is empty")
+	}
+	return report, nil
+}
+
+func parseNativeCodeReviewerVerdict(report string) (string, error) {
+	var decision string
+	inFence := false
+	for _, line := range strings.Split(report, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		candidate, ok := parseNativeCodeReviewerVerdictLine(trimmed)
+		if !ok {
+			continue
+		}
+		if decision != "" {
+			return "", fmt.Errorf("native code-reviewer report contains multiple verdict lines")
+		}
+		decision = candidate
+	}
+	if decision == "" {
+		return "", fmt.Errorf("native code-reviewer report must contain exactly one verdict line")
+	}
+	return decision, nil
+}
+
+func parseNativeCodeReviewerVerdictLine(line string) (string, bool) {
+	if line == "" {
+		return "", false
+	}
+	for _, marker := range []string{"**", "__"} {
+		if strings.HasPrefix(line, marker) {
+			line = strings.TrimSpace(line[len(marker):])
+			break
+		}
+	}
+
+	for _, decision := range []string{"APPROVE", "BLOCK"} {
+		if !strings.HasPrefix(line, decision) {
+			continue
+		}
+		rest := line[len(decision):]
+		for _, marker := range []string{"**", "__"} {
+			if strings.HasPrefix(rest, marker) {
+				rest = rest[len(marker):]
+				break
+			}
+		}
+		rest = strings.TrimSpace(rest)
+		if rest == "" || strings.HasPrefix(rest, "—") ||
+			strings.HasPrefix(rest, "-") || strings.HasPrefix(rest, ":") {
+			return decision, true
+		}
+		return "", false
+	}
+	return "", false
+}
+
+func extractDocumenterNativePath(report string) (string, error) {
+	const marker = "app_docs/"
+	var paths []string
+	for offset := 0; offset < len(report); {
+		index := strings.Index(report[offset:], marker)
+		if index < 0 {
+			break
+		}
+		index += offset
+		start := index
+		for start > 0 && isNativeDocumenterPathChar(report[start-1]) {
+			start--
+		}
+		end := index
+		for end < len(report) && isNativeDocumenterPathChar(report[end]) {
+			end++
+		}
+		token := report[start:end]
+		pathEnd := strings.LastIndex(token, ".md")
+		if pathEnd < 0 {
+			return "", fmt.Errorf("native documenter report contains an unsafe app_docs path")
+		}
+		pathEnd += len(".md")
+		for _, suffix := range token[pathEnd:] {
+			if !strings.ContainsRune(".,;:!?)]}", suffix) {
+				return "", fmt.Errorf("native documenter report contains an unsafe app_docs path")
+			}
+		}
+		path := token[:pathEnd]
+		if err := validateNativeDocumenterPath(path); err != nil {
+			return "", err
+		}
+		paths = append(paths, path)
+		offset = index + len(marker)
+	}
+	if len(paths) != 1 {
+		return "", fmt.Errorf("native documenter report must contain exactly one safe app_docs/*.md path")
+	}
+	return paths[0], nil
+}
+
+func isNativeDocumenterPathChar(character byte) bool {
+	return character == '/' || character == '\\' || character == '.' ||
+		character == '-' || character == '_' ||
+		(character >= 'a' && character <= 'z') ||
+		(character >= 'A' && character <= 'Z') ||
+		(character >= '0' && character <= '9')
+}
+
+func validateNativeDocumenterPath(path string) error {
+	if !strings.HasPrefix(path, "app_docs/") || !strings.HasSuffix(path, ".md") ||
+		strings.Contains(path, `\`) {
+		return fmt.Errorf("native documenter path %q is not a safe relative app_docs Markdown path", path)
+	}
+	components := strings.Split(path, "/")
+	for _, component := range components {
+		if component == "" || component == "." || component == ".." {
+			return fmt.Errorf("native documenter path %q contains an unsafe component", path)
+		}
+	}
+	return nil
+}
+
+func validateDocumenterNativeCompletion(report string) error {
+	lower := strings.ToLower(report)
+	for _, phrase := range []string{
+		"could not",
+		"couldn't",
+		"cannot",
+		"can't",
+		"not completed",
+		"not complete",
+		"not done",
+		"not written",
+		"did not",
+	} {
+		if strings.Contains(lower, phrase) {
+			return fmt.Errorf("native documenter report contains failure language")
+		}
+	}
+	for _, word := range []string{
+		"blocked",
+		"blocker",
+		"failed",
+		"failure",
+		"unable",
+		"error",
+		"aborted",
+		"incomplete",
+		"pending",
+		"skipped",
+	} {
+		if containsNativeWorkflowWord(lower, word) {
+			return fmt.Errorf("native documenter report contains failure language")
+		}
+	}
+	for _, word := range []string{
+		"done",
+		"complete",
+		"completed",
+		"finished",
+		"created",
+		"wrote",
+		"written",
+		"documented",
+		"saved",
+	} {
+		if containsNativeWorkflowWord(lower, word) {
+			return nil
+		}
+	}
+	return fmt.Errorf("native documenter report must contain an unambiguous completion statement")
+}
+
+func containsNativeWorkflowWord(text, word string) bool {
+	for offset := 0; offset < len(text); {
+		index := strings.Index(text[offset:], word)
+		if index < 0 {
+			return false
+		}
+		index += offset
+		beforeOK := index == 0 || !isNativeWorkflowWordChar(text[index-1])
+		after := index + len(word)
+		afterOK := after == len(text) || !isNativeWorkflowWordChar(text[after])
+		if beforeOK && afterOK {
+			return true
+		}
+		offset = index + len(word)
+	}
+	return false
+}
+
+func isNativeWorkflowWordChar(character byte) bool {
+	return (character >= 'a' && character <= 'z') ||
+		(character >= 'A' && character <= 'Z') ||
+		(character >= '0' && character <= '9') || character == '_'
+}
+
+func workflowTopLevelAssistantText(raw map[string]json.RawMessage) []string {
+	parentToolUseID, hasParent := raw["parent_tool_use_id"]
+	if hasParent && !bytes.Equal(bytes.TrimSpace(parentToolUseID), []byte("null")) {
+		return nil
+	}
+
+	messageRaw, ok := raw["message"]
+	if !ok {
+		return nil
+	}
+	var message struct {
+		Content []struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"content"`
+	}
+	if err := json.Unmarshal(messageRaw, &message); err != nil {
+		return nil
+	}
+
+	text := make([]string, 0, len(message.Content))
+	for _, block := range message.Content {
+		if block.Type == "text" {
+			text = append(text, block.Text)
+		}
+	}
+	return text
+}
+
+func extractWorkflowAssistantJSON(texts []string) ([]byte, error) {
+	if len(texts) == 0 {
+		return nil, fmt.Errorf("no top-level assistant text events")
+	}
+	text := strings.TrimSpace(strings.Join(texts, "\n"))
+	if text == "" {
+		return nil, fmt.Errorf("top-level assistant text is empty")
+	}
+
+	candidate, err := extractWorkflowJSONObject(text)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := decodeWorkflowJSONObject(candidate); err != nil {
+		return nil, err
+	}
+	return candidate, nil
+}
+
+func extractWorkflowJSONObject(text string) ([]byte, error) {
+	start := -1
+	end := -1
+	depth := 0
+	inString := false
+	escaped := false
+
+	for index := 0; index < len(text); index++ {
+		character := text[index]
+		if depth > 0 {
+			if inString {
+				if escaped {
+					escaped = false
+					continue
+				}
+				if character == '\\' {
+					escaped = true
+					continue
+				}
+				if character == '"' {
+					inString = false
+				}
+				continue
+			}
+
+			switch character {
+			case '"':
+				inString = true
+			case '{':
+				depth++
+			case '}':
+				depth--
+				if depth == 0 {
+					end = index + 1
+				}
+			case '[':
+				// Arrays are valid inside the candidate object, but not around
+				// or alongside it. This keeps an array-wrapped object from
+				// being mistaken for the required top-level object.
+			}
+			continue
+		}
+
+		switch character {
+		case '{':
+			if start >= 0 {
+				return nil, fmt.Errorf("assistant text contains multiple JSON objects")
+			}
+			start = index
+			depth = 1
+		case '}':
+			return nil, fmt.Errorf("assistant text contains an unmatched closing brace")
+		case '[':
+			return nil, fmt.Errorf("assistant text contains an array outside the JSON object")
+		case ']':
+			return nil, fmt.Errorf("assistant text contains an unmatched closing bracket")
+		}
+	}
+
+	if start < 0 {
+		return nil, fmt.Errorf("assistant text must contain exactly one JSON object")
+	}
+	if depth != 0 {
+		if inString {
+			return nil, fmt.Errorf("assistant text contains an unterminated JSON string")
+		}
+		return nil, fmt.Errorf("assistant text contains unmatched opening braces")
+	}
+	if end <= start {
+		return nil, fmt.Errorf("assistant text must contain exactly one JSON object")
+	}
+
+	for index := end; index < len(text); index++ {
+		switch text[index] {
+		case '{':
+			return nil, fmt.Errorf("assistant text contains multiple JSON objects")
+		case '}':
+			return nil, fmt.Errorf("assistant text contains an unmatched closing brace")
+		case '[':
+			return nil, fmt.Errorf("assistant text contains an array outside the JSON object")
+		case ']':
+			return nil, fmt.Errorf("assistant text contains an unmatched closing bracket")
+		}
+	}
+
+	return []byte(text[start:end]), nil
+}
+
+func decodeWorkflowJSONObject(raw []byte) (any, error) {
+	value, err := decodeSingleJSONValue(raw)
+	if err != nil {
+		return nil, fmt.Errorf("assistant text must contain exactly one JSON object: %w", err)
+	}
+	if object, ok := value.(map[string]any); !ok || object == nil {
+		return nil, fmt.Errorf("assistant text JSON must be an object")
+	}
+	return value, nil
+}
+
+func decodeSingleJSONValue(raw []byte) (any, error) {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var value any
+	if err := decoder.Decode(&value); err != nil {
+		return nil, err
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return nil, fmt.Errorf("multiple JSON values")
+		}
+		return nil, err
+	}
+	return value, nil
+}
+
+type workflowJSONSchema struct {
+	typeName             string
+	hasType              bool
+	hasAdditionalProps   bool
+	additionalProperties bool
+	hasRequired          bool
+	required             []string
+	hasProperties        bool
+	properties           map[string]*workflowJSONSchema
+	hasConst             bool
+	constValue           []byte
+	hasEnum              bool
+	enumValues           [][]byte
+	minLength            *int
+	minItems             *int
+	hasItems             bool
+	items                *workflowJSONSchema
+}
+
+func validateWorkflowOutput(raw []byte, requestJSONSchema string) ([]byte, error) {
+	schema, err := parseWorkflowJSONSchema([]byte(requestJSONSchema))
+	if err != nil {
+		return nil, err
+	}
+	if !schema.hasType || schema.typeName != "object" {
+		return nil, fmt.Errorf("request JSON schema root must have type object")
+	}
+
+	value, err := decodeSingleJSONValue(raw)
+	if err != nil {
+		return nil, fmt.Errorf("output must be valid JSON: %w", err)
+	}
+	if err := validateWorkflowJSONValue(value, schema, "$"); err != nil {
+		return nil, err
+	}
+	canonical, err := json.Marshal(value)
+	if err != nil {
+		return nil, fmt.Errorf("canonicalize output: %w", err)
+	}
+	return canonicalJSONBytes(canonical)
+}
+
+func parseWorkflowJSONSchema(raw []byte) (*workflowJSONSchema, error) {
+	if strings.TrimSpace(string(raw)) == "" {
+		return nil, fmt.Errorf("request JSON schema is required")
+	}
+	object, err := decodeJSONSchemaObject(raw, "$")
+	if err != nil {
+		return nil, err
+	}
+	return parseWorkflowJSONSchemaNode(object, "$")
+}
+
+func decodeJSONSchemaObject(raw []byte, path string) (map[string]json.RawMessage, error) {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	var object map[string]json.RawMessage
+	if err := decoder.Decode(&object); err != nil {
+		return nil, fmt.Errorf("invalid JSON schema at %s: %w", path, err)
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return nil, fmt.Errorf("invalid JSON schema at %s: multiple values", path)
+		}
+		return nil, fmt.Errorf("invalid JSON schema at %s: %w", path, err)
+	}
+	if object == nil {
+		return nil, fmt.Errorf("invalid JSON schema at %s: schema node must be an object", path)
+	}
+	return object, nil
+}
+
+func parseWorkflowJSONSchemaNode(raw map[string]json.RawMessage, path string) (*workflowJSONSchema, error) {
+	const (
+		typeKey                 = "type"
+		additionalPropertiesKey = "additionalProperties"
+		requiredKey             = "required"
+		propertiesKey           = "properties"
+		constKey                = "const"
+		enumKey                 = "enum"
+		minLengthKey            = "minLength"
+		minItemsKey             = "minItems"
+		itemsKey                = "items"
+	)
+	for key := range raw {
+		switch key {
+		case typeKey, additionalPropertiesKey, requiredKey, propertiesKey, constKey, enumKey, minLengthKey, minItemsKey, itemsKey:
+		default:
+			return nil, fmt.Errorf("unsupported JSON schema keyword %q at %s", key, path)
+		}
+	}
+
+	schema := &workflowJSONSchema{}
+	if value, ok := raw[typeKey]; ok {
+		var typeName *string
+		if err := json.Unmarshal(value, &typeName); err != nil || typeName == nil {
+			return nil, fmt.Errorf("JSON schema type at %s must be a string", path)
+		}
+		switch *typeName {
+		case "object", "string", "array":
+			schema.typeName = *typeName
+			schema.hasType = true
+		default:
+			return nil, fmt.Errorf("unsupported JSON schema type %q at %s", *typeName, path)
+		}
+	}
+	if value, ok := raw[additionalPropertiesKey]; ok {
+		var additionalProperties *bool
+		if err := json.Unmarshal(value, &additionalProperties); err != nil || additionalProperties == nil {
+			return nil, fmt.Errorf("additionalProperties at %s must be false", path)
+		}
+		if *additionalProperties {
+			return nil, fmt.Errorf("additionalProperties at %s must be false", path)
+		}
+		schema.hasAdditionalProps = true
+		schema.additionalProperties = false
+	}
+	if value, ok := raw[requiredKey]; ok {
+		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+			return nil, fmt.Errorf("required at %s must be an array of unique strings", path)
+		}
+		var required []string
+		if err := json.Unmarshal(value, &required); err != nil {
+			return nil, fmt.Errorf("required at %s must be an array of unique strings", path)
+		}
+		seen := make(map[string]struct{}, len(required))
+		for _, name := range required {
+			if _, ok := seen[name]; ok {
+				return nil, fmt.Errorf("required at %s contains duplicate property %q", path, name)
+			}
+			seen[name] = struct{}{}
+		}
+		schema.hasRequired = true
+		schema.required = required
+	}
+	if value, ok := raw[propertiesKey]; ok {
+		properties, err := decodeJSONSchemaObject(value, path+".properties")
+		if err != nil {
+			return nil, err
+		}
+		schema.hasProperties = true
+		schema.properties = make(map[string]*workflowJSONSchema, len(properties))
+		for name, propertyRaw := range properties {
+			property, err := decodeJSONSchemaObject(propertyRaw, path+".properties."+name)
+			if err != nil {
+				return nil, err
+			}
+			parsed, err := parseWorkflowJSONSchemaNode(property, path+".properties."+name)
+			if err != nil {
+				return nil, err
+			}
+			schema.properties[name] = parsed
+		}
+	}
+	if value, ok := raw[constKey]; ok {
+		canonical, err := canonicalJSONBytes(value)
+		if err != nil {
+			return nil, fmt.Errorf("const at %s must be valid JSON: %w", path, err)
+		}
+		schema.hasConst = true
+		schema.constValue = canonical
+	}
+	if value, ok := raw[enumKey]; ok {
+		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+			return nil, fmt.Errorf("enum at %s must be a non-empty array", path)
+		}
+		var values []json.RawMessage
+		if err := json.Unmarshal(value, &values); err != nil || values == nil || len(values) == 0 {
+			return nil, fmt.Errorf("enum at %s must be a non-empty array", path)
+		}
+		seen := make(map[string]struct{}, len(values))
+		schema.enumValues = make([][]byte, 0, len(values))
+		for _, item := range values {
+			canonical, err := canonicalJSONBytes(item)
+			if err != nil {
+				return nil, fmt.Errorf("enum at %s contains invalid JSON: %w", path, err)
+			}
+			key := string(canonical)
+			if _, ok := seen[key]; ok {
+				return nil, fmt.Errorf("enum at %s contains duplicate values", path)
+			}
+			seen[key] = struct{}{}
+			schema.enumValues = append(schema.enumValues, canonical)
+		}
+		schema.hasEnum = true
+	}
+	if value, ok := raw[minLengthKey]; ok {
+		minLength, err := workflowSchemaNonNegativeInt(value, path+".minLength")
+		if err != nil {
+			return nil, err
+		}
+		schema.minLength = &minLength
+	}
+	if value, ok := raw[minItemsKey]; ok {
+		minItems, err := workflowSchemaNonNegativeInt(value, path+".minItems")
+		if err != nil {
+			return nil, err
+		}
+		schema.minItems = &minItems
+	}
+	if value, ok := raw[itemsKey]; ok {
+		itemRaw, err := decodeJSONSchemaObject(value, path+".items")
+		if err != nil {
+			return nil, err
+		}
+		items, err := parseWorkflowJSONSchemaNode(itemRaw, path+".items")
+		if err != nil {
+			return nil, err
+		}
+		schema.hasItems = true
+		schema.items = items
+	}
+
+	if !schema.hasType && !schema.hasConst && !schema.hasEnum {
+		return nil, fmt.Errorf("JSON schema node at %s must define type, const, or enum", path)
+	}
+	switch schema.typeName {
+	case "object":
+		if !schema.hasAdditionalProps || schema.additionalProperties {
+			return nil, fmt.Errorf("object schema at %s must set additionalProperties to false", path)
+		}
+		if !schema.hasProperties {
+			return nil, fmt.Errorf("object schema at %s must define properties", path)
+		}
+		if schema.minLength != nil || schema.minItems != nil || schema.hasItems {
+			return nil, fmt.Errorf("object schema at %s contains string or array keywords", path)
+		}
+	case "string":
+		if schema.hasAdditionalProps || schema.hasRequired || schema.hasProperties || schema.minItems != nil || schema.hasItems {
+			return nil, fmt.Errorf("string schema at %s contains object or array keywords", path)
+		}
+	case "array":
+		if !schema.hasItems {
+			return nil, fmt.Errorf("array schema at %s must define items", path)
+		}
+		if schema.hasAdditionalProps || schema.hasRequired || schema.hasProperties || schema.minLength != nil {
+			return nil, fmt.Errorf("array schema at %s contains object or string keywords", path)
+		}
+	case "":
+		if schema.hasAdditionalProps || schema.hasRequired || schema.hasProperties ||
+			schema.minLength != nil || schema.minItems != nil || schema.hasItems {
+			return nil, fmt.Errorf("untyped JSON schema node at %s contains type-specific keywords", path)
+		}
+	}
+	if schema.hasProperties {
+		for _, name := range schema.required {
+			if _, ok := schema.properties[name]; !ok {
+				return nil, fmt.Errorf("required property %q at %s is not defined", name, path)
+			}
+		}
+	}
+	return schema, nil
+}
+
+func workflowSchemaNonNegativeInt(raw json.RawMessage, path string) (int, error) {
+	value, err := decodeSingleJSONValue(raw)
+	if err != nil {
+		return 0, fmt.Errorf("schema integer at %s is invalid: %w", path, err)
+	}
+	number, ok := value.(json.Number)
+	if !ok {
+		return 0, fmt.Errorf("schema integer at %s must be a non-negative integer", path)
+	}
+	parsed, err := strconv.ParseUint(string(number), 10, 64)
+	if err != nil || parsed > uint64(maxInt) {
+		return 0, fmt.Errorf("schema integer at %s must be a non-negative integer", path)
+	}
+	return int(parsed), nil
+}
+
+func validateWorkflowJSONValue(value any, schema *workflowJSONSchema, path string) error {
+	switch schema.typeName {
+	case "object":
+		object, ok := value.(map[string]any)
+		if !ok || object == nil {
+			return fmt.Errorf("output at %s must be an object", path)
+		}
+		for _, name := range schema.required {
+			if _, ok := object[name]; !ok {
+				return fmt.Errorf("output at %s is missing required property %q", path, name)
+			}
+		}
+		for name := range object {
+			property, ok := schema.properties[name]
+			if !ok {
+				return fmt.Errorf("output at %s contains additional property %q", path, name)
+			}
+			if err := validateWorkflowJSONValue(propertyValue(object, name), property, path+"."+name); err != nil {
+				return err
+			}
+		}
+	case "string":
+		text, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("output at %s must be a string", path)
+		}
+		if schema.minLength != nil && utf8.RuneCountInString(text) < *schema.minLength {
+			return fmt.Errorf("output at %s is shorter than minLength %d", path, *schema.minLength)
+		}
+	case "array":
+		items, ok := value.([]any)
+		if !ok {
+			return fmt.Errorf("output at %s must be an array", path)
+		}
+		if schema.minItems != nil && len(items) < *schema.minItems {
+			return fmt.Errorf("output at %s contains fewer than minItems %d", path, *schema.minItems)
+		}
+		for index, item := range items {
+			if err := validateWorkflowJSONValue(item, schema.items, fmt.Sprintf("%s[%d]", path, index)); err != nil {
+				return err
+			}
+		}
+	}
+
+	canonical, err := canonicalWorkflowValue(value)
+	if err != nil {
+		return fmt.Errorf("canonicalize output at %s: %w", path, err)
+	}
+	if schema.hasConst && !bytes.Equal(canonical, schema.constValue) {
+		return fmt.Errorf("output at %s does not match const", path)
+	}
+	if schema.hasEnum {
+		matched := false
+		for _, allowed := range schema.enumValues {
+			if bytes.Equal(canonical, allowed) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return fmt.Errorf("output at %s does not match enum", path)
+		}
+	}
+	return nil
+}
+
+func propertyValue(object map[string]any, name string) any {
+	return object[name]
+}
+
+func canonicalWorkflowValue(value any) ([]byte, error) {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	return canonicalJSONBytes(encoded)
+}
+
 func responseMetrics(raw map[string]json.RawMessage) (ProviderResponse, error) {
 	var response ProviderResponse
 	var err error
+	response.ProviderRequestID, err = optionalString(raw, "request_id")
+	if err != nil {
+		return response, err
+	}
+	_, response.TelemetryPresence.ProviderRequestID = raw["request_id"]
 	response.ProviderResponseID, err = optionalString(raw, "uuid")
 	if err != nil {
 		return response, err
 	}
+	_, response.TelemetryPresence.ProviderResponseID = raw["uuid"]
 	response.ProviderSessionID, err = optionalString(raw, "session_id")
 	if err != nil {
 		return response, err
 	}
+	_, response.TelemetryPresence.ProviderSessionID = raw["session_id"]
 	if value, ok := raw["modelUsage"]; ok {
+		response.TelemetryPresence.ModelUsage = true
 		var usage map[string]map[string]json.RawMessage
 		if err := json.Unmarshal(value, &usage); err != nil {
 			return response, fmt.Errorf("response modelUsage must be an object: %w", err)
 		}
 		response.ProviderModelUsage = usage
 		response.ProviderModels = make([]string, 0, len(usage))
+		inputPresent := len(usage) > 0
+		outputPresent := len(usage) > 0
 		for model, totals := range usage {
 			response.ProviderModels = append(response.ProviderModels, model)
+			if _, ok := totals["inputTokens"]; !ok {
+				inputPresent = false
+			}
+			if _, ok := totals["outputTokens"]; !ok {
+				outputPresent = false
+			}
 			input, err := optionalNonNegativeInt(totals, "inputTokens")
 			if err != nil {
 				return response, fmt.Errorf("response modelUsage %q: %w", model, err)
@@ -1061,9 +2097,12 @@ func responseMetrics(raw map[string]json.RawMessage) (ProviderResponse, error) {
 			response.InputTokens += input
 			response.OutputTokens += output
 		}
+		response.TelemetryPresence.InputTokens = inputPresent
+		response.TelemetryPresence.OutputTokens = outputPresent
 		sort.Strings(response.ProviderModels)
 	}
 	if value, ok := raw["total_cost_usd"]; ok {
+		response.TelemetryPresence.CostUSD = true
 		cost, err := nonNegativeFloat(value, "response total_cost_usd")
 		if err != nil {
 			return response, err
@@ -1071,6 +2110,7 @@ func responseMetrics(raw map[string]json.RawMessage) (ProviderResponse, error) {
 		response.CostUSD = cost
 	}
 	if value, ok := raw["duration_ms"]; ok {
+		response.TelemetryPresence.DurationMS = true
 		durationMS, err := nonNegativeInt(value, "response duration_ms")
 		if err != nil {
 			return response, err

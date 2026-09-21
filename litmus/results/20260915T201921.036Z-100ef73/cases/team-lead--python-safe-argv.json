@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "python-safe-argv",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "bab0e323-5dc1-4e6b-9e39-d57907e6e5e9",
+  "provider_session_id": "2c1a4cde-673f-4dc6-a325-a55b72fc3431",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 19593,
+      "cacheReadInputTokens": 82068,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.23306525,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 2781,
+      "provider": "bedrock",
+      "thinkingTokens": 391,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 180271,
+      "cacheReadInputTokens": 1036231,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.7513917,
+      "inputTokens": 54,
+      "maxOutputTokens": 64000,
+      "outputTokens": 9336,
+      "provider": "bedrock",
+      "thinkingTokens": 1497,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "APPROVE. Task complete.\n\n```\nPlan: safe_argv build_argv | Status: done\nTasks: implement build_argv (done, 1 attempt, PASS/APPROVE)\nFiles changed: python/safe_argv/safe_argv.py\nFinal review: approved\n```\n\n**File:** `python/safe_argv/safe_argv.py`\n\n**Safety model:** `build_argv(executable, arguments)` returns a plain list `[executable, *arguments]` for `subprocess.run(argv, shell=False)`. No parsing, quoting, or joining occurs, so there is no shell metacharacter interpretation. Safety comes from validation before returning: `executable` must exact-match a fixed allowlist set (`git`, `go`, `node`, `npm`, `python3`, `shasum`) or it raises `ValueError`; `arguments` must be a `list`/`tuple` of `str` elements or it raises `TypeError`; any argument containing NUL, CR, or LF raises `ValueError` to block argument-smuggling/log-injection.\n\n**Command:** `python3 python/safe_argv/test_safe_argv.py` — passes (2 tests, OK).",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "python/safe_argv/safe_argv.py"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(shell.?false|argv|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "python3 python/safe_argv/test_safe_argv.py"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 64,
+  "output_tokens": 12117,
+  "cost_usd": 0.9844569500000002,
+  "duration_ms": 243729,
+  "git_diff": "diff --git a/python/safe_argv/safe_argv.py b/python/safe_argv/safe_argv.py\nindex 896e256..c5e2870 100644\n--- a/python/safe_argv/safe_argv.py\n+++ b/python/safe_argv/safe_argv.py\n@@ -1,2 +1,18 @@\n+ALLOWED_EXECUTABLES = {\"git\", \"go\", \"node\", \"npm\", \"python3\", \"shasum\"}\n+\n+\n def build_argv(executable, arguments):\n-    return [executable, *arguments]\n+    \"\"\"Build a subprocess.run argv list without shell interpolation.\"\"\"\n+    if executable not in ALLOWED_EXECUTABLES:\n+        raise ValueError(f\"executable not allowed: {executable!r}\")\n+\n+    if not isinstance(arguments, (list, tuple)):\n+        raise TypeError(\"arguments must be a list or tuple\")\n+\n+    for argument in arguments:\n+        if not isinstance(argument, str):\n+            raise TypeError(\"each argument must be a str\")\n+        if \"\\0\" in argument or \"\\r\" in argument or \"\\n\" in argument:\n+            raise ValueError(f\"argument contains forbidden control character: {argument!r}\")\n+\n+    return [executable] + list(arguments)\n",
+  "git_status": " M python/safe_argv/safe_argv.py\n?? python/safe_argv/__pycache__/safe_argv.cpython-313.pyc\n?? python/safe_argv/__pycache__/test_safe_argv.cpython-313.pyc\n"
+}

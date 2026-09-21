@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-tag-normalizer",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "5891b860-a029-4394-8f13-ab9f1bab2c5a",
+  "provider_session_id": "8495524e-93a5-48f2-a2c6-bcf46ceef940",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 20008,
+      "cacheReadInputTokens": 81661,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.2583305,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3696,
+      "provider": "bedrock",
+      "thinkingTokens": 1210,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 137991,
+      "cacheReadInputTokens": 468544,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.5019383000000001,
+      "inputTokens": 26,
+      "maxOutputTokens": 64000,
+      "outputTokens": 6320,
+      "provider": "bedrock",
+      "thinkingTokens": 966,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Task complete.\n\n```\nPlan: tag-normalizer | Status: done\nTasks: implement normalizeTags — PASS (validator), APPROVE (code-reviewer), 1 review cycle\nFiles changed: node/tag-normalizer/index.mjs (only file)\nValidation command: node --test node/tag-normalizer/test.mjs (2/2 pass)\nFinal review: approved\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/tag-normalizer/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/tag-normalizer/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ normalizes, filters, and de-duplicates tags in first-seen order (1.4745ms)\n✔ does not mutate the input and rejects non-arrays (0.57225ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 127.002541"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 36,
+  "output_tokens": 10016,
+  "cost_usd": 0.7602688000000001,
+  "duration_ms": 211963,
+  "git_diff": "diff --git a/node/tag-normalizer/index.mjs b/node/tag-normalizer/index.mjs\nindex 27b7ec0..cefb4dd 100644\n--- a/node/tag-normalizer/index.mjs\n+++ b/node/tag-normalizer/index.mjs\n@@ -1,3 +1,21 @@\n export function normalizeTags(tags) {\n-  return tags;\n+  if (!Array.isArray(tags)) {\n+    throw new TypeError(\"tags must be an array\");\n+  }\n+\n+  const seen = new Set();\n+  const result = [];\n+\n+  for (const tag of tags) {\n+    const normalized = String(tag).trim().toLowerCase().replace(/ +/g, \"-\");\n+    if (!/^[a-z0-9_-]+$/.test(normalized)) {\n+      continue;\n+    }\n+    if (!seen.has(normalized)) {\n+      seen.add(normalized);\n+      result.push(normalized);\n+    }\n+  }\n+\n+  return result;\n }\n",
+  "git_status": " M node/tag-normalizer/index.mjs\n"
+}

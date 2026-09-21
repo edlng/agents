@@ -1,0 +1,62 @@
+{
+  "agent": "validator",
+  "case_id": "missing-zero-check",
+  "model": "opus",
+  "provider_models": [
+    "claude-opus-5"
+  ],
+  "provider_request_model": "opus",
+  "provider_response_id": "1d7e6871-47d0-4fe9-bd75-2b2584abcf32",
+  "provider_session_id": "23d8913e-0272-4164-adbd-b4f3f16abab3",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 122553,
+      "cacheReadInputTokens": 0,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.77154125,
+      "inputTokens": 2,
+      "maxOutputTokens": 64000,
+      "outputTokens": 223,
+      "provider": "bedrock",
+      "thinkingTokens": 0,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "995533801ada756d58e71a085b41fbd42f5c5069c4f180ca6e44028d43200189",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^status:\\s*fail\\s*$"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ValueError"
+      },
+      "passed": false,
+      "reason": "output does not contain value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)criterion\\s*2|missing"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 2,
+  "output_tokens": 223,
+  "cost_usd": 0.77154125,
+  "duration_ms": 7104,
+  "provider_error": "claude command failed: exit status 1: provider error: Reached maximum budget ($0.73)"
+}

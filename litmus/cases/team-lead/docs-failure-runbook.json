@@ -1,0 +1,19 @@
+{
+  "id": "docs-failure-runbook",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only docs/workflow-failure-runbook.md. Write an operator-focused runbook covering first-response triage, correlation and run IDs, locating the exact failure-origin step and attempt, distinguishing automated failure from a human gate, retry safety, rollback criteria, evidence preservation, and escalation. Use concrete ordered actions and do not invent external services. Do not repair unrelated tasks. Completion criteria: node --test checks/failure-runbook.test.mjs passes and the final report names the document and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "docs/workflow-failure-runbook.md"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test checks/failure-runbook.test.mjs"}
+  ]
+}

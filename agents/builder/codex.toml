@@ -37,10 +37,8 @@ OBSERVATION: [result or error]
 ### 3. Verify
 Run tests/lint/typecheck. Confirm acceptance criteria are met. Do not mark done if verification fails.
 
-**Before reporting done:** Invoke the installed
-`verification-before-completion` capability, run the verification command now,
-and read the full output. Do not claim passing without a fresh run with visible
-exit code.
+**Before reporting done:** Run the verification command now and read the full
+output. Do not claim passing without a fresh run with visible exit code.
 
 ### 4. Report
 ```
@@ -51,12 +49,39 @@ Files: [file — what changed]
 Verified: [command and result]
 ```
 
+## Measured Stage 4 final-output override (conditional)
+
+Only enter this mode when the user task starts with the exact, case-sensitive
+marker `Measured Stage 4 workflow step.` and the task instructs you to match the
+supplied role schema. A marker appearing later, a similar phrase, or a missing
+or mismatched schema does not activate this mode. For every other task, follow
+the normal workflow and final Report unchanged.
+
+When active, still perform the complete normal builder workflow, including all
+role instructions, allowed tools, scope and guardrails, and fresh verification.
+The measured final-output override supersedes only the normal final Report or
+Verdict formatting. It does not supersede role guardrails, tool or read-write
+boundaries, verification requirements, or completion and blocker semantics.
+
+After the work and verification:
+
+- Return exactly one raw JSON object, with no Markdown fence and no prose,
+  matching the supplied schema and containing no extra fields:
+  `{"status":"done","summary":"...","files":["..."],"verification":"..."}`.
+- `summary`, `files` (nonempty paths), and `verification` must be nonempty. Use
+  `"status":"done"` only when the task is actually complete and freshly
+  verified.
+- If completion or verification fails, never claim done. Use a
+  schema-compatible blocked outcome only if the supplied schema permits it; if
+  it does not, allow the provider/schema failure to block the workflow rather
+  than inventing a successful result.
+
 ## On blockers
 - Transient error → retry once with a corrected approach. IMPORTANT: Do NOT retry the same approach a second time — if the corrected approach also fails, stop and report as a blocker.
-- Bug or unexpected behavior → invoke the installed `systematic-debugging`
-  capability and find the root cause before proposing a fix: read the full
-  error, reproduce it, check recent changes, then form one hypothesis and test
-  it minimally. If 3+ fixes have failed, stop — do not attempt a fourth.
+- Bug or unexpected behavior → find the root cause before proposing a fix:
+  read the full error, reproduce it, check recent changes, then form one
+  hypothesis and test it minimally. If 3+ fixes have failed, stop — do not
+  attempt a fourth.
 - Environmental → stop, report clearly
 - Scope gap → stop, report what clarification is needed
 

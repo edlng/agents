@@ -20,7 +20,9 @@ const usage = `usage:
   litmus-eval list
   litmus-eval replay <agent> <case>
   litmus-eval probe <agent> <case> --budget <usd>
+  litmus-eval workflow-probe <case> --budget <usd>
   litmus-eval batch <manifest> --budget <usd> [--include-replay-only] [--jobs <count>]
+  litmus-eval workflow-batch <manifest> --budget <usd>
   litmus-eval grade <run-directory> --budget <usd> [--jobs 1]
   litmus-eval compare <baseline-run> <current-run>`
 
@@ -35,6 +37,7 @@ type command struct {
 	RunDirectory      string
 	BaselineRun       string
 	CurrentRun        string
+	WorkflowName      string
 	BudgetUSD         float64
 	IncludeReplayOnly bool
 	Jobs              int
@@ -86,8 +89,12 @@ func (app application) run(args []string, stdout, stderr io.Writer) int {
 		return app.runReplay(parsed, stdout, stderr)
 	case "probe":
 		return app.runProbe(parsed, stdout, stderr)
+	case "workflow-probe":
+		return app.runWorkflowProbe(parsed, stdout, stderr)
 	case "batch":
 		return app.runBatch(parsed, stdout, stderr)
+	case "workflow-batch":
+		return app.runWorkflowBatch(parsed, stdout, stderr)
 	case "grade":
 		return app.runGrade(parsed, stdout, stderr)
 	case "compare":
@@ -120,6 +127,21 @@ func parseArgs(args []string) (command, error) {
 			return command{}, err
 		}
 		return command{Name: "probe", Agent: agent, CaseID: caseID, BudgetUSD: budget}, nil
+	case "workflow-probe":
+		if len(args) != 4 || args[2] != "--budget" {
+			return command{}, usageError("workflow-probe <case> --budget <usd>")
+		}
+		budget, err := parseBudget(args[3])
+		if err != nil {
+			return command{}, err
+		}
+		return command{
+			Name:         "workflow-probe",
+			Agent:        "team-lead",
+			CaseID:       args[1],
+			BudgetUSD:    budget,
+			WorkflowName: "stage4-team-lead",
+		}, nil
 	case "batch":
 		if len(args) < 4 || args[2] != "--budget" {
 			return command{}, usageError("batch <manifest> --budget <usd> [--include-replay-only] [--jobs <count>]")
@@ -158,6 +180,21 @@ func parseArgs(args []string) (command, error) {
 			}
 		}
 		return parsed, nil
+	case "workflow-batch":
+		if len(args) != 4 || args[2] != "--budget" {
+			return command{}, usageError("workflow-batch <manifest> --budget <usd>")
+		}
+		budget, err := parseBudget(args[3])
+		if err != nil {
+			return command{}, err
+		}
+		return command{
+			Name:         "workflow-batch",
+			Manifest:     args[1],
+			BudgetUSD:    budget,
+			WorkflowName: "stage4-team-lead",
+			Jobs:         1,
+		}, nil
 	case "grade":
 		if len(args) < 4 || args[2] != "--budget" {
 			return command{}, usageError("grade <run-directory> --budget <usd> [--jobs 1]")
@@ -323,6 +360,40 @@ func (app application) runProbe(parsed command, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func (app application) runWorkflowProbe(parsed command, stdout, stderr io.Writer) int {
+	testCase, err := litmus.LoadCase(app.root, parsed.Agent, parsed.CaseID)
+	if err != nil {
+		fmt.Fprintf(stderr, "load case: %v\n", err)
+		return 1
+	}
+	config, err := litmus.LoadMeasuredWorkflowConfig(app.root, parsed.WorkflowName)
+	if err != nil {
+		fmt.Fprintf(stderr, "load measured workflow: %v\n", err)
+		return 1
+	}
+	runner := litmus.MeasuredWorkflowRunner{
+		Root:     app.root,
+		Executor: app.runner.Executor,
+		Now:      app.now,
+	}
+	result, workflowErr := runner.Run(context.Background(), testCase, config, parsed.BudgetUSD, 0)
+	if result.Agent == "" {
+		fmt.Fprintf(stderr, "workflow probe: %v\n", workflowErr)
+		return 1
+	}
+	directory, err := app.writeRun(parsed.BudgetUSD, []litmus.CaseResult{result})
+	if err != nil {
+		fmt.Fprintf(stderr, "write run: %v\n", err)
+		return 1
+	}
+	printCaseResult(stdout, result, directory)
+	if workflowErr != nil {
+		fmt.Fprintf(stderr, "workflow probe: %v\n", workflowErr)
+		return 1
+	}
+	return 0
+}
+
 func (app application) runBatch(parsed command, stdout, stderr io.Writer) int {
 	manifest, err := loadBatchManifest(app.root, parsed.Manifest)
 	if err != nil {
@@ -445,6 +516,67 @@ func (app application) runBatch(parsed command, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func (app application) runWorkflowBatch(parsed command, stdout, stderr io.Writer) int {
+	manifest, err := loadBatchManifest(app.root, parsed.Manifest)
+	if err != nil {
+		fmt.Fprintf(stderr, "load manifest: %v\n", err)
+		return 1
+	}
+	config, err := litmus.LoadMeasuredWorkflowConfig(app.root, parsed.WorkflowName)
+	if err != nil {
+		fmt.Fprintf(stderr, "load measured workflow: %v\n", err)
+		return 1
+	}
+	runner := litmus.MeasuredWorkflowRunner{
+		Root:     app.root,
+		Executor: app.runner.Executor,
+		Now:      app.now,
+	}
+	var results []litmus.CaseResult
+	var spent float64
+	failed := false
+	for _, item := range manifest.Cases {
+		testCase, err := litmus.LoadCase(app.root, item.Agent, item.CaseID)
+		if err != nil {
+			fmt.Fprintf(stderr, "load case %s/%s: %v\n", item.Agent, item.CaseID, err)
+			return 1
+		}
+		result, workflowErr := runner.Run(
+			context.Background(),
+			testCase,
+			config,
+			parsed.BudgetUSD,
+			spent,
+		)
+		if result.Agent == "" {
+			fmt.Fprintf(stderr, "workflow batch %s/%s: %v\n", item.Agent, item.CaseID, workflowErr)
+			failed = true
+			break
+		}
+		results = append(results, result)
+		spent += result.CostUSD
+		if workflowErr != nil || !result.Passed {
+			failed = true
+		}
+		if result.Workflow != nil && result.Workflow.Failure != nil &&
+			result.Workflow.Failure.Code == "BUDGET_EXHAUSTED" {
+			break
+		}
+	}
+	directory, err := app.writeRun(parsed.BudgetUSD, results)
+	if err != nil {
+		fmt.Fprintf(stderr, "write run: %v\n", err)
+		return 1
+	}
+	for _, result := range results {
+		printCaseResult(stdout, result, directory)
+	}
+	if failed {
+		return 1
+	}
+	return 0
+}
+
 func loadBatchManifest(root, value string) (litmus.Manifest, error) {
 	if strings.ContainsAny(value, `/\`) || strings.HasSuffix(value, ".json") {
 		return litmus.LoadManifestPath(root, value)
@@ -535,7 +667,20 @@ func printCaseResult(writer io.Writer, result litmus.CaseResult, directory strin
 	if result.Passed {
 		status = "PASS"
 	}
-	fmt.Fprintf(writer, "%s %s/%s $%.2f %s\n", status, result.Agent, result.CaseID, result.CostUSD, directory)
+	workflowStatus := ""
+	if result.Workflow != nil {
+		workflowStatus = " workflow=" + result.Workflow.Status
+	}
+	fmt.Fprintf(
+		writer,
+		"%s %s/%s $%.2f%s %s\n",
+		status,
+		result.Agent,
+		result.CaseID,
+		result.CostUSD,
+		workflowStatus,
+		directory,
+	)
 }
 
 func writeComparisonMarkdown(writer io.Writer, comparison litmus.Comparison) {

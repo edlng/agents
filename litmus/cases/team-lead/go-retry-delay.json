@@ -1,0 +1,19 @@
+{
+  "id": "go-retry-delay",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only go/retrydelay/retrydelay.go. Implement Delay(attempt, base, maximum) with one-based attempts: attempt 1 returns base and each later attempt doubles it, saturating at maximum without integer overflow. Reject attempt < 1, nonpositive durations, or base > maximum. Use only the standard library. Do not repair unrelated tasks. Completion criteria: go test ./go/retrydelay passes and the final report names the file and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "go/retrydelay/retrydelay.go"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "go test ./go/retrydelay"}
+  ]
+}

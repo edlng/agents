@@ -1,0 +1,67 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-approval-token",
+  "model": "sonnet",
+  "provider_request_model": "claude-sonnet-5",
+  "prompt_hash": "d270e96b8d902c7df67e9476442eb8909addd297b9b8e0f47ce30aea087c064a",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/approval/approval.go"
+      },
+      "passed": false,
+      "reason": "output does not contain value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(HMAC|human gate|approval|constant.?time)"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/approval"
+      },
+      "passed": false,
+      "reason": "workspace command failed: exit status 1: --- FAIL: TestApprovalRoundTripAndBinding (0.00s)\n    approval_test.go:17: Verify() = \"\", \u003cnil\u003e\n--- FAIL: TestApprovalRejectsExpiredTamperedAndWeakInputs (0.00s)\n    approval_test.go:27: Sign() accepted a weak secret\n--- FAIL: TestApprovalRoundTripsDelimiterCharacters (0.00s)\n    approval_test.go:61: Verify() = \"\", \u003cnil\u003e\nFAIL\nFAIL\tstage4-team-lead-lab/go/approval\t0.566s\nFAIL"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "cost_usd": 0,
+  "duration_ms": 47,
+  "provider_error": "claude command failed: exit status 1: claude: warning: Midway session expired but stdin is not a terminal; skipping interactive prompt\nclaude: error: failed to write /Users/liawedwa/.claude/settings.json: failed to write temp file for /Users/liawedwa/.claude/settings.json: Operation not permitted (os error 1): workflow response result is required"
+}

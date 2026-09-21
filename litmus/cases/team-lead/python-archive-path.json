@@ -1,0 +1,19 @@
+{
+  "id": "python-archive-path",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only python/archive_path/archive_path.py. Implement safe_archive_path(root, member_name) to return a pathlib.Path contained beneath root for a portable archive member. Reject absolute paths, dot-dot traversal, Windows drive or backslash forms, empty components, and NUL bytes. The check must be lexical and safe even when the destination does not exist. Do not create files and do not repair unrelated tasks. Completion criteria: python3 python/archive_path/test_archive_path.py passes and the final report names the file, traversal protection, and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "python/archive_path/archive_path.py"},
+    {"type": "regex", "value": "(?i)(traversal|security|contained)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "python3 python/archive_path/test_archive_path.py"}
+  ]
+}

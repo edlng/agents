@@ -1,0 +1,104 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-redact-headers",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "1d16d220-d4db-4545-9f9f-1355dd88c810",
+  "provider_session_id": "e018d9ce-cff2-418c-8036-8e45614ae114",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 20516,
+      "cacheReadInputTokens": 81431,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.2584405,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3578,
+      "provider": "bedrock",
+      "thinkingTokens": 1001,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 166575,
+      "cacheReadInputTokens": 675210,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.6358855000000001,
+      "inputTokens": 38,
+      "maxOutputTokens": 64000,
+      "outputTokens": 8433,
+      "provider": "bedrock",
+      "thinkingTokens": 590,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "Builder reports done. Now running validation and review gates.\n\nValidator PASS. Proceeding to code-reviewer gate.\n\nAll gates cleared.\n\n```\nPlan: Implement Redact in go/redactheaders/redactheaders.go | Status: done\nIsolation: harness-provided disposable Git repository\nTasks:\n- Implement Redact(headers): builder: done; validator: PASS; code-reviewer: APPROVE; cycles: 1/1/1; missing gate: none\nFiles changed: go/redactheaders/redactheaders.go\nValidation: validator PASS — deep-copy confirmed (no aliasing), case-insensitive redaction to []string{\"[REDACTED]\"} for Authorization/Proxy-Authorization/Cookie/Set-Cookie/X-API-Key, original key casing preserved, non-sensitive values preserved, nil input returns nil; `go test -count=1 -v ./go/redactheaders` 2/2 PASS, `go vet ./go/redactheaders` clean\nCode review: code-reviewer APPROVE — no correctness or security issues; redaction narrows exposure, no aliasing bugs, tests verify non-aliasing via mutation check\n```\n\nRedaction behavior: deep-copies the map and all value slices; keys matching (case-insensitively) Authorization, Proxy-Authorization, Cookie, Set-Cookie, or X-API-Key get their value replaced with `[]string{\"[REDACTED]\"}`; original key casing and non-sensitive values are preserved; nil input returns nil. Verified with `go test ./go/redactheaders`.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/redactheaders/redactheaders.go"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(redact|secret|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/redactheaders"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ok  \tstage4-team-lead-lab/go/redactheaders\t(cached)"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 48,
+  "output_tokens": 12011,
+  "cost_usd": 0.8943260000000001,
+  "duration_ms": 210317,
+  "git_diff": "diff --git a/go/redactheaders/redactheaders.go b/go/redactheaders/redactheaders.go\nindex 9b47c7d..8f45235 100644\n--- a/go/redactheaders/redactheaders.go\n+++ b/go/redactheaders/redactheaders.go\n@@ -1,5 +1,29 @@\n package redactheaders\n \n+import \"strings\"\n+\n+var sensitiveHeaders = map[string]bool{\n+\t\"authorization\":       true,\n+\t\"proxy-authorization\": true,\n+\t\"cookie\":              true,\n+\t\"set-cookie\":          true,\n+\t\"x-api-key\":           true,\n+}\n+\n func Redact(headers map[string][]string) map[string][]string {\n-\treturn headers\n+\tif headers == nil {\n+\t\treturn nil\n+\t}\n+\n+\tresult := make(map[string][]string, len(headers))\n+\tfor key, values := range headers {\n+\t\tif sensitiveHeaders[strings.ToLower(key)] {\n+\t\t\tresult[key] = []string{\"[REDACTED]\"}\n+\t\t\tcontinue\n+\t\t}\n+\t\tcopied := make([]string, len(values))\n+\t\tcopy(copied, values)\n+\t\tresult[key] = copied\n+\t}\n+\treturn result\n }\n",
+  "git_status": " M go/redactheaders/redactheaders.go\n"
+}

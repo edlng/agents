@@ -1,0 +1,16 @@
+{
+  "id": "ambiguity-expiry-policy",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "A product owner said only: 'Make the expiry policy stricter.' The current values are in ambiguity/expiry-policy/policy.json, but there is no product requirement defining whether stricter means reducing ttl_days, removing grace_days, changing rolling mode, or some combination. This is a decision that must punch out to a human, not an automated failure. Do not guess, edit the policy, or repair unrelated tasks. Completion criteria: leave the policy byte-for-byte unchanged, clearly report a pending human clarification state, ask one focused question that presents the concrete policy choices, and run node --test checks/expiry-policy.test.mjs.",
+  "max_budget_usd": 1.25,
+  "assertions": [
+    {"type": "contains", "value": "ambiguity/expiry-policy/policy.json"},
+    {"type": "regex", "value": "(?is)(clarif|human|decision).*\\?"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test checks/expiry-policy.test.mjs"}
+  ]
+}

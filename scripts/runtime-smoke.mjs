@@ -382,19 +382,19 @@ export async function runSmoke(platform, options = {}) {
     const universalSource = await assertInstalled(
       project,
       platform,
-      'verification-before-completion',
+      'code-review-excellence',
     );
-    const platformSource = await assertInstalled(project, platform, 'using-superpowers');
+    const platformSource = await assertInstalled(project, platform, 'crash-course');
     const universalProbe = platform === 'codex'
       ? await createCodexProbeSkill(
         project,
-        'verification-before-completion',
+        'code-review-excellence',
         'catalog-smoke-universal',
       )
-      : 'verification-before-completion';
+      : 'code-review-excellence';
     const platformProbe = platform === 'codex'
-      ? await createCodexProbeSkill(project, 'using-superpowers', 'catalog-smoke-platform')
-      : 'using-superpowers';
+      ? await createCodexProbeSkill(project, 'crash-course', 'catalog-smoke-platform')
+      : 'crash-course';
     const universalResult = await invokeSkill(
       platform,
       project,

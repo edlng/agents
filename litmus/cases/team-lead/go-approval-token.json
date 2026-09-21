@@ -1,0 +1,19 @@
+{
+  "id": "go-approval-token",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only go/approval/approval.go. Implement Sign and Verify for human approval tokens using HMAC-SHA256 and URL-safe base64. Bind the token to task ID, actor, and UTC expiry; both Sign and Verify must reject secrets shorter than 32 bytes, and Sign must reject an empty task or actor; support task IDs and actors containing punctuation such as | without ambiguous field boundaries; use constant-time MAC verification; reject malformed, tampered, wrong-task, or expired tokens, including when now is exactly the expiry instant; and return the authenticated actor from Verify. Use only the standard library. Do not repair unrelated tasks. Completion criteria: go test ./go/approval passes and the final report names the file, authenticated human gate, and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "go/approval/approval.go"},
+    {"type": "regex", "value": "(?i)(HMAC|human gate|approval|constant.?time)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "go test ./go/approval"}
+  ]
+}

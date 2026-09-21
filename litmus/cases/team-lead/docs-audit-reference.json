@@ -1,0 +1,19 @@
+{
+  "id": "docs-audit-reference",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only docs/audit-event-reference.md. Define a compact Stage 4 workflow event reference covering run_id, step_id, attempt, timestamp, agent, model, input_tokens, output_tokens, cost_usd, input_hash, output_hash, guard outcome, transition, failure_origin, and human_gate actor/action. Include one valid JSON example and rules for ordering, hash purpose, secret redaction, and cost aggregation. Do not repair unrelated tasks. Completion criteria: node --test checks/audit-reference.test.mjs passes and the final report names the document and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "docs/audit-event-reference.md"},
+    {"type": "regex", "value": "(?i)(audit|trace|complete|pass)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test checks/audit-reference.test.mjs"}
+  ]
+}

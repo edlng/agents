@@ -1,0 +1,19 @@
+{
+  "id": "go-slugify",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only go/slugify/slugify.go. Implement Slugify(value) using the Go standard library: lowercase ASCII letters, retain ASCII letters and digits, collapse every run of other characters to one hyphen, trim separators, reject a result with no letters or digits, and cap output at 48 bytes without ending in a hyphen. Do not repair unrelated tasks. Completion criteria: go test ./go/slugify passes and the final report names the file and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "go/slugify/slugify.go"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "go test ./go/slugify"}
+  ]
+}

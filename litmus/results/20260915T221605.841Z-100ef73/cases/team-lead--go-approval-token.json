@@ -1,0 +1,104 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-approval-token",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "f8c8a6ec-b9cb-47df-ba7c-682b88b57357",
+  "provider_session_id": "5d052b29-e7c9-4a1d-a1c3-a43c1cf71d3d",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 27595,
+      "cacheReadInputTokens": 87161,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.32349924999999996,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 4296,
+      "provider": "bedrock",
+      "thinkingTokens": 991,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 240980,
+      "cacheReadInputTokens": 678640,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.9281159999999998,
+      "inputTokens": 44,
+      "maxOutputTokens": 64000,
+      "outputTokens": 18985,
+      "provider": "bedrock",
+      "thinkingTokens": 4818,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "d270e96b8d902c7df67e9476442eb8909addd297b9b8e0f47ce30aea087c064a",
+  "output": "Now delegating implementation.\n\nNow validate and review.\n\nValidator PASS. Now code review.\n\nAll gates cleared.\n\n```\nPlan: Implement go/approval/approval.go | Status: done\nIsolation: harness-provided disposable Git repository\nTasks:\n- Implement Sign/Verify HMAC-SHA256 approval tokens: builder: done; validator: PASS; code-reviewer: APPROVE; cycles: 1/1/1; missing gate: none\nFiles changed: go/approval/approval.go\nValidation: validator PASS — go test ./go/approval/... -v (3 tests), -race clean, go vet clean; all 9 criteria confirmed by code inspection\nCode review: code-reviewer APPROVE — MAC verified before parsing, constant-time compare, no OOB/overflow, no secret/error leakage, stdlib only\n```\n\nFile: `go/approval/approval.go`. Authenticated human gate: HMAC-SHA256-signed, base64-URL-safe approval tokens binding task ID, actor, and UTC expiry (length-prefixed encoding, constant-time verification, strict expiry). Command: `go test ./go/approval/...` (passes).",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/approval/approval.go"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(HMAC|human gate|approval|constant.?time)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/approval"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ok  \tstage4-team-lead-lab/go/approval\t0.465s"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 54,
+  "output_tokens": 23281,
+  "cost_usd": 1.2516152500000002,
+  "duration_ms": 312290,
+  "git_diff": "diff --git a/go/approval/approval.go b/go/approval/approval.go\nindex 7158400..1c0e45d 100644\n--- a/go/approval/approval.go\n+++ b/go/approval/approval.go\n@@ -1,11 +1,132 @@\n package approval\n \n-import \"time\"\n+import (\n+\t\"crypto/hmac\"\n+\t\"crypto/sha256\"\n+\t\"encoding/base64\"\n+\t\"encoding/binary\"\n+\t\"errors\"\n+\t\"time\"\n+)\n \n+const minSecretLen = 32\n+const macLen = sha256.Size\n+\n+// buildPayload builds a canonical, unambiguous encoding of taskID, actor, and\n+// expiry (UTC unix nanoseconds), using length-prefixed fields so that no\n+// delimiter character can create ambiguity.\n+func buildPayload(taskID, actor string, expires time.Time) []byte {\n+\ttaskBytes := []byte(taskID)\n+\tactorBytes := []byte(actor)\n+\n+\tpayload := make([]byte, 0, 4+len(taskBytes)+4+len(actorBytes)+8)\n+\n+\tvar lenBuf [4]byte\n+\tbinary.BigEndian.PutUint32(lenBuf[:], uint32(len(taskBytes)))\n+\tpayload = append(payload, lenBuf[:]...)\n+\tpayload = append(payload, taskBytes...)\n+\n+\tbinary.BigEndian.PutUint32(lenBuf[:], uint32(len(actorBytes)))\n+\tpayload = append(payload, lenBuf[:]...)\n+\tpayload = append(payload, actorBytes...)\n+\n+\tvar expBuf [8]byte\n+\tbinary.BigEndian.PutUint64(expBuf[:], uint64(expires.UTC().UnixNano()))\n+\tpayload = append(payload, expBuf[:]...)\n+\n+\treturn payload\n+}\n+\n+func parsePayload(payload []byte) (taskID, actor string, expires time.Time, err error) {\n+\tif len(payload) \u003c 4 {\n+\t\treturn \"\", \"\", time.Time{}, errors.New(\"approval: malformed payload\")\n+\t}\n+\ttaskLen := binary.BigEndian.Uint32(payload[0:4])\n+\toffset := 4\n+\tif uint64(offset)+uint64(taskLen)+4 \u003e uint64(len(payload)) {\n+\t\treturn \"\", \"\", time.Time{}, errors.New(\"approval: malformed payload\")\n+\t}\n+\ttaskID = string(payload[offset : offset+int(taskLen)])\n+\toffset += int(taskLen)\n+\n+\tactorLen := binary.BigEndian.Uint32(payload[offset : offset+4])\n+\toffset += 4\n+\tif uint64(offset)+uint64(actorLen)+8 \u003e uint64(len(payload)) {\n+\t\treturn \"\", \"\", time.Time{}, errors.New(\"approval: malformed payload\")\n+\t}\n+\tactor = string(payload[offset : offset+int(actorLen)])\n+\toffset += int(actorLen)\n+\n+\tif offset+8 != len(payload) {\n+\t\treturn \"\", \"\", time.Time{}, errors.New(\"approval: malformed payload\")\n+\t}\n+\tnanos := binary.BigEndian.Uint64(payload[offset : offset+8])\n+\texpires = time.Unix(0, int64(nanos)).UTC()\n+\n+\treturn taskID, actor, expires, nil\n+}\n+\n+// Sign creates an authenticated approval token binding taskID, actor, and\n+// expires.\n func Sign(secret []byte, taskID, actor string, expires time.Time) (string, error) {\n-\treturn \"\", nil\n+\tif len(secret) \u003c minSecretLen {\n+\t\treturn \"\", errors.New(\"approval: secret must be at least 32 bytes\")\n+\t}\n+\tif taskID == \"\" {\n+\t\treturn \"\", errors.New(\"approval: taskID must not be empty\")\n+\t}\n+\tif actor == \"\" {\n+\t\treturn \"\", errors.New(\"approval: actor must not be empty\")\n+\t}\n+\n+\tpayload := buildPayload(taskID, actor, expires)\n+\n+\tmac := hmac.New(sha256.New, secret)\n+\tmac.Write(payload)\n+\tsum := mac.Sum(nil)\n+\n+\ttoken := append(payload, sum...)\n+\treturn base64.RawURLEncoding.EncodeToString(token), nil\n }\n \n+// Verify checks that token is a valid, unexpired approval for taskID and\n+// returns the authenticated actor.\n func Verify(secret []byte, token, taskID string, now time.Time) (string, error) {\n-\treturn \"\", nil\n+\tif len(secret) \u003c minSecretLen {\n+\t\treturn \"\", errors.New(\"approval: secret must be at least 32 bytes\")\n+\t}\n+\n+\traw, err := base64.RawURLEncoding.DecodeString(token)\n+\tif err != nil {\n+\t\treturn \"\", errors.New(\"approval: malformed token\")\n+\t}\n+\tif len(raw) \u003c macLen {\n+\t\treturn \"\", errors.New(\"approval: malformed token\")\n+\t}\n+\n+\tpayload := raw[:len(raw)-macLen]\n+\tgotMAC := raw[len(raw)-macLen:]\n+\n+\tmac := hmac.New(sha256.New, secret)\n+\tmac.Write(payload)\n+\twantMAC := mac.Sum(nil)\n+\n+\tif !hmac.Equal(gotMAC, wantMAC) {\n+\t\treturn \"\", errors.New(\"approval: invalid token\")\n+\t}\n+\n+\tsignedTaskID, actor, expires, err := parsePayload(payload)\n+\tif err != nil {\n+\t\treturn \"\", err\n+\t}\n+\n+\tif signedTaskID != taskID {\n+\t\treturn \"\", errors.New(\"approval: token does not match taskID\")\n+\t}\n+\n+\tif !now.Before(expires) {\n+\t\treturn \"\", errors.New(\"approval: token expired\")\n+\t}\n+\n+\treturn actor, nil\n }\n",
+  "git_status": " M go/approval/approval.go\n"
+}

@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-endpoint-allowlist",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "0387a3b3-e895-4db9-8e5f-21b96df098ef",
+  "provider_session_id": "863a23b3-733e-414a-85c4-41d38cd90c63",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 21020,
+      "cacheReadInputTokens": 83553,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.26120150000000003,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3520,
+      "provider": "bedrock",
+      "thinkingTokens": 1092,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 191146,
+      "cacheReadInputTokens": 917116,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.7985681999999997,
+      "inputTokens": 50,
+      "maxOutputTokens": 64000,
+      "outputTokens": 13718,
+      "provider": "bedrock",
+      "thinkingTokens": 2207,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Validator PASS, code-reviewer APPROVE. Task complete.\n\n```\nPlan: Implement go/endpoint/endpoint.go Validate | Status: done\nTasks: 1/1 done — implementation (builder), validation (PASS), review (APPROVE)\nFiles changed: go/endpoint/endpoint.go (endpoint_test.go untouched)\nSSRF boundary: rejects non-https/scheme-relative URLs, userinfo, empty hostname, IP-literal hosts (net.ParseIP only, no DNS resolution), and any host not an exact case-insensitive match in a nonempty allowlist (no suffix matching, e.g. rejects \"api.example.com.evil.test\" against \"api.example.com\"); returns parsed *url.URL preserving Path/RawQuery.\nCommand: go test ./go/endpoint — PASS (also go vet, gofmt clean)\nFinal review: approved, no blocking findings\nIntegration: clean, no git operations performed\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/endpoint/endpoint.go"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(SSRF|allowlist|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/endpoint"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ok  \tstage4-team-lead-lab/go/endpoint\t0.234s"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 60,
+  "output_tokens": 17238,
+  "cost_usd": 1.0597697,
+  "duration_ms": 218696,
+  "git_diff": "diff --git a/go/endpoint/endpoint.go b/go/endpoint/endpoint.go\nindex 7fef09f..895f7cf 100644\n--- a/go/endpoint/endpoint.go\n+++ b/go/endpoint/endpoint.go\n@@ -1,7 +1,49 @@\n package endpoint\n \n-import \"net/url\"\n+import (\n+\t\"errors\"\n+\t\"net\"\n+\t\"net/url\"\n+\t\"strings\"\n+)\n \n func Validate(raw string, allowedHosts []string) (*url.URL, error) {\n-\treturn url.Parse(raw)\n+\tu, err := url.Parse(raw)\n+\tif err != nil {\n+\t\treturn nil, err\n+\t}\n+\n+\tif u.Scheme != \"https\" {\n+\t\treturn nil, errors.New(\"endpoint: scheme must be https\")\n+\t}\n+\n+\tif u.User != nil {\n+\t\treturn nil, errors.New(\"endpoint: userinfo not allowed\")\n+\t}\n+\n+\thost := u.Hostname()\n+\tif host == \"\" {\n+\t\treturn nil, errors.New(\"endpoint: empty hostname\")\n+\t}\n+\n+\tif net.ParseIP(host) != nil {\n+\t\treturn nil, errors.New(\"endpoint: IP-literal hosts not allowed\")\n+\t}\n+\n+\tif len(allowedHosts) == 0 {\n+\t\treturn nil, errors.New(\"endpoint: allowedHosts must be nonempty\")\n+\t}\n+\n+\tallowed := false\n+\tfor _, h := range allowedHosts {\n+\t\tif strings.EqualFold(host, h) {\n+\t\t\tallowed = true\n+\t\t\tbreak\n+\t\t}\n+\t}\n+\tif !allowed {\n+\t\treturn nil, errors.New(\"endpoint: host not in allowlist\")\n+\t}\n+\n+\treturn u, nil\n }\n",
+  "git_status": " M go/endpoint/endpoint.go\n"
+}

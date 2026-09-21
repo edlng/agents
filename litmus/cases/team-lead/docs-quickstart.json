@@ -1,0 +1,19 @@
+{
+  "id": "docs-quickstart",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only docs/quickstart.md for a new contributor. Keep it concise and include prerequisites, exact commands for one existing Node check, one Python check, and one Go check, expected successful output, and troubleshooting for missing runtimes and running from the wrong directory. Verify every command and path against the fixture; do not repair unrelated tasks. Completion criteria: node --test checks/quickstart.test.mjs passes and the final report names the document and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "docs/quickstart.md"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test checks/quickstart.test.mjs"}
+  ]
+}

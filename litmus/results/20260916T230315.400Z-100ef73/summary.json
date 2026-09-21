@@ -1,0 +1,37 @@
+{
+  "id": "20260916T230315.400Z-100ef73",
+  "timestamp": "2026-09-16T23:03:15.400627Z",
+  "revision": "100ef73",
+  "budget_usd": 2.5,
+  "totals": {
+    "cases": 1,
+    "passed": 0,
+    "failed": 1,
+    "agent_failures": 0,
+    "infrastructure_errors": 1,
+    "grader_errors": 0,
+    "input_tokens": 10,
+    "output_tokens": 2986,
+    "total_tokens": 2996,
+    "cost_usd": 0.1422369,
+    "duration_ms": 42624
+  },
+  "cases": [
+    {
+      "agent": "team-lead",
+      "case_id": "node-safe-merge",
+      "provider_models": [
+        "claude-sonnet-5"
+      ],
+      "status": "infra_error",
+      "passed": false,
+      "workflow_status": "BLOCKED",
+      "workflow_invocations": 1,
+      "input_tokens": 10,
+      "output_tokens": 2986,
+      "cost_usd": 0.1422369,
+      "duration_ms": 42624,
+      "detail_path": "cases/team-lead--node-safe-merge.json"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "primary": "score_desc",
+  "tie_breaker": "created_at_asc"
+}

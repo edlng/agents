@@ -1,0 +1,36 @@
+{
+  "id": "20260915T195938.003Z-100ef73",
+  "timestamp": "2026-09-15T19:59:38.003442Z",
+  "revision": "100ef73",
+  "budget_usd": 1.25,
+  "totals": {
+    "cases": 1,
+    "passed": 1,
+    "failed": 0,
+    "agent_failures": 0,
+    "infrastructure_errors": 0,
+    "grader_errors": 0,
+    "input_tokens": 52,
+    "output_tokens": 11984,
+    "total_tokens": 12036,
+    "cost_usd": 1.03030955,
+    "duration_ms": 141707
+  },
+  "cases": [
+    {
+      "agent": "team-lead",
+      "case_id": "node-tag-normalizer",
+      "provider_models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 52,
+      "output_tokens": 11984,
+      "cost_usd": 1.03030955,
+      "duration_ms": 141707,
+      "detail_path": "cases/team-lead--node-tag-normalizer.json"
+    }
+  ]
+}

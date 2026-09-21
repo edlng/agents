@@ -1,0 +1,65 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-retry-schedule",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "7241ab76-f462-4d72-9727-206503d50a1d",
+  "provider_session_id": "28a11371-73c9-46c7-b5b9-5669146cc855",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 80552,
+      "cacheReadInputTokens": 176183,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.2560846,
+      "inputTokens": 14,
+      "maxOutputTokens": 64000,
+      "outputTokens": 1944,
+      "provider": "bedrock",
+      "thinkingTokens": 191,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Given the tight remaining budget, skipping further review cycles.\n\n```\nPlan: retry-schedule | Status: done\nTasks: implement retrySchedule - done, tests pass on first attempt\nFiles changed: node/retry-schedule/index.mjs\nVerification: node --test node/retry-schedule/test.mjs → tests 2, pass 2, fail 0\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/retry-schedule/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/retry-schedule/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ returns capped exponential delays after the initial attempt (0.579209ms)\n✔ validates integer attempts and positive finite timing options (0.240666ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 50.249584"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 14,
+  "output_tokens": 1944,
+  "cost_usd": 0.2560846,
+  "duration_ms": 43519,
+  "git_diff": "diff --git a/node/retry-schedule/index.mjs b/node/retry-schedule/index.mjs\nindex 8c7bd70..52284b2 100644\n--- a/node/retry-schedule/index.mjs\n+++ b/node/retry-schedule/index.mjs\n@@ -1,3 +1,23 @@\n-export function retrySchedule(options) {\n-  return [];\n+export function retrySchedule({ attempts, baseMs, factor, maxMs }) {\n+  if (!Number.isInteger(attempts) || attempts \u003c= 0) {\n+    throw new Error(\"invalid attempts: must be a positive integer\");\n+  }\n+  if (!Number.isFinite(baseMs) || baseMs \u003c= 0) {\n+    throw new Error(\"invalid baseMs: must be a positive finite number\");\n+  }\n+  if (!Number.isFinite(maxMs) || maxMs \u003c= 0) {\n+    throw new Error(\"invalid maxMs: must be a positive finite number\");\n+  }\n+  if (baseMs \u003e maxMs) {\n+    throw new Error(\"invalid options: baseMs must be \u003c= maxMs\");\n+  }\n+  if (!Number.isFinite(factor) || factor \u003c 1) {\n+    throw new Error(\"invalid factor: must be a finite number \u003e= 1\");\n+  }\n+\n+  const delays = [];\n+  for (let n = 0; n \u003c attempts - 1; n++) {\n+    delays.push(Math.min(baseMs * factor ** n, maxMs));\n+  }\n+  return delays;\n }\n",
+  "git_status": " M node/retry-schedule/index.mjs\n"
+}

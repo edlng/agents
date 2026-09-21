@@ -2,6 +2,7 @@ package litmus
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,8 +13,9 @@ import (
 )
 
 type Validator struct {
-	Type string `json:"type"`
-	Path string `json:"path,omitempty"`
+	Type    string `json:"type"`
+	Path    string `json:"path,omitempty"`
+	Command string `json:"command,omitempty"`
 }
 
 type ValidatorResult struct {
@@ -34,11 +36,173 @@ func runValidator(output, workspace string, validator Validator) ValidatorResult
 		return validatePythonTests(output, workspace, validator, result)
 	case "glide_batch_static":
 		return validateGLIDEBatch(output, result)
+	case "command", "workspace_command":
+		return validateWorkspaceCommandResult(workspace, validator, result)
 	default:
 		result.Error = true
 		result.Reason = fmt.Sprintf("unsupported validator type %q", validator.Type)
 		return result
 	}
+}
+
+var safeWorkspaceCommands = map[string]func([]string) bool{
+	"go": func(args []string) bool {
+		return len(args) > 0 && args[0] == "test"
+	},
+	"cargo": func(args []string) bool {
+		return len(args) > 0 && args[0] == "test"
+	},
+	"pytest": func(_ []string) bool {
+		return true
+	},
+	"python3": func(args []string) bool {
+		return (len(args) >= 2 && args[0] == "-m" && args[1] == "pytest") ||
+			(len(args) > 0 && strings.HasSuffix(args[0], ".py"))
+	},
+	"node": func(args []string) bool {
+		if len(args) > 1 && args[0] == "--test" {
+			return true
+		}
+		return len(args) > 0 &&
+			(strings.HasSuffix(args[0], ".mjs") || strings.HasSuffix(args[0], ".js"))
+	},
+	"npm": func(args []string) bool {
+		return safePackageScript(args)
+	},
+	"pnpm": func(args []string) bool {
+		return safePackageScript(args)
+	},
+	"yarn": func(args []string) bool {
+		return safePackageScript(args)
+	},
+}
+
+var packageScriptPattern = regexp.MustCompile(`^[A-Za-z0-9:_-]+$`)
+
+func safePackageScript(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	if args[0] == "test" {
+		return true
+	}
+	return len(args) > 1 && args[0] == "run" && packageScriptPattern.MatchString(args[1])
+}
+
+func parseWorkspaceCommand(command string) ([]string, error) {
+	if strings.TrimSpace(command) == "" {
+		return nil, fmt.Errorf("workspace command is required")
+	}
+	if strings.ContainsAny(command, "\x00\r\n;&|`$<>(){}") {
+		return nil, fmt.Errorf("workspace command must not contain shell syntax")
+	}
+	if strings.ContainsAny(command, `"'`) {
+		return nil, fmt.Errorf("workspace command quoting is not supported; use simple arguments")
+	}
+	arguments := strings.Fields(command)
+	if len(arguments) == 0 {
+		return nil, fmt.Errorf("workspace command is required")
+	}
+	return arguments, nil
+}
+
+func validateWorkspaceCommand(command string) error {
+	arguments, err := parseWorkspaceCommand(command)
+	if err != nil {
+		return err
+	}
+	if len(arguments) == 0 {
+		return fmt.Errorf("workspace_command validator command is required")
+	}
+	executable := arguments[0]
+	if executable == "" || filepath.Base(executable) != executable {
+		return fmt.Errorf("workspace_command executable must be an allowed command name")
+	}
+	validateArgs, ok := safeWorkspaceCommands[executable]
+	if !ok || !validateArgs(arguments[1:]) {
+		return fmt.Errorf("workspace_command %q is not an allowed test command", command)
+	}
+	for _, argument := range arguments {
+		if argument == "" || strings.ContainsAny(argument, "\x00\r\n") {
+			return fmt.Errorf("workspace_command arguments must be non-empty single-line values")
+		}
+		if filepath.IsAbs(argument) {
+			return fmt.Errorf("workspace_command arguments must not use absolute paths")
+		}
+		for _, component := range strings.FieldsFunc(argument, func(r rune) bool {
+			return r == '/' || r == '\\'
+		}) {
+			if component == ".." {
+				return fmt.Errorf("workspace_command arguments must not contain parent traversal")
+			}
+		}
+	}
+	return nil
+}
+
+func validateWorkspaceCommandResult(workspace string, validator Validator, result ValidatorResult) ValidatorResult {
+	if err := validateWorkspaceCommand(validator.Command); err != nil {
+		result.Error = true
+		result.Reason = err.Error()
+		return result
+	}
+	if strings.TrimSpace(workspace) == "" {
+		result.Error = true
+		result.Reason = "workspace_command validator requires a workspace"
+		return result
+	}
+	resolvedWorkspace, err := filepath.EvalSymlinks(workspace)
+	if err != nil {
+		result.Error = true
+		result.Reason = fmt.Sprintf("resolve workspace: %v", err)
+		return result
+	}
+	arguments, err := parseWorkspaceCommand(validator.Command)
+	if err != nil {
+		result.Error = true
+		result.Reason = err.Error()
+		return result
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	command := exec.CommandContext(ctx, arguments[0], arguments[1:]...)
+	command.Dir = resolvedWorkspace
+	command.Env = append(os.Environ(), "CI=1")
+	output, runErr := command.CombinedOutput()
+	details := truncateCommandOutput(strings.TrimSpace(string(output)))
+	if ctx.Err() != nil {
+		result.Error = true
+		result.Reason = fmt.Sprintf("workspace command timed out: %v", ctx.Err())
+		return result
+	}
+	if runErr != nil {
+		var exitErr *exec.ExitError
+		if !errors.As(runErr, &exitErr) {
+			result.Error = true
+			result.Reason = fmt.Sprintf("workspace command unavailable: %v", runErr)
+			return result
+		}
+		result.Reason = fmt.Sprintf("workspace command failed: %v", runErr)
+		if details != "" {
+			result.Reason += ": " + details
+		}
+		return result
+	}
+	result.Passed = true
+	result.Reason = "workspace command passed"
+	if details != "" {
+		result.Reason += ": " + details
+	}
+	return result
+}
+
+func truncateCommandOutput(output string) string {
+	const limit = 4000
+	if len(output) <= limit {
+		return output
+	}
+	return output[:limit] + "…"
 }
 
 func validatePythonSyntax(output string, result ValidatorResult) ValidatorResult {

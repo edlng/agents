@@ -1,0 +1,81 @@
+{
+  "agent": "team-lead",
+  "case_id": "docs-failure-runbook",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "c70ee9e1-7005-4e79-a707-a690286465c4",
+  "provider_session_id": "e5291b33-ea6b-4104-a442-a97f0e46a8f0",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 28358,
+      "cacheReadInputTokens": 201848,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.4348515,
+      "inputTokens": 18,
+      "maxOutputTokens": 64000,
+      "outputTokens": 6264,
+      "provider": "bedrock",
+      "thinkingTokens": 1773,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 195130,
+      "cacheReadInputTokens": 838276,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.7998162000000001,
+      "inputTokens": 48,
+      "maxOutputTokens": 64000,
+      "outputTokens": 14424,
+      "provider": "bedrock",
+      "thinkingTokens": 2434,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "docs/workflow-failure-runbook.md"
+      },
+      "passed": false,
+      "reason": "output does not contain value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/failure-runbook.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ runbook covers Stage 4 failure response (0.619958ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 42.033583"
+    }
+  ],
+  "status": "infra_error",
+  "passed": false,
+  "input_tokens": 66,
+  "output_tokens": 20688,
+  "cost_usd": 1.2346677,
+  "duration_ms": 128,
+  "provider_error": "claude command failed: exit status 1: Budget limit reached ($1.23 of $1.23); stopping background agents.: provider error: Reached maximum budget ($1.23)",
+  "git_diff": "diff --git a/docs/workflow-failure-runbook.md b/docs/workflow-failure-runbook.md\nindex 3142018..f083374 100644\n--- a/docs/workflow-failure-runbook.md\n+++ b/docs/workflow-failure-runbook.md\n@@ -1,3 +1,88 @@\n # Workflow Failure Runbook\n \n-TODO: Document how an operator traces and responds to a failed workflow.\n+This runbook guides an operator through responding to a failed automated workflow run, from first notification through escalation.\n+\n+## First Response / Triage\n+\n+1. Confirm the alert is real: check that the notification references an actual run ID and is not a duplicate or stale notification.\n+2. Identify the run ID from the alert and use it to pull up the run's full step history.\n+3. Check the overall run status (in progress, failed, stopped) to understand what state the run is currently in.\n+4. Determine blast radius: check whether this is an isolated single-run failure or a systemic issue affecting multiple concurrent runs (same step failing across many run IDs suggests a systemic cause).\n+5. Decide urgency based on blast radius and whether the workflow is customer-facing or blocking downstream work; route accordingly (self-service triage vs immediate escalation).\n+\n+## Correlation and Run IDs\n+\n+1. Every audit event for a run carries a `run_id` field; use it as the primary key to pull every event belonging to that run in one query or log search.\n+2. Each event also carries `step_id` and `attempt`, which together identify a specific execution of a specific step (a step may have multiple attempts due to retries).\n+3. Use `run_id` + `step_id` + `attempt` as a compound key to correlate log lines, audit events, and any other system's records back to the exact execution being investigated.\n+4. Use the `input_hash` and `output_hash` fields recorded on each audit event to confirm whether two records describe the same inputs/outputs, or to detect whether a retry actually changed the input.\n+5. Build the full execution trace by sorting all correlated events for a `run_id` by step order and attempt number; this reconstructs the sequence of what happened, in what order, with what inputs and outputs.\n+\n+## Locating the Failure Origin\n+\n+1. Walk the run's step sequence in order, starting from the first step, following the recorded step order.\n+2. For each step, check its status; find the first step in sequence whose status indicates failure. This step is the failure origin, not necessarily the last step in the recorded history.\n+3. Note that step's `step_id` and its `attempt` count so you have a precise pointer to the exact execution that failed.\n+4. Distinguish a retry-in-progress from a final failure: a step showing a failed attempt followed by a newer attempt still running or pending is not yet a terminal failure. A step is a final failure only when its most recent attempt is failed and no further attempt has been scheduled.\n+5. Record the identified `run_id`, `step_id`, and `attempt` as the confirmed failure origin before proceeding to remediation.\n+\n+## Automated Failure vs Human Gate\n+\n+1. Before assuming the run failed, check whether the stopping point is actually a human approval gate awaiting input rather than a failure.\n+2. Inspect the audit event at the stopping point for a `human_gate` field; if present and indicating \"awaiting approval\" (or equivalent pending state), the run is paused for human input, not failed.\n+3. If no `human_gate` marker is present, check the step's own failure signal: a recorded exception, a non-zero exit code, or a timeout indicates an automated failure.\n+4. If both a `human_gate` marker and a failure signal are absent, treat the state as ambiguous and continue investigating rather than assuming either outcome.\n+5. Only proceed with failure-response steps (retry safety, rollback criteria) once the automated failure has been confirmed; if the state is a pending human gate, route to whoever owns that approval instead of treating it as a failure.\n+\n+## Retry Safety\n+\n+Safe to retry when all of the following hold:\n+\n+1. The failed step is idempotent (re-running it with the same input produces the same result without duplicating effects).\n+2. No partial side effects were left behind by the failed attempt (verify by inspecting the step's expected outputs/state against what was actually produced).\n+3. The root cause is understood and known to be transient (for example, a timeout or a temporary resource contention), not a logic error.\n+\n+Retry must be withheld when any of the following hold:\n+\n+1. The step is non-idempotent and a partial side effect has already been applied (re-running risks duplicating or corrupting the effect).\n+2. The root cause is unknown; retrying blind risks repeating the same failure or masking the real issue.\n+3. The same step has already failed repeatedly across multiple attempts; further retries without a root-cause fix are unlikely to succeed and should stop.\n+\n+## Rollback Criteria\n+\n+Trigger conditions for rollback (any one is sufficient):\n+\n+1. Risk of data corruption from the partial or failed execution.\n+2. Repeated failures at the same step exceeding the retry threshold with no resolution.\n+3. Confirmed partial side effects that leave the system in an inconsistent state.\n+\n+Rollback procedure, in order:\n+\n+1. Freeze further retries on the affected run so no additional side effects accumulate while rollback is planned.\n+2. Identify the last known-good state, using the correlated audit trail (`run_id`, `step_id`, `attempt`, `output_hash`) to find the last step that completed cleanly.\n+3. Apply compensating actions to undo or neutralize the partial side effects introduced by the failed step(s).\n+4. Verify the resulting state matches the last known-good state before resuming or closing out the incident.\n+\n+## Evidence Preservation\n+\n+Before taking any remediating action, in order:\n+\n+1. Snapshot or export the full audit event log for the affected `run_id` so the record cannot be lost or overwritten by subsequent retries or rollback actions.\n+2. Record the correlation identifiers: `run_id`, `step_id`, and `attempt` for the failure origin and any related steps.\n+3. Capture the `input_hash` and `output_hash` values for the failed step and its neighbors to preserve exact evidence of what was processed.\n+4. Avoid destructive actions (deleting state, forcing retries, discarding logs) until the evidence above has been captured; remediation should only begin once the trail is preserved.\n+\n+## Escalation\n+\n+Escalate when any of the following apply:\n+\n+1. Retries have been exhausted (per Retry Safety criteria) and the step is still failing.\n+2. A rollback has been determined necessary (per Rollback Criteria).\n+3. The human-gate state is ambiguous and cannot be resolved by the operator alone.\n+4. There is a risk to data integrity that requires broader review before action.\n+\n+Escalation steps, in order:\n+\n+1. Notify the on-call or owning team responsible for the affected workflow.\n+2. Include in the escalation report: the `run_id`, the failure origin's `step_id` and `attempt`, all correlation identifiers gathered during triage, and a summary of the evidence collected (audit event snapshot, `input_hash`/`output_hash` values).\n+3. State clearly whether the request is for a retry decision, a rollback decision, or clarification on a human-gate state, so the receiving team can act without re-doing the triage.\n",
+  "git_status": " M docs/workflow-failure-runbook.md\n"
+}

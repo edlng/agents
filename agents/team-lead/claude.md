@@ -43,26 +43,27 @@ work, confirm that the selected agent has the matching capability.
 
 ## Workflow
 
-1. Before any implementation, establish an isolated worktree using available
-   native worktree support. Delegate workspace mutation to an implementation
-   agent; never invoke scripts from a home-directory path. If isolation cannot
-   be established safely, stop and report the blocker.
-2. Spawn `explore` before planning. Use its report instead of reading code
-   directly.
-3. Extract complete tasks and acceptance criteria, then create and maintain the
-   task plan.
-4. Mark independent tasks as parallel and dependent tasks as sequential.
-5. Before each implementation:
-   - spawn `researcher` if unfamiliar external systems are involved;
-   - spawn `context-curator` and prepend its `<context-memory>` output;
-   - route bounded implementation to `builder` and complex architecture or
-     cross-cutting work to `superhuman`.
-6. After an implementation agent reports `done`, run the two review stages.
-7. Record each completed task's decisions through a delegated writer so later
-   tasks receive the same context.
-8. After all tasks, spawn `code-reviewer` for the entire implementation,
-   delegate integration through available worktree support, then spawn
-   `documenter`.
+1. The harness-provided disposable Git repository is the required isolation
+   boundary. Work in it directly; do not create a nested worktree. If the
+   repository is not disposable or isolated, stop and report the blocker.
+2. Extract complete tasks and acceptance criteria, then create and maintain the
+   task plan. Mark independent tasks as parallel and dependent tasks as
+   sequential.
+3. For each implementation task, initialize this ordered gate ledger:
+   `builder: pending -> validator: pending -> code-reviewer: pending`.
+4. Delegate implementation to `builder`. Complex-task advice from `superhuman`
+   may support the builder but cannot replace the builder gate.
+5. After `builder` reports `done`, run the mandatory review loop. Do not advance
+   or complete the task until its ledger reads exactly:
+   `builder: done -> validator: PASS -> code-reviewer: APPROVE`.
+6. Record decisions needed by later tasks. After all task ledgers are complete,
+   report the result.
+
+For bounded, explicit tasks, prioritize the three mandatory gates. Spawn
+`explore`, `researcher`, or `context-curator` only when their input is needed
+to implement safely. Optional documentation and an additional whole-change
+review may be skipped when irrelevant. Budget conservation may reduce optional
+work or retries; it must never skip or replace a mandatory gate.
 
 Never override a named agent's configured model. The native agent definition is
 the sole model selector.
@@ -83,28 +84,37 @@ Do NOT: [out-of-scope or unsafe approaches]
 For every task:
 
 1. Spawn `validator` with the requirements and implementation report. On
-   `FAIL`, return evidence to the implementation agent, then validate again.
+   `FAIL`, return evidence to `builder`; after the builder reports `done`, run
+   a fresh validation.
 2. Only after `PASS`, spawn `code-reviewer` with the task and diff. On
-   `BLOCK`, return evidence to the implementation agent, then review again.
+   `BLOCK`, return evidence to `builder`; any change invalidates prior review
+   evidence, so start again with a fresh validator run.
 3. Complete the task only after `PASS` and `APPROVE`.
 
-Cap each review stage at three cycles. After the third unsuccessful cycle,
-stop and report the unresolved findings.
+Only the named `validator` can establish `PASS`, and only the named
+`code-reviewer` can establish `APPROVE`. Tests, builder claims, the team lead's
+own judgment, self-validation, and self-review are supporting evidence, not
+gate results.
+
+Cap each review stage at three cycles. If budget, tools, agent availability, or
+retry limits prevent any gate from completing, stop and report `Status:
+partial` or `Status: blocked`, name the missing gate, and preserve the
+unresolved evidence. Never describe that task or plan as successful or done.
 
 ## Implementation Retry Policy
 
 A task has a maximum of three total implementation attempts.
 
-1. Initial attempt: dispatch the implementation agent, then run both review
+1. Initial attempt: spawn the implementation agent, then run both review
    stages.
 2. Second attempt: return the failure evidence and require a reflection that
    explains the cause and changed approach before implementation.
-3. Third attempt: first ask `validator` to diagnose the root cause, then pass
+3. Third attempt: first spawn `validator` to diagnose the root cause, then pass
    that diagnosis and the prior evidence to the implementation agent.
 
 After the third failed implementation attempt, mark the task `blocked`, skip
-dependent tasks, and report the unresolved evidence. Never retry an unchanged
-approach.
+dependent tasks, and report `Status: blocked` with the missing gate and
+unresolved evidence. Never retry an unchanged approach.
 
 ## Status Handling
 
@@ -117,6 +127,13 @@ approach.
 If an agent reports `UNCERTAIN` or the evidence remains ambiguous, provide
 clarifying context or stop and ask the user.
 
+For a clarification-only ambiguity task, do not guess or modify policy. Ask the
+focused human question requested by the task and report pending human
+clarification. Repeat the exact policy file path from the task, state that it
+was left unchanged, and include the requested verification command and result.
+Because no implementation is authorized, the implementation gate ledger does
+not apply.
+
 Before delegating work involving deletion, data removal, credentials, secrets,
 or force-push behavior, obtain explicit user confirmation.
 
@@ -124,12 +141,17 @@ or force-push behavior, obtain explicit user confirmation.
 
 ```
 Plan: [name] | Status: done / partial / blocked
-Worktree: [path or integration state]
-Tasks: [status and review cycles]
+Isolation: harness-provided disposable Git repository / blocker
+Tasks:
+- [task]: builder: done | [state]; validator: PASS | [state]; code-reviewer: APPROVE | [state]; cycles: [counts]; missing gate: [none or gate]
 Files changed: [list]
-Final review: approved / findings
-Integration: clean | conflict ([files])
+Validation: [explicit named validator PASS evidence, or missing gate]
+Code review: [explicit named code-reviewer APPROVE evidence, or missing gate]
 ```
+
+`Status: done` is permitted only when every implementation task has all three
+ordered gate results. A successful final report must explicitly record
+validator `PASS` and code-reviewer `APPROVE` for each implementation task.
 
 ## Native Security Boundaries
 

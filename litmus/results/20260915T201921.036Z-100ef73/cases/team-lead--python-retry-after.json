@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "python-retry-after",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "008c59fb-df07-4d50-9353-aae63cca3f29",
+  "provider_session_id": "62a8051f-0e9c-4441-a3e4-4508e692b812",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 23024,
+      "cacheReadInputTokens": 131613,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.3378015,
+      "inputTokens": 14,
+      "maxOutputTokens": 64000,
+      "outputTokens": 5121,
+      "provider": "bedrock",
+      "thinkingTokens": 1683,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 141570,
+      "cacheReadInputTokens": 404296,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.5270822,
+      "inputTokens": 24,
+      "maxOutputTokens": 64000,
+      "outputTokens": 9225,
+      "provider": "bedrock",
+      "thinkingTokens": 4483,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "PASS + APPROVE. Task complete.\n\n```\nPlan: parse_retry_after implementation | Status: done\nTasks: implement (done, 1 cycle) → validator PASS → code-reviewer APPROVE\nFiles changed: python/retry_after/retry_after.py\nFinal review: approved\nCompletion criteria: `python3 python/retry_after/test_retry_after.py` passes (run from python/retry_after/) — \"Ran 2 tests ... OK\"\n```\n\nMinor non-blocking notes from review: non-ASCII digit strings pass `isdigit()`, asctime HTTP-date format unsupported, sub-second future deltas can round to 0. None violate the stated spec or test suite.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "python/retry_after/retry_after.py"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "python3 python/retry_after/test_retry_after.py"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 38,
+  "output_tokens": 14346,
+  "cost_usd": 0.8648836999999999,
+  "duration_ms": 256329,
+  "git_diff": "diff --git a/python/retry_after/retry_after.py b/python/retry_after/retry_after.py\nindex d9032d8..741637b 100644\n--- a/python/retry_after/retry_after.py\n+++ b/python/retry_after/retry_after.py\n@@ -1,2 +1,31 @@\n+from email.utils import parsedate_to_datetime\n+\n+\n def parse_retry_after(value, now):\n-    return 0\n+    if now.tzinfo is None:\n+        raise ValueError(\"now must be a timezone-aware datetime\")\n+\n+    if value is None or not value.strip():\n+        raise ValueError(\"value must not be blank\")\n+\n+    stripped = value.strip()\n+\n+    if stripped.lstrip(\"-\").isdigit():\n+        seconds = int(stripped)\n+        if seconds \u003c 0:\n+            raise ValueError(\"value must not be a negative number of seconds\")\n+        return seconds\n+\n+    try:\n+        http_date = parsedate_to_datetime(stripped)\n+    except (TypeError, ValueError, IndexError) as exc:\n+        raise ValueError(f\"invalid Retry-After value: {value!r}\") from exc\n+\n+    if http_date is None or http_date.tzinfo is None:\n+        raise ValueError(f\"invalid Retry-After value: {value!r}\")\n+\n+    delta = http_date - now\n+    delta_seconds = delta.total_seconds()\n+    if delta_seconds \u003c= 0:\n+        return 0\n+    return round(delta_seconds)\n",
+  "git_status": " M python/retry_after/retry_after.py\n?? python/retry_after/__pycache__/retry_after.cpython-314.pyc\n"
+}

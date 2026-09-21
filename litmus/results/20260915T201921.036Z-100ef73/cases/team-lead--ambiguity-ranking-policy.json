@@ -1,0 +1,63 @@
+{
+  "agent": "team-lead",
+  "case_id": "ambiguity-ranking-policy",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "91118c03-07d2-45c2-988a-85fbd738781c",
+  "provider_session_id": "f8443aa6-d5c6-43e1-993f-7367bcaae418",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 94447,
+      "cacheReadInputTokens": 539263,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.39731209999999995,
+      "inputTokens": 36,
+      "maxOutputTokens": 64000,
+      "outputTokens": 5327,
+      "provider": "bedrock",
+      "thinkingTokens": 432,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Already incorporated that report into my last message — nothing further to add. Report stands as final.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ambiguity/ranking-policy/policy.json"
+      },
+      "passed": false,
+      "reason": "output does not contain value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(clarif|human|owner).*\\?"
+      },
+      "passed": false,
+      "reason": "output does not match regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/ranking-policy.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ ranking policy remains unchanged pending clarification (1.435167ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 93.529583"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 36,
+  "output_tokens": 5327,
+  "cost_usd": 0.39731209999999995,
+  "duration_ms": 2609
+}

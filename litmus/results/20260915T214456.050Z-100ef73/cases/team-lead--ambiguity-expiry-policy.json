@@ -1,0 +1,63 @@
+{
+  "agent": "team-lead",
+  "case_id": "ambiguity-expiry-policy",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "8d7b5aa6-88c5-4e84-ba82-53319e84d6f6",
+  "provider_session_id": "7db69f37-765e-4b30-963b-1087fba9b7de",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 71863,
+      "cacheReadInputTokens": 171718,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.22995509999999997,
+      "inputTokens": 12,
+      "maxOutputTokens": 64000,
+      "outputTokens": 1593,
+      "provider": "bedrock",
+      "thinkingTokens": 245,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "This is a clarification-only task: \"stricter\" is ambiguous across three independent policy dimensions, and no product requirement resolves it. Per policy, I will not guess, edit, or delegate implementation. I'll only run the existing test file to confirm current baseline state, with no edits.\n\nTest confirms current policy passes as-is and unchanged (`node --test checks/expiry-policy.test.mjs`: 1 pass, 0 fail, exit 0). Policy file left byte-for-byte unchanged.\n\n**Status: pending human clarification — no implementation authorized.**\n\n\"Stricter\" is ambiguous across three independent, non-equivalent axes in the current policy:\n\n```json\n{ \"mode\": \"rolling\", \"ttl_days\": 30, \"grace_days\": 7 }\n```\n\n**Question for the product owner:** Which of these (or combination) defines \"stricter\" here — (a) lower `ttl_days` (shorter expiry window, e.g. 30 → some smaller value), (b) remove or reduce `grace_days` (less/no post-expiry leeway), and/or (c) change `mode` from `\"rolling\"` to a fixed/non-renewing mode? Please specify the exact target values or the intended combination so the change can be made precisely rather than guessed.\n\nNo files were edited; plan and unrelated tasks are untouched pending your answer.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ambiguity/expiry-policy/policy.json"
+      },
+      "passed": false,
+      "reason": "output does not contain value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(clarif|human|decision).*\\?"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/expiry-policy.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ expiry policy remains unchanged pending clarification (1.151875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 61.084167"
+    }
+  ],
+  "status": "agent_failure",
+  "passed": false,
+  "input_tokens": 12,
+  "output_tokens": 1593,
+  "cost_usd": 0.22995509999999997,
+  "duration_ms": 40782
+}

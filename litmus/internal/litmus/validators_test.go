@@ -3,6 +3,7 @@ package litmus
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -47,9 +48,106 @@ func TestValidateGeneratedBatchRejectsDeprecatedTransactionAPI(t *testing.T) {
 	}
 }
 
+func TestWorkspaceCommandValidatorRunsAllowedCommand(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test helper uses a Unix executable")
+	}
+	workspace := t.TempDir()
+	fakeBin := t.TempDir()
+	writeValidatorExecutable(t, filepath.Join(fakeBin, "go"), `#!/bin/sh
+test "$1" = "test"
+test "$2" = "./..."
+test "$(pwd)" = "$EXPECTED_WORKSPACE"
+`)
+	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	resolvedWorkspace, err := filepath.EvalSymlinks(workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("EXPECTED_WORKSPACE", resolvedWorkspace)
+
+	result := runValidator("", workspace, Validator{
+		Type:    "command",
+		Command: "go test ./...",
+	})
+	if !result.Passed || result.Error {
+		t.Fatalf("runValidator() = %#v, want workspace command pass", result)
+	}
+}
+
+func TestWorkspaceCommandValidatorRunsWorkspaceRelativeNodeCheck(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test helper uses a Unix executable")
+	}
+	workspace := t.TempDir()
+	writeFile(t, filepath.Join(workspace, "checks", "check-doc.mjs"), "// fixture check")
+	fakeBin := t.TempDir()
+	writeValidatorExecutable(t, filepath.Join(fakeBin, "node"), `#!/bin/sh
+test "$1" = "checks/check-doc.mjs"
+test "$2" = "docs/quickstart.md"
+test "$3" = "quickstart"
+`)
+	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	result := runValidator("", workspace, Validator{
+		Type:    "command",
+		Command: "node checks/check-doc.mjs docs/quickstart.md quickstart",
+	})
+	if !result.Passed || result.Error {
+		t.Fatalf("runValidator() = %#v, want workspace-relative Node check pass", result)
+	}
+}
+
+func TestWorkspaceCommandValidatorRejectsUnsafeCommands(t *testing.T) {
+	for _, command := range []string{
+		"",
+		"sh -c go-test",
+		"go run main.go",
+		"python3 -c print",
+		"go test ../outside",
+		"npm run test;rm",
+		"node -e process.exit(0)",
+		"node ../checks/check-doc.mjs",
+		"node /tmp/check-doc.mjs",
+	} {
+		result := runValidator("", t.TempDir(), Validator{
+			Type:    "command",
+			Command: command,
+		})
+		if result.Passed || !result.Error {
+			t.Fatalf("runValidator(%#v) = %#v, want grader error", command, result)
+		}
+	}
+}
+
+func TestWorkspaceCommandValidatorClassifiesTestFailure(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test helper uses a Unix executable")
+	}
+	fakeBin := t.TempDir()
+	writeValidatorExecutable(t, filepath.Join(fakeBin, "pytest"), "#!/bin/sh\nexit 1\n")
+	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	result := runValidator("", t.TempDir(), Validator{
+		Type:    "command",
+		Command: "pytest -q",
+	})
+	if result.Passed || result.Error || !strings.Contains(result.Reason, "failed") {
+		t.Fatalf("runValidator() = %#v, want agent test failure", result)
+	}
+}
+
 func writeValidatorFile(t *testing.T, path, contents string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeValidatorExecutable(t *testing.T, path, contents string) {
+	t.Helper()
+	writeValidatorFile(t, path, contents)
+	if err := os.Chmod(path, 0o755); err != nil {
 		t.Fatal(err)
 	}
 }

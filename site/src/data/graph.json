@@ -780,24 +780,6 @@
       "sourcePath": "agents/valkey-glide-implementor/manifest.json"
     },
     {
-      "id": "skill:brainstorming",
-      "type": "skill",
-      "name": "brainstorming",
-      "description": "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/brainstorming/SKILL.md",
-        "codex": "skills/codex/brainstorming/SKILL.md"
-      },
-      "sourcePath": "skills/claude/brainstorming/SKILL.md",
-      "excerpt": "Brainstorming Ideas Into Designs Help turn ideas into fully formed designs and specs through natural collaborative dialogue. Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get u"
-    },
-    {
       "id": "skill:code-review-excellence",
       "type": "skill",
       "name": "code-review-excellence",
@@ -886,42 +868,6 @@
       "excerpt": "Diagram Valkey Flow Analyze the project at `$ARGUMENTS` (or the current working directory if blank) and produce a Mermaid sequence diagram showing how data flows from the application entry point through to Valkey. Run all phases in order. Do not skip phases. --- Phase 1: Discover Entry Points and Fr"
     },
     {
-      "id": "skill:dispatching-parallel-agents",
-      "type": "skill",
-      "name": "dispatching-parallel-agents",
-      "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
-      "category": "Planning & Orchestration",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/dispatching-parallel-agents/SKILL.md",
-        "codex": "skills/codex/dispatching-parallel-agents/SKILL.md"
-      },
-      "sourcePath": "skills/claude/dispatching-parallel-agents/SKILL.md",
-      "excerpt": "Dispatching Parallel Agents Overview You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what "
-    },
-    {
-      "id": "skill:executing-plans",
-      "type": "skill",
-      "name": "executing-plans",
-      "description": "Use when you have a written implementation plan to execute in a separate session with review checkpoints",
-      "category": "Planning & Orchestration",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/executing-plans/SKILL.md",
-        "codex": "skills/codex/executing-plans/SKILL.md"
-      },
-      "sourcePath": "skills/claude/executing-plans/SKILL.md",
-      "excerpt": "Executing Plans Overview Load plan, review critically, execute all tasks, report when complete. **Announce at start:** \"I'm using the executing-plans skill to implement this plan.\" **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work "
-    },
-    {
       "id": "skill:find-skills",
       "type": "skill",
       "name": "find-skills",
@@ -937,23 +883,6 @@
       },
       "sourcePath": "skills/universal/find-skills/SKILL.md",
       "excerpt": "Find Skills This skill helps you discover and install skills from the open agent skills ecosystem. When to Use This Skill Use this skill when the user: - Asks \"how do I do X\" where X might be a common task with an existing skill - Says \"find a skill for X\" or \"is there a skill for X\" - Asks \"can you"
-    },
-    {
-      "id": "skill:finishing-a-development-branch",
-      "type": "skill",
-      "name": "finishing-a-development-branch",
-      "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/finishing-a-development-branch/SKILL.md"
-      },
-      "sourcePath": "skills/universal/finishing-a-development-branch/SKILL.md",
-      "excerpt": "Finishing a Development Branch Overview Guide completion of development work by presenting clear options and handling chosen workflow. **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up. **Announce at start:** \"I'm using the finishing-a-development-br"
     },
     {
       "id": "skill:glide-skill",
@@ -1029,7 +958,7 @@
       "id": "skill:implement-task",
       "type": "skill",
       "name": "implement-task",
-      "description": "Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review using existing agents. Use when given a task description without a Jira ticket. Do NOT use for tasks that have a Jira ticket (use implement-jira), for quick one-file fixes, or when a plan already exists (use subagent-driven-development).",
+      "description": "Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review using existing agents. Use when given a task description without a Jira ticket. Do NOT use for tasks that have a Jira ticket (use implement-jira), for quick one-file fixes, or when a multi-step plan already exists.",
       "category": "Other",
       "platforms": [
         "claude",
@@ -1095,41 +1024,6 @@
       },
       "sourcePath": "skills/claude/pr-comment-humanizer/SKILL.md",
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
-    },
-    {
-      "id": "skill:receiving-code-review",
-      "type": "skill",
-      "name": "receiving-code-review",
-      "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
-      "category": "Code Review",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/receiving-code-review/SKILL.md"
-      },
-      "sourcePath": "skills/universal/receiving-code-review/SKILL.md",
-      "excerpt": "Code Review Reception Overview Code review requires technical evaluation, not emotional performance. **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort. The Response Pattern ``` WHEN receiving code review feedback: 1. READ: Complete feedbac"
-    },
-    {
-      "id": "skill:requesting-code-review",
-      "type": "skill",
-      "name": "requesting-code-review",
-      "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
-      "category": "Code Review",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/requesting-code-review/SKILL.md",
-        "codex": "skills/codex/requesting-code-review/SKILL.md"
-      },
-      "sourcePath": "skills/claude/requesting-code-review/SKILL.md",
-      "excerpt": "Requesting Code Review Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for c"
     },
     {
       "id": "skill:revamp-cookbook",
@@ -1220,58 +1114,6 @@
       "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. This is the **standard** PR review. The full workflow is defined in the shared base file so it can be reused by specialized variants (e.g. `review-cookbook-pr`). Run the base wor"
     },
     {
-      "id": "skill:subagent-driven-development",
-      "type": "skill",
-      "name": "subagent-driven-development",
-      "description": "Use when executing implementation plans with independent tasks in the current session",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/subagent-driven-development/SKILL.md",
-        "codex": "skills/codex/subagent-driven-development/SKILL.md"
-      },
-      "sourcePath": "skills/claude/subagent-driven-development/SKILL.md",
-      "excerpt": "Subagent-Driven Development Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review. **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and c"
-    },
-    {
-      "id": "skill:systematic-debugging",
-      "type": "skill",
-      "name": "systematic-debugging",
-      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/systematic-debugging/SKILL.md"
-      },
-      "sourcePath": "skills/universal/systematic-debugging/SKILL.md",
-      "excerpt": "Systematic Debugging Overview Random fixes waste time and create new bugs. Quick patches mask underlying issues. **Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure. **Violating the letter of this process is violating the spirit of debugging.** The Iron Law "
-    },
-    {
-      "id": "skill:test-driven-development",
-      "type": "skill",
-      "name": "test-driven-development",
-      "description": "Use when implementing any feature or bugfix, before writing implementation code",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/test-driven-development/SKILL.md"
-      },
-      "sourcePath": "skills/universal/test-driven-development/SKILL.md",
-      "excerpt": "Test-Driven Development (TDD) Overview Write the test first. Watch it fail. Write minimal code to pass. **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing. **Violating the letter of the rules is violating the spirit of the rules.** When to Use **Always:"
-    },
-    {
       "id": "skill:test-valkey",
       "type": "skill",
       "name": "test-valkey",
@@ -1342,41 +1184,6 @@
       "excerpt": "Update Sysprompts Persist the skill arguments as one managed instruction in all three harnesses: Kiro, Claude Code, and Codex. The invocation prefix is harness-specific (typically `/update-sysprompts` in Kiro or Claude Code and `$update-sysprompts` in Codex). When the host provides parsed skill argu"
     },
     {
-      "id": "skill:using-git-worktrees",
-      "type": "skill",
-      "name": "using-git-worktrees",
-      "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
-      "category": "Planning & Orchestration",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/using-git-worktrees/SKILL.md"
-      },
-      "sourcePath": "skills/universal/using-git-worktrees/SKILL.md",
-      "excerpt": "Using Git Worktrees Overview Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available. **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never f"
-    },
-    {
-      "id": "skill:using-superpowers",
-      "type": "skill",
-      "name": "using-superpowers",
-      "description": "Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions",
-      "category": "Meta",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/using-superpowers/SKILL.md",
-        "codex": "skills/codex/using-superpowers/SKILL.md"
-      },
-      "sourcePath": "skills/claude/using-superpowers/SKILL.md",
-      "excerpt": "<SUBAGENT-STOP> If you were dispatched as a subagent to execute a specific task, skip this skill. </SUBAGENT-STOP> <EXTREMELY-IMPORTANT> If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill. IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT"
-    },
-    {
       "id": "skill:valkey-spike",
       "type": "skill",
       "name": "valkey-spike",
@@ -1392,23 +1199,6 @@
       },
       "sourcePath": "skills/universal/valkey-spike/SKILL.md",
       "excerpt": "Valkey Spike Analyze the repository `$ARGUMENTS` (or the current working directory if blank) for Valkey integration opportunities, then **prove the riskiest assumptions work** against a live Valkey instance. This is a four-phase workflow: 1. **Evidence Collection** - scan the codebase 2. **Compatibi"
-    },
-    {
-      "id": "skill:verification-before-completion",
-      "type": "skill",
-      "name": "verification-before-completion",
-      "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/verification-before-completion/SKILL.md"
-      },
-      "sourcePath": "skills/universal/verification-before-completion/SKILL.md",
-      "excerpt": "Verification Before Completion Overview Claiming work is complete without verification is dishonesty, not efficiency. **Core principle:** Evidence before claims, always. **Violating the letter of this rule is violating the spirit of this rule.** The Iron Law ``` NO COMPLETION CLAIMS WITHOUT FRESH VE"
     },
     {
       "id": "skill:write-narrative",
@@ -1462,42 +1252,6 @@
       },
       "sourcePath": "skills/claude/write-pr-comments/SKILL.md",
       "excerpt": "Write PR Comments Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note. `$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/"
-    },
-    {
-      "id": "skill:writing-plans",
-      "type": "skill",
-      "name": "writing-plans",
-      "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
-      "category": "Planning & Orchestration",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/writing-plans/SKILL.md",
-        "codex": "skills/codex/writing-plans/SKILL.md"
-      },
-      "sourcePath": "skills/claude/writing-plans/SKILL.md",
-      "excerpt": "Writing Plans Overview Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole"
-    },
-    {
-      "id": "skill:writing-skills",
-      "type": "skill",
-      "name": "writing-skills",
-      "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
-      "category": "Meta",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/writing-skills/SKILL.md",
-        "codex": "skills/codex/writing-skills/SKILL.md"
-      },
-      "sourcePath": "skills/claude/writing-skills/SKILL.md",
-      "excerpt": "Writing Skills Overview **Writing skills IS Test-Driven Development applied to process documentation.** **Claude skills are installed in `~/.claude/skills` or the project-local `.claude/skills` directory.** You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior)"
     },
     {
       "id": "shared-ref:async-dispatch-protocols",
@@ -2372,7 +2126,7 @@
   "stats": {
     "counts": {
       "agents": 17,
-      "skills": 41,
+      "skills": 27,
       "sharedRefs": 11,
       "mcpServers": 5,
       "workflows": 5
@@ -2407,35 +2161,34 @@
       "valkey-glide": 1
     },
     "skillCategories": {
-      "Development Workflows": 7,
-      "Code Review": 8,
+      "Code Review": 6,
       "Other": 6,
-      "Meta": 6,
+      "Meta": 4,
       "Valkey & GLIDE": 5,
-      "Planning & Orchestration": 4,
-      "Writing & Documentation": 5
+      "Writing & Documentation": 5,
+      "Development Workflows": 1
     },
     "evals": {
-      "caseCount": 20,
-      "runCount": 24,
+      "caseCount": 40,
+      "runCount": 45,
       "byAgent": [
         {
           "agent": "builder",
           "model": "sonnet",
-          "runs": 21,
-          "avgIn": 3,
-          "avgOut": 1632,
-          "avgDurationS": 22,
-          "totalCostUsd": 1.4725805000000003
+          "runs": 29,
+          "avgIn": 2,
+          "avgOut": 1198,
+          "avgDurationS": 17,
+          "totalCostUsd": 2.3715965000000003
         },
         {
           "agent": "code-reviewer",
           "model": "sonnet",
-          "runs": 41,
+          "runs": 45,
           "avgIn": 2,
-          "avgOut": 1080,
-          "avgDurationS": 16,
-          "totalCostUsd": 2.5025952
+          "avgOut": 1009,
+          "avgDurationS": 15,
+          "totalCostUsd": 2.555639
         },
         {
           "agent": "context-curator",
@@ -2449,11 +2202,11 @@
         {
           "agent": "documenter",
           "model": "haiku",
-          "runs": 4,
-          "avgIn": 3,
-          "avgOut": 390,
-          "avgDurationS": 9,
-          "totalCostUsd": 0.16948499999999997
+          "runs": 6,
+          "avgIn": 2,
+          "avgOut": 351,
+          "avgDurationS": 8,
+          "totalCostUsd": 0.28106675
         },
         {
           "agent": "glide-code-reviewer",
@@ -2492,6 +2245,15 @@
           "totalCostUsd": 0.36877
         },
         {
+          "agent": "team-lead",
+          "model": "sonnet",
+          "runs": 66,
+          "avgIn": 45,
+          "avgOut": 13025,
+          "avgDurationS": 180,
+          "totalCostUsd": 58.3802655
+        },
+        {
           "agent": "tester",
           "model": "sonnet",
           "runs": 4,
@@ -2503,11 +2265,11 @@
         {
           "agent": "validator",
           "model": "opus",
-          "runs": 9,
-          "avgIn": 3,
-          "avgOut": 328,
-          "avgDurationS": 8,
-          "totalCostUsd": 0.3422905000000001
+          "runs": 15,
+          "avgIn": 2,
+          "avgOut": 253,
+          "avgDurationS": 7,
+          "totalCostUsd": 2.3887155
         },
         {
           "agent": "valkey-glide-implementor",
@@ -2519,8 +2281,8 @@
           "totalCostUsd": 0.6927100000000002
         }
       ],
-      "grandRuns": 121,
-      "grandTotalCostUsd": 7.003003700000001
+      "grandRuns": 207,
+      "grandTotalCostUsd": 68.49333575000001
     }
   }
 }

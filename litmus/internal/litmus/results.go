@@ -62,6 +62,8 @@ type summaryCase struct {
 	ProviderModels []string   `json:"provider_models,omitempty"`
 	Status         CaseStatus `json:"status"`
 	Passed         bool       `json:"passed"`
+	WorkflowStatus string     `json:"workflow_status,omitempty"`
+	Invocations    int        `json:"workflow_invocations,omitempty"`
 	InputTokens    int        `json:"input_tokens"`
 	OutputTokens   int        `json:"output_tokens"`
 	CostUSD        float64    `json:"cost_usd"`
@@ -117,6 +119,9 @@ func WriteRun(root string, run Run) (string, error) {
 		path := filepath.Join(casesDirectory, caseDetailName(result))
 		if err := writeIndentedJSON(path, result); err != nil {
 			return "", fmt.Errorf("write case result: %w", err)
+		}
+		if err := writeWorkflowEvidence(directory, result); err != nil {
+			return "", fmt.Errorf("write workflow evidence: %w", err)
 		}
 	}
 	if err := writeIndentedJSON(filepath.Join(directory, "summary.json"), summary); err != nil {
@@ -276,6 +281,17 @@ func normalizedRun(run Run) (Run, error) {
 		}
 		if !isFinite(result.CostUSD) || result.CostUSD < 0 {
 			return Run{}, fmt.Errorf("case cost_usd must be finite and non-negative")
+		}
+		if result.Workflow != nil {
+			if result.Workflow.SchemaVersion != MeasuredWorkflowSchemaVersion {
+				return Run{}, fmt.Errorf("unsupported case workflow schema_version")
+			}
+			if result.Workflow.CaseID != result.CaseID {
+				return Run{}, fmt.Errorf("case workflow identity does not match result")
+			}
+			if err := validateWorkflowEvidence(*result.Workflow); err != nil {
+				return Run{}, err
+			}
 		}
 	}
 	return run, nil
@@ -447,7 +463,7 @@ func summaryFor(run Run) runSummary {
 		summary.Totals.OutputTokens += result.OutputTokens
 		summary.Totals.CostUSD += result.CostUSD
 		summary.Totals.DurationMS += result.DurationMS
-		summary.Cases = append(summary.Cases, summaryCase{
+		entry := summaryCase{
 			Agent:          result.Agent,
 			CaseID:         result.CaseID,
 			ProviderModels: result.ProviderModels,
@@ -458,7 +474,12 @@ func summaryFor(run Run) runSummary {
 			CostUSD:        result.CostUSD,
 			DurationMS:     result.DurationMS,
 			DetailPath:     filepath.ToSlash(filepath.Join("cases", caseDetailName(result))),
-		})
+		}
+		if result.Workflow != nil {
+			entry.WorkflowStatus = result.Workflow.Status
+			entry.Invocations = result.Workflow.Totals.Invocations
+		}
+		summary.Cases = append(summary.Cases, entry)
 	}
 	summary.Totals.TotalTokens = summary.Totals.InputTokens + summary.Totals.OutputTokens
 	return summary
@@ -489,6 +510,45 @@ func writeIndentedJSON(path string, value any) error {
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(value)
+}
+
+func writeWorkflowEvidence(directory string, result CaseResult) error {
+	if result.Workflow == nil {
+		return nil
+	}
+	workflowDirectory := filepath.Join(directory, "workflow", result.CaseID)
+	sentinelDirectory := filepath.Join(workflowDirectory, "sentinels")
+	if err := os.MkdirAll(sentinelDirectory, 0o755); err != nil {
+		return err
+	}
+	audit, err := os.OpenFile(
+		filepath.Join(workflowDirectory, "audit.jsonl"),
+		os.O_WRONLY|os.O_CREATE|os.O_EXCL,
+		0o644,
+	)
+	if err != nil {
+		return err
+	}
+	encoder := json.NewEncoder(audit)
+	for _, record := range result.Workflow.Audit {
+		if err := encoder.Encode(record); err != nil {
+			_ = audit.Close()
+			return err
+		}
+	}
+	if err := audit.Close(); err != nil {
+		return err
+	}
+	for _, sentinel := range result.Workflow.Sentinels {
+		path := filepath.Join(
+			sentinelDirectory,
+			fmt.Sprintf("%s-attempt-%d.passed.json", sentinel.StepID, sentinel.Attempt),
+		)
+		if err := writeIndentedJSON(path, sentinel); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func markdownReport(summary runSummary) string {

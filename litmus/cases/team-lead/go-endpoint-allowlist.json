@@ -1,0 +1,19 @@
+{
+  "id": "go-endpoint-allowlist",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only go/endpoint/endpoint.go. Implement Validate(raw, allowedHosts) for outbound endpoints. Require an absolute https URL, no userinfo, a nonempty hostname, no IP-literal host, and an exact case-insensitive hostname match in the nonempty allowlist. Preserve path and query and return the parsed URL. Reject scheme-relative URLs and deceptive suffix hosts. Do not resolve DNS or repair unrelated tasks. Completion criteria: go test ./go/endpoint passes and the final report names the file, SSRF boundary, and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "go/endpoint/endpoint.go"},
+    {"type": "regex", "value": "(?i)(SSRF|allowlist|security)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "go test ./go/endpoint"}
+  ]
+}

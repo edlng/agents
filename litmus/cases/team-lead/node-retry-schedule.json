@@ -1,0 +1,19 @@
+{
+  "id": "node-retry-schedule",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only node/retry-schedule/index.mjs. Implement retrySchedule({attempts, baseMs, factor, maxMs}) returning one delay for every retry after the initial attempt. Delays grow exponentially from baseMs and are capped at maxMs. attempts must be a positive integer; baseMs and maxMs must be positive finite numbers with baseMs <= maxMs; factor must be finite and >= 1. Throw an error containing invalid for bad options. Do not repair unrelated tasks. Completion criteria: node --test node/retry-schedule/test.mjs passes and the final report names the file and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "node/retry-schedule/index.mjs"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "node --test node/retry-schedule/test.mjs"}
+  ]
+}

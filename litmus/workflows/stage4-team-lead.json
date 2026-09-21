@@ -1,0 +1,88 @@
+{
+  "schema_version": "stage4.measured-workflow.v1",
+  "workflow_id": "team-lead-implementation-v1",
+  "max_attempts": 3,
+  "steps": [
+    {
+      "id": "builder",
+      "agent": "builder",
+      "budget_usd": 0.75,
+      "allow_workspace_changes": true,
+      "json_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "summary", "files", "verification"],
+        "properties": {
+          "status": {"const": "done"},
+          "summary": {"type": "string", "minLength": 1},
+          "files": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "verification": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "id": "validator",
+      "agent": "validator",
+      "budget_usd": 0.45,
+      "allow_workspace_changes": false,
+      "json_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "reason", "issues"],
+        "properties": {
+          "decision": {"enum": ["PASS", "FAIL"]},
+          "reason": {"type": "string", "minLength": 1},
+          "issues": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    {
+      "id": "code-reviewer",
+      "agent": "code-reviewer",
+      "budget_usd": 0.5,
+      "allow_workspace_changes": false,
+      "json_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "reason", "findings"],
+        "properties": {
+          "decision": {"enum": ["APPROVE", "BLOCK"]},
+          "reason": {"type": "string", "minLength": 1},
+          "findings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    {
+      "id": "review-challenge",
+      "agent": "validator",
+      "budget_usd": 0.4,
+      "allow_workspace_changes": false,
+      "json_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "reason", "issues"],
+        "properties": {
+          "decision": {"enum": ["PASS", "FAIL"]},
+          "reason": {"type": "string", "minLength": 1},
+          "issues": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    {
+      "id": "documenter",
+      "agent": "documenter",
+      "budget_usd": 0.4,
+      "allow_workspace_changes": true,
+      "json_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "path", "summary"],
+        "properties": {
+          "status": {"const": "done"},
+          "path": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ]
+}

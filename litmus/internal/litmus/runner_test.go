@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -213,6 +214,39 @@ func TestLoadCaseLoadsValidCase(t *testing.T) {
 	}
 	if got.ID != "case" || got.Agent != "reviewer" || got.Task != "review task" || got.MaxBudgetUSD != 0.10 || len(got.Assertions) != 1 {
 		t.Fatalf("LoadCase() = %#v, want decoded case", got)
+	}
+}
+
+func TestLoadCaseValidatesWorkspaceCommand(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "litmus/cases/builder/valid.json"), `{
+		"id": "valid",
+		"agent": "builder",
+		"task": "implement",
+		"max_budget_usd": 0.10,
+		"workflow": true,
+		"assertions": [{"type": "contains", "value": "done"}],
+		"validators": [{"type": "command", "command": "go test ./..."}]
+	}`)
+	writeFile(t, filepath.Join(root, "litmus/cases/builder/invalid.json"), `{
+		"id": "invalid",
+		"agent": "builder",
+		"task": "implement",
+		"max_budget_usd": 0.10,
+		"assertions": [{"type": "contains", "value": "done"}],
+		"validators": [{"type": "command", "command": "sh -c go-test"}]
+	}`)
+
+	valid, err := LoadCase(root, "builder", "valid")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid.Workflow || valid.Validators[0].Command != "go test ./..." {
+		t.Fatalf("LoadCase() = %#v, want workflow command", valid)
+	}
+	if _, err := LoadCase(root, "builder", "invalid"); err == nil ||
+		!strings.Contains(err.Error(), "not an allowed test command") {
+		t.Fatalf("LoadCase() error = %v, want unsafe command rejection", err)
 	}
 }
 
@@ -752,6 +786,80 @@ effort: medium
 	}
 }
 
+func TestProbePreparesWorkflowAndCapturesGitChanges(t *testing.T) {
+	root := testRepo(t)
+	writeFile(t, filepath.Join(root, "scripts", "install.mjs"), "// invoked through fake node")
+	writeFile(t, filepath.Join(root, "litmus", "fixtures", "workflow", "tracked.txt"), "before\n")
+	installLog := filepath.Join(t.TempDir(), "install-args.txt")
+	fakeBin := t.TempDir()
+	nodeScript := fmt.Sprintf(`#!/bin/sh
+printf '%%s\n' "$@" > %q
+target=
+while [ "$#" -gt 0 ]; do
+	if [ "$1" = "--target" ]; then
+		shift
+		target=$1
+		break
+	fi
+	shift
+done
+mkdir -p "$target/.claude/agents"
+printf 'installed\n' > "$target/.claude/agents/team-lead.md"
+`, installLog)
+	writeExecutable(t, filepath.Join(fakeBin, "node"), nodeScript)
+	t.Setenv("PATH", fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	fake := &fakeExecutor{
+		response: ProviderResponse{Output: "done"},
+		onExecute: func(request ProviderRequest) {
+			if _, err := os.Stat(filepath.Join(request.Workspace, ".git")); err != nil {
+				t.Errorf("workflow git repository was not initialized: %v", err)
+			}
+			if _, err := os.Stat(filepath.Join(request.Workspace, ".claude", "agents", "team-lead.md")); err != nil {
+				t.Errorf("project-scoped Claude agents were not installed: %v", err)
+			}
+			writeFile(t, filepath.Join(request.Workspace, "tracked.txt"), "after\n")
+			writeFile(t, filepath.Join(request.Workspace, "created.txt"), "new\n")
+		},
+	}
+	runner := Runner{Root: root, Executor: fake}
+	testCase := Case{
+		ID:           "workflow",
+		Agent:        "code-reviewer",
+		Task:         "Implement the change",
+		MaxBudgetUSD: 0.10,
+		Live:         true,
+		Workflow:     true,
+		Fixture:      "workflow",
+		Assertions:   []Assertion{{Type: "contains", Value: "done"}},
+	}
+
+	result, err := runner.Probe(context.Background(), testCase, 0.10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !fake.request.Workflow || !fake.request.AllowTools {
+		t.Fatalf("Probe() request = %#v, want workflow with tools enabled", fake.request)
+	}
+	if !strings.Contains(result.GitDiff, "-before") || !strings.Contains(result.GitDiff, "+after") {
+		t.Fatalf("Probe() git diff = %q, want tracked file change", result.GitDiff)
+	}
+	if !strings.Contains(result.GitStatus, "tracked.txt") || !strings.Contains(result.GitStatus, "created.txt") {
+		t.Fatalf("Probe() git status = %q, want tracked and untracked changes", result.GitStatus)
+	}
+	installArgs, err := os.ReadFile(installLog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantInstall := fmt.Sprintf(
+		"scripts/install.mjs\nclaude\n--scope\nproject\n--target\n%s\n",
+		fake.request.Workspace,
+	)
+	if string(installArgs) != wantInstall {
+		t.Fatalf("install args = %q, want %q", installArgs, wantInstall)
+	}
+}
+
 func TestProbeReturnsProviderFailureWithCapturedMetrics(t *testing.T) {
 	root := testRepo(t)
 	fake := &fakeExecutor{
@@ -856,9 +964,9 @@ func TestClaudeArgsDisableBuiltInTools(t *testing.T) {
 	}
 	want := []string{
 		"-p",
-		"--output-format", "json",
 		"--model", "claude-sonnet-5",
 		"--max-budget-usd", "0.08",
+		"--output-format", "json",
 		"--system-prompt", "# Builder",
 		"--tools", "",
 	}
@@ -881,6 +989,441 @@ func TestClaudeArgsAddsJSONSchema(t *testing.T) {
 		t.Fatalf("claudeArgs() tail = %#v, want JSON schema flag", args[len(args)-2:])
 	}
 }
+
+func TestClaudeArgsUsesInstalledAgentForWorkflow(t *testing.T) {
+	args, err := claudeArgs(ProviderRequest{
+		Agent:      "team-lead",
+		Model:      "sonnet",
+		BudgetUSD:  0.10,
+		AllowTools: true,
+		Workflow:   true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"-p",
+		"--model", "claude-sonnet-5",
+		"--max-budget-usd", "0.08",
+		"--output-format", "stream-json",
+		"--verbose",
+		"--forward-subagent-text",
+		"--agent", "team-lead",
+		"--permission-mode", "auto",
+		"--permission-prompts", "none",
+	}
+	if !reflect.DeepEqual(args, want) {
+		t.Fatalf("claudeArgs() = %#v, want %#v", args, want)
+	}
+}
+
+func TestTeamLeadPromptsEnforceMandatoryGateContract(t *testing.T) {
+	root := repoRoot(t)
+	claudeContents, err := os.ReadFile(filepath.Join(root, "agents", "team-lead", "claude.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	codexContents, err := os.ReadFile(filepath.Join(root, "agents", "team-lead", "codex.toml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claudeBody := extractDelimitedBody(t, string(claudeContents), "---\n", "---\n")
+	codexBody := extractDelimitedBody(t, string(codexContents), "developer_instructions = \"\"\"\n", "\n\"\"\"")
+	if strings.TrimSpace(claudeBody) != strings.TrimSpace(codexBody) {
+		t.Fatal("Claude and Codex team-lead instructions must remain behaviorally identical")
+	}
+
+	contract := strings.Join(strings.Fields(claudeBody), " ")
+	required := []string{
+		"harness-provided disposable Git repository is the required isolation boundary",
+		"do not create a nested worktree",
+		"`builder: done -> validator: PASS -> code-reviewer: APPROVE`",
+		"Only the named `validator` can establish `PASS`",
+		"only the named `code-reviewer` can establish `APPROVE`",
+		"self-validation, and self-review are supporting evidence, not gate results",
+		"Budget conservation may reduce optional work or retries; it must never skip or replace a mandatory gate",
+		"report `Status: partial` or `Status: blocked`, name the missing gate",
+		"`Status: done` is permitted only when every implementation task has all three ordered gate results",
+		"Ask the focused human question requested by the task and report pending human clarification",
+		"Repeat the exact policy file path from the task, state that it was left unchanged",
+	}
+	for _, marker := range required {
+		if !strings.Contains(contract, marker) {
+			t.Errorf("team-lead contract missing durable marker %q", marker)
+		}
+	}
+
+	builder := strings.Index(contract, "builder: done")
+	validator := strings.Index(contract, "validator: PASS")
+	reviewer := strings.Index(contract, "code-reviewer: APPROVE")
+	if builder < 0 || validator <= builder || reviewer <= validator {
+		t.Fatalf("gate order indexes = builder:%d validator:%d reviewer:%d, want builder -> validator -> reviewer", builder, validator, reviewer)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseRequiresOneTerminalStructuredResult(t *testing.T) {
+	contents := "{\"type\":\"assistant\",\"request_id\":\"assistant-request\",\"uuid\":\"assistant-response\",\"session_id\":\"assistant-session\",\"modelUsage\":{\"assistant-model\":{\"inputTokens\":99,\"outputTokens\":101}},\"total_cost_usd\":9.99,\"duration_ms\":999,\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"unvalidated prose: validator PASS\\n```json\\n{\\\"decision\\\":\\\"FAIL\\\",\\\"reason\\\":\\\"unvalidated\\\",\\\"issues\\\":[\\\"unvalidated\\\"]}\\n```\"}]}}\n" +
+		"{\"type\":\"result\",\"request_id\":\"result-request\",\"result\":\"unvalidated result prose\",\"structured_output\":{\"reason\":\"verified\",\"issues\":[],\"decision\":\"PASS\"},\"uuid\":\"response-id\",\"session_id\":\"session-id\",\"modelUsage\":{\"claude-sonnet-5\":{\"inputTokens\":3,\"outputTokens\":5}},\"total_cost_usd\":0.12,\"duration_ms\":250,\"is_error\":false}\n"
+
+	response, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderSchema)
+	if err != nil {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want valid structured output", err)
+	}
+	if response.Output != `{"decision":"PASS","issues":[],"reason":"verified"}` {
+		t.Fatalf("workflow output = %q, want canonical structured output", response.Output)
+	}
+	if strings.Contains(response.Output, "unvalidated") ||
+		strings.Contains(response.Output, "validator PASS") {
+		t.Fatalf("workflow output = %q, must exclude assistant and result prose", response.Output)
+	}
+	if response.ProviderRequestID != "result-request" ||
+		response.ProviderResponseID != "response-id" ||
+		response.ProviderSessionID != "session-id" ||
+		response.InputTokens != 3 ||
+		response.OutputTokens != 5 ||
+		response.CostUSD != 0.12 ||
+		response.Duration != 250*time.Millisecond {
+		t.Fatalf("workflow metrics = %#v, want telemetry bound only to the sole result", response)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseRejectsMissingOrDuplicateResultData(t *testing.T) {
+	tests := []struct {
+		name     string
+		contents string
+		want     string
+	}{
+		{
+			name: "missing structured output",
+			contents: "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Status: done\"}]}}\n" +
+				"{\"type\":\"result\",\"result\":\"Status: done\",\"uuid\":\"response-id\"}\n",
+			want: "assistant fallback",
+		},
+		{
+			name: "duplicate result",
+			contents: "{\"type\":\"result\",\"structured_output\":{\"decision\":\"PASS\"},\"uuid\":\"first\"}\n" +
+				"{\"type\":\"result\",\"structured_output\":{\"decision\":\"FAIL\"},\"uuid\":\"second\"}\n",
+			want: "result event",
+		},
+		{
+			name: "result is not terminal",
+			contents: "{\"type\":\"result\",\"structured_output\":{\"decision\":\"PASS\"},\"uuid\":\"response-id\"}\n" +
+				"{\"type\":\"system\",\"subtype\":\"complete\"}\n",
+			want: "terminal",
+		},
+		{
+			name:     "missing result",
+			contents: "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Status: done\"}]}}\n",
+			want:     "result is required",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := decodeWorkflowProviderResponse([]byte(test.contents), "validator", workflowDecoderSchema)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("decodeWorkflowProviderResponse() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestDecodeWorkflowProviderResponseAcceptsOneFencedAssistantObject(t *testing.T) {
+	contents := "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Completed the work.\\n\\n```json\\n{\\\"decision\\\":\\\"PASS\\\",\\\"reason\\\":\\\"verified\\\",\\\"issues\\\":[]}\\n```\\n\\nAdditional context.\"}]}}\n" +
+		"{\"type\":\"result\",\"request_id\":\"result-request\",\"uuid\":\"response-id\",\"session_id\":\"session-id\",\"modelUsage\":{\"claude-sonnet-5\":{\"inputTokens\":3,\"outputTokens\":5}},\"total_cost_usd\":0.12,\"duration_ms\":250,\"is_error\":false}\n"
+
+	response, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderSchema)
+	if err != nil {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want fenced assistant JSON fallback", err)
+	}
+	if response.Output != `{"decision":"PASS","issues":[],"reason":"verified"}` {
+		t.Fatalf("workflow output = %q, want canonical fenced assistant JSON", response.Output)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseAcceptsObservedPrefixedAssistantObject(t *testing.T) {
+	contents := "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"All 4 tests pass.\\n{\\\"decision\\\":\\\"PASS\\\",\\\"reason\\\":\\\"verified\\\",\\\"issues\\\":[]}\"}]}}\n" +
+		"{\"type\":\"result\",\"request_id\":\"result-request\",\"uuid\":\"response-id\",\"session_id\":\"session-id\",\"modelUsage\":{\"claude-sonnet-5\":{\"inputTokens\":3,\"outputTokens\":5}},\"total_cost_usd\":0.12,\"duration_ms\":250,\"is_error\":false}\n"
+
+	response, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderSchema)
+	if err != nil {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want embedded assistant JSON fallback", err)
+	}
+	if response.Output != `{"decision":"PASS","issues":[],"reason":"verified"}` {
+		t.Fatalf("workflow output = %q, want canonical embedded assistant JSON", response.Output)
+	}
+}
+
+func TestExtractWorkflowJSONObjectRespectsStringsAndEscapes(t *testing.T) {
+	text := `prefix {"decision":"PASS","reason":"brace } and { plus escaped \"quote\"","issues":[]} suffix`
+
+	candidate, err := extractWorkflowJSONObject(text)
+	if err != nil {
+		t.Fatalf("extractWorkflowJSONObject() error = %v, want valid embedded object", err)
+	}
+	if string(candidate) != `{"decision":"PASS","reason":"brace } and { plus escaped \"quote\"","issues":[]}` {
+		t.Fatalf("candidate = %q, want balanced object with string braces preserved", candidate)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseRejectsAmbiguousAssistantFallbacks(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+		want string
+	}{
+		{
+			name: "missing JSON",
+			text: "I completed the work successfully.",
+			want: "exactly one JSON object",
+		},
+		{
+			name: "multiple JSON blocks",
+			text: "prefix {\"decision\":\"PASS\",\"reason\":\"one\",\"issues\":[]} suffix {\"decision\":\"FAIL\",\"reason\":\"two\",\"issues\":[\"issue\"]}",
+			want: "multiple JSON objects",
+		},
+		{
+			name: "wrong enum",
+			text: "```json\n{\"decision\":\"MAYBE\",\"reason\":\"unknown\",\"issues\":[]}\n```",
+			want: "enum",
+		},
+		{
+			name: "extra property",
+			text: "```json\n{\"decision\":\"PASS\",\"reason\":\"verified\",\"issues\":[],\"extra\":true}\n```",
+			want: "additional property",
+		},
+		{
+			name: "malformed JSON",
+			text: "```json\n{\"decision\":\"PASS\",\"reason\":\"verified\",\"issues\":[}\n```",
+			want: "exactly one JSON object",
+		},
+		{
+			name: "braces outside candidate",
+			text: `prefix {"decision":"PASS","reason":"verified","issues":[]} suffix }`,
+			want: "unmatched closing brace",
+		},
+		{
+			name: "array outside candidate",
+			text: `[{"decision":"PASS","reason":"verified","issues":[]}]`,
+			want: "array outside",
+		},
+		{
+			name: "scalar",
+			text: `42`,
+			want: "exactly one JSON object",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			contents := fmt.Sprintf(
+				"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+					"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+				test.text,
+			)
+			_, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderSchema)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("decodeWorkflowProviderResponse() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestDecodeWorkflowProviderResponseIgnoresChildAssistantText(t *testing.T) {
+	contents := "{\"type\":\"assistant\",\"parent_tool_use_id\":\"tool-use-1\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"```json\\n{\\\"decision\\\":\\\"PASS\\\",\\\"reason\\\":\\\"child\\\",\\\"issues\\\":[]}\\n```\"}]}}\n" +
+		"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n"
+
+	_, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderSchema)
+	if err == nil || !strings.Contains(err.Error(), "no top-level assistant text events") {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want child text ignored", err)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseRejectsConstMismatch(t *testing.T) {
+	contents := "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"```json\\n{\\\"status\\\":\\\"blocked\\\"}\\n```\"}]}}\n" +
+		"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n"
+
+	_, err := decodeWorkflowProviderResponse([]byte(contents), "validator", workflowDecoderConstSchema)
+	if err == nil || !strings.Contains(err.Error(), "const") {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want const mismatch", err)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseAcceptsObservedCodeReviewerNativeReport(t *testing.T) {
+	report := "APPROVE — spec met, no blocking issues.\n\n**Spec alignment:** ... safeKeys[...] ..."
+	contents := fmt.Sprintf(
+		"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+			"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+		report,
+	)
+
+	response, err := decodeWorkflowProviderResponse([]byte(contents), "code-reviewer", workflowCodeReviewSchema)
+	if err != nil {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want native code-reviewer adapter", err)
+	}
+	var output struct {
+		Decision string   `json:"decision"`
+		Reason   string   `json:"reason"`
+		Findings []string `json:"findings"`
+	}
+	if err := json.Unmarshal([]byte(response.Output), &output); err != nil {
+		t.Fatal(err)
+	}
+	if output.Decision != "APPROVE" || output.Reason != report || len(output.Findings) != 0 {
+		t.Fatalf("native code-reviewer output = %#v, want APPROVE with exact report and no findings", output)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseSynthesizesBlockedCodeReviewerNativeReport(t *testing.T) {
+	report := "**BLOCK**: unresolved issue in the implementation."
+	contents := fmt.Sprintf(
+		"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+			"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+		report,
+	)
+
+	response, err := decodeWorkflowProviderResponse([]byte(contents), "code-reviewer", workflowCodeReviewSchema)
+	if err != nil {
+		t.Fatalf("decodeWorkflowProviderResponse() error = %v, want native BLOCK adapter", err)
+	}
+	var output struct {
+		Decision string   `json:"decision"`
+		Reason   string   `json:"reason"`
+		Findings []string `json:"findings"`
+	}
+	if err := json.Unmarshal([]byte(response.Output), &output); err != nil {
+		t.Fatal(err)
+	}
+	if output.Decision != "BLOCK" || output.Reason != report ||
+		len(output.Findings) != 1 || output.Findings[0] != report {
+		t.Fatalf("native code-reviewer output = %#v, want BLOCK with report finding", output)
+	}
+}
+
+func TestDecodeWorkflowProviderResponseRejectsUnsafeNativeCodeReviewerFallbacks(t *testing.T) {
+	tests := []struct {
+		name  string
+		agent string
+		text  string
+		want  string
+	}{
+		{
+			name:  "conflicting verdicts",
+			agent: "code-reviewer",
+			text:  "APPROVE — spec met.\n\nBLOCK — unresolved issue.",
+			want:  "multiple verdict lines",
+		},
+		{
+			name:  "incidental verdict word",
+			agent: "code-reviewer",
+			text:  "The review mentions APPROVE, but this is not a verdict line.",
+			want:  "exactly one verdict line",
+		},
+		{
+			name:  "other agent",
+			agent: "validator",
+			text:  "APPROVE — spec met, no blocking issues.",
+			want:  "assistant fallback",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			contents := fmt.Sprintf(
+				"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+					"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+				test.text,
+			)
+			_, err := decodeWorkflowProviderResponse([]byte(contents), test.agent, workflowCodeReviewSchema)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("decodeWorkflowProviderResponse() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestDecodeWorkflowProviderResponseAcceptsAndRejectsDocumenterNativeReports(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		report := "DONE — wrote app_docs/feature-x.md."
+		contents := fmt.Sprintf(
+			"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+				"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+			report,
+		)
+		response, err := decodeWorkflowProviderResponse([]byte(contents), "documenter", workflowDocumenterSchema)
+		if err != nil {
+			t.Fatalf("decodeWorkflowProviderResponse() error = %v, want native documenter adapter", err)
+		}
+		var output struct {
+			Status  string `json:"status"`
+			Path    string `json:"path"`
+			Summary string `json:"summary"`
+		}
+		if err := json.Unmarshal([]byte(response.Output), &output); err != nil {
+			t.Fatal(err)
+		}
+		if output.Status != "done" || output.Path != "app_docs/feature-x.md" || output.Summary != report {
+			t.Fatalf("native documenter output = %#v, want synthesized completion object", output)
+		}
+	})
+
+	for _, report := range []string{
+		"BLOCKED — could not write app_docs/feature-x.md.",
+		"DONE — wrote app_docs/one.md and app_docs/two.md.",
+	} {
+		t.Run(report, func(t *testing.T) {
+			contents := fmt.Sprintf(
+				"{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":%q}]}}\n"+
+					"{\"type\":\"result\",\"uuid\":\"response-id\",\"is_error\":false}\n",
+				report,
+			)
+			if _, err := decodeWorkflowProviderResponse([]byte(contents), "documenter", workflowDocumenterSchema); err == nil {
+				t.Fatal("decodeWorkflowProviderResponse() error = nil, want native documenter rejection")
+			}
+		})
+	}
+}
+
+const workflowCodeReviewSchema = `{
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["decision", "reason", "findings"],
+	"properties": {
+		"decision": {"enum": ["APPROVE", "BLOCK"]},
+		"reason": {"type": "string", "minLength": 1},
+		"findings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+	}
+}`
+
+const workflowDocumenterSchema = `{
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["status", "path", "summary"],
+	"properties": {
+		"status": {"const": "done"},
+		"path": {"type": "string", "minLength": 1},
+		"summary": {"type": "string", "minLength": 1}
+	}
+}`
+
+const workflowDecoderSchema = `{
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["decision", "reason", "issues"],
+	"properties": {
+		"decision": {"enum": ["PASS", "FAIL"]},
+		"reason": {"type": "string", "minLength": 1},
+		"issues": {"type": "array", "items": {"type": "string", "minLength": 1}}
+	}
+}`
+
+const workflowDecoderConstSchema = `{
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["status"],
+	"properties": {
+		"status": {"const": "done"}
+	}
+}`
 
 func TestResolveProductionAgentLoadsNativeClaudeVariant(t *testing.T) {
 	root := t.TempDir()
@@ -993,6 +1536,15 @@ func TestDecodeProviderResponseAggregatesUsageAndPreservesFailures(t *testing.T)
 		OutputTokens: 4,
 		CostUSD:      0.04,
 		Duration:     125 * time.Millisecond,
+		TelemetryPresence: TelemetryPresence{
+			ModelUsage:         true,
+			InputTokens:        true,
+			OutputTokens:       true,
+			CostUSD:            true,
+			DurationMS:         true,
+			ProviderResponseID: true,
+			ProviderSessionID:  true,
+		},
 	}
 	if !reflect.DeepEqual(response, want) {
 		t.Fatalf("decodeProviderResponse() = %#v, want %#v", response, want)
@@ -1116,6 +1668,22 @@ func TestReplayCatalog(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				for _, assertion := range testCase.Assertions {
+					if assertion.Type != "regex" && assertion.Type != "not_regex" {
+						continue
+					}
+					if _, err := regexp.Compile(assertion.Value); err != nil {
+						t.Fatalf("%s assertion has invalid regex %q: %v", assertion.Type, assertion.Value, err)
+					}
+				}
+				replayPath := filepath.Join(root, "litmus", "replays", testCase.Agent, testCase.ID+".json")
+				if testCase.Live && testCase.Workflow {
+					if _, err := os.Stat(replayPath); os.IsNotExist(err) {
+						t.Skip("live workflow case intentionally has no replay artifact")
+					} else if err != nil {
+						t.Fatal(err)
+					}
+				}
 				result, err := Replay(root, testCase)
 				if err != nil {
 					t.Fatal(err)
@@ -1138,6 +1706,30 @@ func validCaseJSON(id, agent string) string {
 	}`, id, agent)
 }
 
+func extractDelimitedBody(t *testing.T, contents, prefix, suffix string) string {
+	t.Helper()
+	start := strings.Index(contents, prefix)
+	if start < 0 {
+		t.Fatalf("opening delimiter %q not found", prefix)
+	}
+	start += len(prefix)
+	if prefix == "---\n" {
+		next := strings.Index(contents[start:], suffix)
+		if next < 0 {
+			t.Fatalf("closing delimiter %q not found", suffix)
+		}
+		start += next + len(suffix)
+	}
+	end := strings.LastIndex(contents[start:], suffix)
+	if end < 0 {
+		if prefix == "---\n" {
+			return contents[start:]
+		}
+		t.Fatalf("closing delimiter %q not found", suffix)
+	}
+	return contents[start : start+end]
+}
+
 func symlink(t *testing.T, target, path string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -1158,21 +1750,33 @@ func writeFile(t *testing.T, path, contents string) {
 	}
 }
 
+func writeExecutable(t *testing.T, path, contents string) {
+	t.Helper()
+	writeFile(t, path, contents)
+	if err := os.Chmod(path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func writeReplay(t *testing.T, root, agent, id, contents string) {
 	t.Helper()
 	writeFile(t, filepath.Join(root, "litmus", "replays", agent, id+".json"), contents)
 }
 
 type fakeExecutor struct {
-	request  ProviderRequest
-	response ProviderResponse
-	err      error
-	calls    int
+	request   ProviderRequest
+	response  ProviderResponse
+	err       error
+	calls     int
+	onExecute func(ProviderRequest)
 }
 
 func (f *fakeExecutor) Execute(_ context.Context, request ProviderRequest) (ProviderResponse, error) {
 	f.calls++
 	f.request = request
+	if f.onExecute != nil {
+		f.onExecute(request)
+	}
 	return f.response, f.err
 }
 

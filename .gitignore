@@ -21,3 +21,5 @@ __pycache__/
 .langgraph_api/
 litmus/.grader-cache/
 langgraph-agents/.langgraph/
+certification/
+.skill-drafts/

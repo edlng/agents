@@ -1,0 +1,108 @@
+{
+  "id": "20260915T202913.344Z-100ef73",
+  "timestamp": "2026-09-15T20:29:13.344931Z",
+  "revision": "100ef73",
+  "budget_usd": 8,
+  "totals": {
+    "cases": 6,
+    "passed": 6,
+    "failed": 0,
+    "agent_failures": 0,
+    "infrastructure_errors": 0,
+    "grader_errors": 0,
+    "input_tokens": 172,
+    "output_tokens": 39483,
+    "total_tokens": 39655,
+    "cost_usd": 3.310710549999999,
+    "duration_ms": 750733
+  },
+  "cases": [
+    {
+      "agent": "team-lead",
+      "case_id": "ambiguity-ranking-policy",
+      "provider_models": [
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 12,
+      "output_tokens": 1155,
+      "cost_usd": 0.2239201,
+      "duration_ms": 37921,
+      "detail_path": "cases/team-lead--ambiguity-ranking-policy.json"
+    },
+    {
+      "agent": "team-lead",
+      "case_id": "docs-failure-runbook",
+      "provider_models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 52,
+      "output_tokens": 15774,
+      "cost_usd": 1.1413003999999998,
+      "duration_ms": 2329,
+      "detail_path": "cases/team-lead--docs-failure-runbook.json"
+    },
+    {
+      "agent": "team-lead",
+      "case_id": "go-slugify",
+      "provider_models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 46,
+      "output_tokens": 11150,
+      "cost_usd": 0.8541561,
+      "duration_ms": 371559,
+      "detail_path": "cases/team-lead--go-slugify.json"
+    },
+    {
+      "agent": "team-lead",
+      "case_id": "node-retry-schedule",
+      "provider_models": [
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 14,
+      "output_tokens": 1944,
+      "cost_usd": 0.2560846,
+      "duration_ms": 43519,
+      "detail_path": "cases/team-lead--node-retry-schedule.json"
+    },
+    {
+      "agent": "team-lead",
+      "case_id": "python-archive-path",
+      "provider_models": [
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 18,
+      "output_tokens": 2608,
+      "cost_usd": 0.26742330000000003,
+      "duration_ms": 57228,
+      "detail_path": "cases/team-lead--python-archive-path.json"
+    },
+    {
+      "agent": "team-lead",
+      "case_id": "python-report-renderer",
+      "provider_models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 30,
+      "output_tokens": 6852,
+      "cost_usd": 0.56782605,
+      "duration_ms": 238177,
+      "detail_path": "cases/team-lead--python-report-renderer.json"
+    }
+  ]
+}

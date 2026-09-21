@@ -1,0 +1,104 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-endpoint-allowlist",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "dad54a9c-9eab-4994-a31f-69f5c0bc1a8f",
+  "provider_session_id": "902faf81-14fc-4240-9e0a-ad1dc7a86fc6",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 21172,
+      "cacheReadInputTokens": 85545,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.26819750000000003,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3722,
+      "provider": "bedrock",
+      "thinkingTokens": 763,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 265794,
+      "cacheReadInputTokens": 1239610,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 1.067715,
+      "inputTokens": 54,
+      "maxOutputTokens": 64000,
+      "outputTokens": 15520,
+      "provider": "bedrock",
+      "thinkingTokens": 3087,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "Now delegating implementation to builder.\n\nBuilder reports done. Running validator and code-reviewer gates now.\n\nValidator PASS. Now code-reviewer gate.\n\nAll gates passed.\n\nPlan: Implement Validate for go/endpoint/endpoint.go | Status: done\nIsolation: harness-provided disposable Git repository\nTasks:\n- Implement Validate(raw, allowedHosts) SSRF boundary in go/endpoint/endpoint.go: builder: done; validator: PASS; code-reviewer: APPROVE; cycles: 1/1/1; missing gate: none\n\nFiles changed: go/endpoint/endpoint.go (endpoint_test.go untouched)\n\nSSRF boundary enforced: absolute https scheme only, no userinfo, nonempty hostname, IP-literal hosts (IPv4/IPv6) rejected via `net.ParseIP`, exact case-insensitive hostname match against a nonempty allowlist (no suffix matching, so `api.example.com.evil.test` is rejected), scheme-relative URLs rejected via `IsAbs()`, no DNS resolution performed, parsed `*url.URL` returned with Path/RawQuery preserved.\n\nCommand: `go test ./go/endpoint/...` → `ok stage4-team-lead-lab/go/endpoint`\n\nValidation: validator (agent a a1a640...) reported PASS, confirming all 8 criteria with `go test -v`, `go vet`, and git diff scope checks.\nCode review: code-reviewer (agent a8257e...) reported APPROVE, confirming spec alignment, correctness, and no SSRF bypass vectors.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/endpoint/endpoint.go"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(SSRF|allowlist|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/endpoint"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ok  \tstage4-team-lead-lab/go/endpoint\t0.200s"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 64,
+  "output_tokens": 19242,
+  "cost_usd": 1.3359124999999998,
+  "duration_ms": 322124,
+  "git_diff": "diff --git a/go/endpoint/endpoint.go b/go/endpoint/endpoint.go\nindex 7fef09f..227a9fa 100644\n--- a/go/endpoint/endpoint.go\n+++ b/go/endpoint/endpoint.go\n@@ -1,7 +1,50 @@\n package endpoint\n \n-import \"net/url\"\n+import (\n+\t\"fmt\"\n+\t\"net\"\n+\t\"net/url\"\n+\t\"strings\"\n+)\n \n func Validate(raw string, allowedHosts []string) (*url.URL, error) {\n-\treturn url.Parse(raw)\n+\tu, err := url.Parse(raw)\n+\tif err != nil {\n+\t\treturn nil, fmt.Errorf(\"parsing url: %w\", err)\n+\t}\n+\n+\tif !u.IsAbs() || !strings.EqualFold(u.Scheme, \"https\") {\n+\t\treturn nil, fmt.Errorf(\"url must be an absolute https url, got scheme %q\", u.Scheme)\n+\t}\n+\n+\tif u.User != nil {\n+\t\treturn nil, fmt.Errorf(\"url must not contain userinfo\")\n+\t}\n+\n+\thostname := u.Hostname()\n+\tif hostname == \"\" {\n+\t\treturn nil, fmt.Errorf(\"url must contain a hostname\")\n+\t}\n+\n+\tif net.ParseIP(hostname) != nil {\n+\t\treturn nil, fmt.Errorf(\"url hostname must not be an IP literal: %q\", hostname)\n+\t}\n+\n+\tif len(allowedHosts) == 0 {\n+\t\treturn nil, fmt.Errorf(\"no allowed hosts configured\")\n+\t}\n+\n+\tlowerHost := strings.ToLower(hostname)\n+\tallowed := false\n+\tfor _, h := range allowedHosts {\n+\t\tif strings.ToLower(h) == lowerHost {\n+\t\t\tallowed = true\n+\t\t\tbreak\n+\t\t}\n+\t}\n+\tif !allowed {\n+\t\treturn nil, fmt.Errorf(\"host %q is not in the allowed hosts list\", hostname)\n+\t}\n+\n+\treturn u, nil\n }\n",
+  "git_status": " M go/endpoint/endpoint.go\n"
+}

@@ -1,0 +1,5 @@
+{
+  "mode": "rolling",
+  "ttl_days": 30,
+  "grace_days": 7
+}

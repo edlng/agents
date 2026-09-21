@@ -1,0 +1,104 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-retry-schedule",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "e7afb0d7-66f5-4334-947a-1592973f9a40",
+  "provider_session_id": "84ee7369-effa-4b84-879b-611faea47616",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 20455,
+      "cacheReadInputTokens": 82143,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.26214024999999996,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3727,
+      "provider": "bedrock",
+      "thinkingTokens": 753,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 162883,
+      "cacheReadInputTokens": 542423,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.5886761,
+      "inputTokens": 32,
+      "maxOutputTokens": 64000,
+      "outputTokens": 7292,
+      "provider": "bedrock",
+      "thinkingTokens": 1543,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "Builder reports done. Running the review gates now.\n\nValidator: PASS. Proceeding to code review.\n\nAll gates passed.\n\n```\nPlan: retry-schedule implementation | Status: done\nIsolation: harness-provided disposable Git repository\nTasks:\n- Implement retrySchedule in node/retry-schedule/index.mjs: builder: done; validator: PASS; code-reviewer: APPROVE; cycles: 1/1/1; missing gate: none\nFiles changed: node/retry-schedule/index.mjs\nValidation: validator ran `node --test node/retry-schedule/test.mjs` -\u003e 2/2 pass, verified exponential growth/cap, all validation rules, overflow safety\nCode review: code-reviewer APPROVE, no correctness or security issues; one non-blocking nit noted (no upper bound on attempts, not a spec requirement)\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/retry-schedule/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/retry-schedule/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ returns capped exponential delays after the initial attempt (1.406375ms)\n✔ validates integer attempts and positive finite timing options (0.5525ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 82.85275"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 42,
+  "output_tokens": 11019,
+  "cost_usd": 0.8508163500000001,
+  "duration_ms": 211453,
+  "git_diff": "diff --git a/node/retry-schedule/index.mjs b/node/retry-schedule/index.mjs\nindex 8c7bd70..0ddd5f7 100644\n--- a/node/retry-schedule/index.mjs\n+++ b/node/retry-schedule/index.mjs\n@@ -1,3 +1,23 @@\n-export function retrySchedule(options) {\n-  return [];\n+export function retrySchedule({ attempts, baseMs, factor, maxMs } = {}) {\n+  if (!Number.isInteger(attempts) || attempts \u003c 1) {\n+    throw new Error(\"Invalid attempts: must be a positive integer\");\n+  }\n+  if (!Number.isFinite(baseMs) || baseMs \u003c= 0) {\n+    throw new Error(\"Invalid baseMs: must be a positive finite number\");\n+  }\n+  if (!Number.isFinite(maxMs) || maxMs \u003c= 0) {\n+    throw new Error(\"Invalid maxMs: must be a positive finite number\");\n+  }\n+  if (baseMs \u003e maxMs) {\n+    throw new Error(\"Invalid options: baseMs must be \u003c= maxMs\");\n+  }\n+  if (!Number.isFinite(factor) || factor \u003c 1) {\n+    throw new Error(\"Invalid factor: must be a finite number \u003e= 1\");\n+  }\n+\n+  const delays = [];\n+  for (let i = 0; i \u003c attempts - 1; i += 1) {\n+    delays.push(Math.min(baseMs * factor ** i, maxMs));\n+  }\n+  return delays;\n }\n",
+  "git_status": " M node/retry-schedule/index.mjs\n"
+}

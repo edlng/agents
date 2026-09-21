@@ -1,0 +1,61 @@
+{
+  "agent": "code-reviewer",
+  "case_id": "clean-code-approval",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "3b362830-e974-41c3-b352-59993efe5335",
+  "provider_session_id": "a1fe8a36-7eb6-4930-82fb-3d661fab78a9",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 9552,
+      "cacheReadInputTokens": 90549,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.0530438,
+      "inputTokens": 2,
+      "maxOutputTokens": 64000,
+      "outputTokens": 1105,
+      "provider": "bedrock",
+      "thinkingTokens": 863,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "9accead0f1fb89e67bcba87b01d5a4e54c6adf9ccb1028efefee8dabd307e872",
+  "output": "No git diff exists here (no repo, no changeset) — reviewing the pasted snippet directly.\n\n**APPROVE**\n\nCorrectness is sound: `Math.max(value, min)` then `Math.min(_, max)` correctly clamps for all min ≤ max, and the guard (`min \u003e max`) fails fast with context rather than silently producing wrong output. No security-relevant behavior (pure numeric function, no untrusted input sinks). No CWE-relevant issues.\n\nOne caveat, not blocking: `NaN` input silently propagates to `NaN` (JS `Math.max/min` semantics) rather than throwing — worth knowing if callers expect a numeric guarantee, but this isn't a bug against any stated spec here.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)(?:^|\\n)\\s*(?:(?:##\\s*)?(?:\\*\\*)?Verdict:\\s*)?(?:\\*\\*)?APPROVE(?:\\*\\*)?(?:\\b|:)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)\\bBLOCK\\b|MUST_FIX|must fix"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?im)^\\s*[-*]\\s*(?:\\*\\*)?(?:blocking|important|critical)\\b"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 1105,
+  "cost_usd": 0.0530438,
+  "duration_ms": 16116
+}

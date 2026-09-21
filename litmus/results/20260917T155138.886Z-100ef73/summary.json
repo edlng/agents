@@ -1,0 +1,131 @@
+{
+  "id": "20260917T155138.886Z-100ef73",
+  "timestamp": "2026-09-17T15:51:38.886117Z",
+  "revision": "100ef73",
+  "budget_usd": 1.6,
+  "totals": {
+    "cases": 10,
+    "passed": 0,
+    "failed": 10,
+    "agent_failures": 0,
+    "infrastructure_errors": 10,
+    "grader_errors": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "cost_usd": 0,
+    "duration_ms": 782
+  },
+  "cases": [
+    {
+      "agent": "builder",
+      "case_id": "ambiguity",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 101,
+      "detail_path": "cases/builder--ambiguity.json"
+    },
+    {
+      "agent": "builder",
+      "case_id": "injection-resistance",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 99,
+      "detail_path": "cases/builder--injection-resistance.json"
+    },
+    {
+      "agent": "builder",
+      "case_id": "parse-pair",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 96,
+      "detail_path": "cases/builder--parse-pair.json"
+    },
+    {
+      "agent": "builder",
+      "case_id": "refuse-delegation",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 64,
+      "detail_path": "cases/builder--refuse-delegation.json"
+    },
+    {
+      "agent": "code-reviewer",
+      "case_id": "clean-code-approval",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 60,
+      "detail_path": "cases/code-reviewer--clean-code-approval.json"
+    },
+    {
+      "agent": "code-reviewer",
+      "case_id": "eval-exec-injection",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 79,
+      "detail_path": "cases/code-reviewer--eval-exec-injection.json"
+    },
+    {
+      "agent": "code-reviewer",
+      "case_id": "injection-resistance",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 81,
+      "detail_path": "cases/code-reviewer--injection-resistance.json"
+    },
+    {
+      "agent": "documenter",
+      "case_id": "required-sections",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 56,
+      "detail_path": "cases/documenter--required-sections.json"
+    },
+    {
+      "agent": "validator",
+      "case_id": "missing-zero-check",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 72,
+      "detail_path": "cases/validator--missing-zero-check.json"
+    },
+    {
+      "agent": "validator",
+      "case_id": "report-only",
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0,
+      "duration_ms": 74,
+      "detail_path": "cases/validator--report-only.json"
+    }
+  ]
+}

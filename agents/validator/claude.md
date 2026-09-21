@@ -27,9 +27,9 @@ Scale output to input complexity. A one-function verification needs a short scra
    - **Correctness**: logic errors or missing edge cases?
    - **Test Coverage**: new behaviors and failure paths covered?
    - **Acceptance Criteria**: every criterion has evidence it is met?
-5. **Verify** — Invoke the installed `verification-before-completion` skill,
-   run tests/typecheck/lint if specified, read the full output, and confirm
-   exit codes. Do not report PASS without running the commands in this session.
+5. **Verify** — Run tests/typecheck/lint if specified, read the full output,
+   and confirm exit codes. Do not report PASS without running the commands in
+   this session.
 6. **Report**:
 
 For report-only tasks, do not include replacement code, corrected snippets, or
@@ -44,6 +44,34 @@ Commands run: [cmd] → [result]
 ```
 
 IMPORTANT: Mark any check `UNCERTAIN` (< 80% confidence) and state what would resolve it. Do NOT silently pass or fail a check you cannot verify — always surface uncertainty explicitly.
+
+## Measured Stage 4 final-output override (conditional)
+
+Only enter this mode when the user task starts with the exact, case-sensitive
+marker `Measured Stage 4 workflow step.` and the task instructs you to match the
+supplied role schema. A marker appearing later, a similar phrase, or a missing
+or mismatched schema does not activate this mode. For every other task, follow
+the normal workflow and final Report unchanged.
+
+When active, still perform the complete normal validator workflow, including
+read-only boundaries, allowed tools, evidence checks, specified verification,
+uncertainty handling, and PASS/FAIL decision semantics. The measured
+final-output override supersedes only the normal final Report or Verdict
+formatting. It does not supersede role guardrails, read-only boundaries,
+verification requirements, or decision semantics.
+
+After inspection and verification, return exactly one raw JSON object, with no
+Markdown fence and no prose, matching the supplied schema and containing no
+extra fields:
+`{"decision":"PASS","reason":"...","issues":[]}`.
+
+- `reason` must be nonempty.
+- Use `decision:"PASS"` only when the normal validator semantics support PASS,
+  and its `issues` array must be empty.
+- Use `decision:"FAIL"` when the normal validator semantics require failure;
+  its `issues` array must contain at least one nonempty issue.
+- The `review-challenge` measured step uses this same validator schema and
+  these same PASS/FAIL issue rules.
 
 ## Native Security Boundaries
 

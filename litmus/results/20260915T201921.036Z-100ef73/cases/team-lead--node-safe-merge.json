@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-safe-merge",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "8129efc4-290d-4dab-897c-49574ffcc5f3",
+  "provider_session_id": "2b060fd1-f6af-42ae-8141-e39d427f8774",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 23704,
+      "cacheReadInputTokens": 84511,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.3619555,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 6860,
+      "provider": "bedrock",
+      "thinkingTokens": 3054,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 197459,
+      "cacheReadInputTokens": 938388,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.8098391,
+      "inputTokens": 52,
+      "maxOutputTokens": 64000,
+      "outputTokens": 12841,
+      "provider": "bedrock",
+      "thinkingTokens": 1606,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Budget is nearly exhausted ($0.09 left), so I'm stopping here rather than spawning another fix/review cycle.\n\n**Plan: safe-merge implementation | Status: partial**\n\n**Worktree:** working directly in `/private/var/folders/.../litmus-fixture-3725673684` (no separate worktree was created; task scope was a single existing file)\n\n**Task:** Implement `safeMerge(base, patch)` in `node/safe-merge/index.mjs`\n- Attempt 1: builder implemented recursive merge with `__proto__`/`prototype`/`constructor` blocking at every depth. Tests passed (3/3), but validator found `isPlainObject` mis-treated class instances and `Object.create(null)` objects as mergeable plain objects (FAIL).\n- Attempt 2: builder tightened `isPlainObject` to require `Object.getPrototypeOf(value) === Object.prototype`. Tests still passed (3/3). Code-reviewer then found a remaining bug: `deepClone`'s fallthrough branch returns non-plain-object values (class instances, `Object.create(null)`, `Date`) by reference instead of cloning them — violating the \"do not mutate or alias mutable containers from either input\" requirement (BLOCK).\n\n**Files changed:**\n- `node/safe-merge/index.mjs`\n\n**Current state:** `node --test node/safe-merge/test.mjs` passes (3/3), but code-reviewer BLOCKed on an aliasing bug for non-plain-object containers (class instances, null-prototype objects, Dates) that the existing tests don't exercise. This is attempt 2 of 3; one retry remains under the retry policy, but there isn't budget remaining in this session to run it safely.\n\n**Unresolved evidence for next session:** In `deepClone`, the final fallthrough (`return value` for non-array, non-plain-object inputs) needs to clone other object types (or the spec needs to explicitly scope \"non-plain values\" to only require array-level cloning, treating things like class instances/Dates as acceptable to pass by reference). Concrete repro is in the code-reviewer's report above (`Object.create(null)` and class-instance aliasing).\n\n**Recommendation:** resume with a third builder attempt implementing the reviewer's suggested `deepClone` fallback (clone-by-own-enumerable-keys for any object, skipping blocked keys), then re-run validator + code-reviewer.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/safe-merge/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(prototype|pollution|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/safe-merge/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ recursively merges plain objects without mutating inputs (1.099167ms)\n✔ blocks prototype-pollution keys at every depth (0.09175ms)\n✔ replaces arrays instead of merging their indexes (0.08075ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 61.913625"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 62,
+  "output_tokens": 19701,
+  "cost_usd": 1.1717946000000001,
+  "duration_ms": 320641,
+  "git_diff": "diff --git a/node/safe-merge/index.mjs b/node/safe-merge/index.mjs\nindex 5597dc3..f2199ed 100644\n--- a/node/safe-merge/index.mjs\n+++ b/node/safe-merge/index.mjs\n@@ -1,3 +1,48 @@\n+const BLOCKED_KEYS = new Set([\"__proto__\", \"prototype\", \"constructor\"]);\n+\n+function isPlainObject(value) {\n+  return (\n+    value !== null \u0026\u0026\n+    typeof value === \"object\" \u0026\u0026\n+    !Array.isArray(value) \u0026\u0026\n+    Object.getPrototypeOf(value) === Object.prototype\n+  );\n+}\n+\n+function deepClone(value) {\n+  if (Array.isArray(value)) {\n+    return value.map((item) =\u003e deepClone(item));\n+  }\n+  if (isPlainObject(value)) {\n+    const result = {};\n+    for (const key of Object.keys(value)) {\n+      if (BLOCKED_KEYS.has(key)) continue;\n+      result[key] = deepClone(value[key]);\n+    }\n+    return result;\n+  }\n+  return value;\n+}\n+\n export function safeMerge(base, patch) {\n-  return { ...base, ...patch };\n+  const result = {};\n+\n+  for (const key of Object.keys(base)) {\n+    if (BLOCKED_KEYS.has(key)) continue;\n+    result[key] = deepClone(base[key]);\n+  }\n+\n+  for (const key of Object.keys(patch)) {\n+    if (BLOCKED_KEYS.has(key)) continue;\n+    const baseValue = base[key];\n+    const patchValue = patch[key];\n+\n+    if (isPlainObject(baseValue) \u0026\u0026 isPlainObject(patchValue)) {\n+      result[key] = safeMerge(baseValue, patchValue);\n+    } else {\n+      result[key] = deepClone(patchValue);\n+    }\n+  }\n+\n+  return result;\n }\n",
+  "git_status": " M node/safe-merge/index.mjs\n"
+}

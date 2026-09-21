@@ -40,9 +40,9 @@ model_reasoning_effort = "xhigh"
 developer_instructions = "Build one scoped task."
 `);
     writeFixture(root, 'agents/builder/kiro.json', '{"name":"builder","model":"global.anthropic.claude-sonnet-5"}');
-    writeFixture(root, 'skills/universal/verification-before-completion/SKILL.md', `---
-name: verification-before-completion
-description: Use before making completion claims.
+    writeFixture(root, 'skills/universal/code-review-excellence/SKILL.md', `---
+name: code-review-excellence
+description: Review code quality systematically.
 ---
 # Verify
 `);
@@ -74,7 +74,7 @@ description: Use when reviewing a pull request with Codex.
     };
     const builder = graph.nodes.find(node => node.id === 'agent:builder');
     const universal = graph.nodes.find(
-      node => node.id === 'skill:verification-before-completion',
+      node => node.id === 'skill:code-review-excellence',
     );
     const reviewPr = graph.nodes.find(node => node.id === 'skill:review-pr');
 

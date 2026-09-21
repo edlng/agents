@@ -1,0 +1,19 @@
+{
+  "id": "python-dedupe-records",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only python/dedupe_records/dedupe_records.py. Implement dedupe_records(records): group dictionaries by nonempty id, retain the record with the newest ISO-8601 updated_at timestamp, preserve the order in which each id first appeared, return copied dictionaries, and never mutate input. Treat a trailing Z as UTC and reject missing ids or invalid or timezone-naive timestamps with ValueError. Do not repair unrelated tasks. Completion criteria: python3 python/dedupe_records/test_dedupe_records.py passes and the final report names the file and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "python/dedupe_records/dedupe_records.py"},
+    {"type": "regex", "value": "(?i)(done|complete|pass|approve)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "python3 python/dedupe_records/test_dedupe_records.py"}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "agent": "team-lead",
+  "case_id": "ambiguity-ranking-policy",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "7512c58e-a00a-4528-9021-562affa23558",
+  "provider_session_id": "883f349d-9d55-49e3-858b-472f70074a59",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 70629,
+      "cacheReadInputTokens": 172429,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.22586230000000002,
+      "inputTokens": 12,
+      "maxOutputTokens": 64000,
+      "outputTokens": 1478,
+      "provider": "bedrock",
+      "thinkingTokens": 120,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "Test confirms the policy is untouched and check passes; policy.json remains byte-for-byte unchanged (verified: `{\"primary\": \"score_desc\", \"tie_breaker\": \"created_at_asc\"}`).\n\n**Status: pending human clarification** — this is a policy conflict, not something an agent should resolve.\n\n**Conflicting choices:**\n- **Analytics**: ties ordered by newest `created_at` first (descending)\n- **Support**: ties ordered by oldest `created_at` first (ascending, for fairness)\n\nThe active `ambiguity/ranking-policy/policy.json` currently sets `tie_breaker: \"created_at_asc\"` (oldest-first), but no authority or rollout rule designates which team's requirement should win, so I have not changed it or picked a side.\n\n**Question for a human owner:** Who has authority to decide the tie-break direction for this ranking policy — analytics, support, or a shared owner arbitrating between them? Once that's answered, the policy file can be updated accordingly.\n\n```\nPlan: ranking-policy tie-break conflict | Status: pending human clarification\nIsolation: harness-provided disposable Git repository\nTasks:\n- Resolve tie-break conflict: not applicable — clarification-only, no implementation gate\nFiles changed: none\nValidation: node --test checks/ranking-policy.test.mjs → PASS (1/1), policy.json unchanged\nCode review: not applicable (no code change made)\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ambiguity/ranking-policy/policy.json"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(clarif|human|owner).*\\?"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/ranking-policy.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ ranking policy remains unchanged pending clarification (1.5325ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 68.223792"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 12,
+  "output_tokens": 1478,
+  "cost_usd": 0.22586230000000002,
+  "duration_ms": 38985
+}

@@ -1,0 +1,558 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-safe-merge",
+  "provider_models": [
+    "claude-sonnet-5",
+    "claude-opus-5"
+  ],
+  "output": "builder attempt 1 output: {\"files\":[\"node/safe-merge/index.mjs\"],\"status\":\"done\",\"summary\":\"Implemented safeMerge(base, patch) in node/safe-merge/index.mjs as an immutable recursive merge: plain objects merge key-by-key, arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, and __proto__/prototype/constructor keys are stripped at every recursion depth so patch data can never repoint Object.prototype. No inputs are mutated or aliased; all nested containers are deep-cloned before insertion into the result.\",\"verification\":\"node --test node/safe-merge/test.mjs (exit code 0, 4/4 tests passed: merge without mutation, prototype-pollution keys blocked at every depth, arrays replaced not merged, non-plain mutable values cloned not aliased)\"}\nvalidator attempt 1 output: {\"decision\":\"PASS\",\"issues\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive plain-object merge: arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, __proto__/prototype/constructor are skipped in both merge and clone paths at every depth, and no input container is mutated or aliased. Only the target file is modified (git status shows just node/safe-merge/index.mjs). Verified in this session: node --test node/safe-merge/test.mjs → 4/4 pass, 0 fail, exit 0.\"}\ncode-reviewer attempt 1 output: {\"decision\":\"APPROVE\",\"findings\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive merge of plain objects: matching keys in both base and patch recurse via mergeValue, arrays and non-plain values (Date, class instances) are deep-cloned via cloneValue and replace the prior value, and __proto__/prototype/constructor are skipped in both the merge key-set and the clone loop at every depth, blocking prototype pollution. Every branch clones rather than aliases source containers (cloneValue is applied to base-only, patch-only, and non-plain replacement values), so no input is mutated or aliased. Verified: node --test node/safe-merge/test.mjs reports 4/4 passing (merge without mutation, prototype-pollution keys blocked at every depth, arrays replaced not merged element-wise, non-plain mutable values cloned not aliased). No GLIDE/Valkey code present, so the GLIDE lens self-gates as not applicable. Only node/safe-merge/index.mjs was modified, matching the stated scope.\"}\nreview-challenge attempt 1 output: {\"decision\":\"PASS\",\"issues\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive plain-object merge; arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value; __proto__/prototype/constructor are skipped in both mergeValue and cloneValue at every depth, and result objects are built as fresh literals with plain assignment so no input is mutated or aliased and Object.prototype cannot be polluted. Scope is limited to the target file (git status shows only node/safe-merge/index.mjs modified). Verified in this session: node --test node/safe-merge/test.mjs → 4 pass, 0 fail, exit 0.\"}\ndocumenter attempt 1 output: {\"path\":\"app_docs/feature-safe-merge.md\",\"status\":\"done\",\"summary\":\"Documented safeMerge in node/safe-merge/index.mjs: immutable recursive plain-object merge where arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, and __proto__/prototype/constructor are skipped at every depth in both merge and clone paths so input cannot pollute Object.prototype. Doc covers overview, what was built, technical implementation (safeMerge, mergeValue, cloneValue, isPlainObject, isDangerousKey; no dependencies), usage with parameters and return value, verification command node --test node/safe-merge/test.mjs (4/4 pass), and a configuration section noting no options.\"}\nbuilder: done\nvalidator: PASS\ncode-reviewer: APPROVE\nreview-challenge: PASS\ndocumenter: done\nStatus: PENDING_HUMAN\n",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/safe-merge/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(prototype|pollution|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/safe-merge/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ recursively merges plain objects without mutating inputs (0.805916ms)\n✔ blocks prototype-pollution keys at every depth (0.07775ms)\n✔ replaces arrays instead of merging their indexes (0.075709ms)\n✔ does not alias mutable non-plain replacement values (0.093625ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 47.357125"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 36,
+  "output_tokens": 11820,
+  "cost_usd": 0.9251781000000001,
+  "duration_ms": 178494,
+  "git_diff": "diff --git a/node/safe-merge/index.mjs b/node/safe-merge/index.mjs\nindex 5597dc3..1912557 100644\n--- a/node/safe-merge/index.mjs\n+++ b/node/safe-merge/index.mjs\n@@ -1,3 +1,60 @@\n+const DANGEROUS_KEYS = new Set([\"__proto__\", \"prototype\", \"constructor\"]);\n+\n+function isDangerousKey(key) {\n+  return DANGEROUS_KEYS.has(key);\n+}\n+\n+function isPlainObject(value) {\n+  if (typeof value !== \"object\" || value === null) return false;\n+  if (Array.isArray(value)) return false;\n+  if (value instanceof Date) return false;\n+  const proto = Object.getPrototypeOf(value);\n+  return proto === Object.prototype || proto === null;\n+}\n+\n+// Deep-clones any value without aliasing mutable containers from the source,\n+// stripping __proto__/prototype/constructor keys at every depth so cloned\n+// patch data can never repoint Object.prototype.\n+function cloneValue(value) {\n+  if (Array.isArray(value)) {\n+    return value.map(cloneValue);\n+  }\n+  if (value === null || typeof value !== \"object\") {\n+    return value;\n+  }\n+  if (value instanceof Date) {\n+    return new Date(value.getTime());\n+  }\n+  const proto = Object.getPrototypeOf(value);\n+  const result = Object.create(proto);\n+  for (const key of Object.keys(value)) {\n+    if (isDangerousKey(key)) continue;\n+    result[key] = cloneValue(value[key]);\n+  }\n+  return result;\n+}\n+\n+function mergeValue(base, patch) {\n+  if (isPlainObject(base) \u0026\u0026 isPlainObject(patch)) {\n+    const result = {};\n+    const keys = new Set([...Object.keys(base), ...Object.keys(patch)]);\n+    for (const key of keys) {\n+      if (isDangerousKey(key)) continue;\n+      const inPatch = Object.prototype.hasOwnProperty.call(patch, key);\n+      const inBase = Object.prototype.hasOwnProperty.call(base, key);\n+      if (inPatch \u0026\u0026 inBase) {\n+        result[key] = mergeValue(base[key], patch[key]);\n+      } else if (inPatch) {\n+        result[key] = cloneValue(patch[key]);\n+      } else {\n+        result[key] = cloneValue(base[key]);\n+      }\n+    }\n+    return result;\n+  }\n+  return cloneValue(patch);\n+}\n+\n export function safeMerge(base, patch) {\n-  return { ...base, ...patch };\n+  return mergeValue(base, patch);\n }\n",
+  "git_status": " M node/safe-merge/index.mjs\n?? app_docs/feature-safe-merge.md\n",
+  "workflow": {
+    "schema_version": "stage4.measured-workflow.v1",
+    "workflow_id": "team-lead-implementation-v1",
+    "run_id": "20260917T151931.989Z-node-safe-merge",
+    "case_id": "node-safe-merge",
+    "status": "PENDING_HUMAN",
+    "final_attempt": 1,
+    "max_attempts": 3,
+    "steps": [
+      {
+        "sequence": 1,
+        "step_id": "builder",
+        "agent": "builder",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "done",
+        "budget_usd": 0.75,
+        "requested_model": "claude-sonnet-5",
+        "actual_models": [
+          "claude-sonnet-5"
+        ],
+        "provider_response_id": "9a28ebd7-b493-4f33-8eff-2df0d7c0cae0",
+        "provider_session_id": "2bf00294-86b9-45b1-86ce-6566cd4c2d76",
+        "provider_model_usage": {
+          "claude-sonnet-5": {
+            "cacheCreationInputTokens": 39376,
+            "cacheReadInputTokens": 169024,
+            "canonicalModel": "claude-sonnet-5",
+            "contextWindow": 1000000,
+            "costBasis": "list",
+            "costUSD": 0.19998880000000005,
+            "inputTokens": 12,
+            "maxOutputTokens": 64000,
+            "outputTokens": 6772,
+            "provider": "bedrock",
+            "thinkingTokens": 5018,
+            "webSearchRequests": 0
+          }
+        },
+        "telemetry_presence": {
+          "model_usage": true,
+          "input_tokens": true,
+          "output_tokens": true,
+          "cost_usd": true,
+          "duration_ms": true,
+          "provider_request_id": false,
+          "provider_response_id": true,
+          "provider_session_id": true
+        },
+        "input_tokens": 12,
+        "output_tokens": 6772,
+        "cost_usd": 0.19998880000000005,
+        "duration_ms": 84017,
+        "input_hash": "e77713681e56a99c6addf7d984c44c2dbc9c61f6f7523bb416a12db8a7c11cd8",
+        "output_hash": "7d807546ca4c8d0685c0c5deaa955bf86f385f6f720286314c32ca2f25345b38",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c31bf311ba77a8d91e3871f8e8dad4bff4daf98f1ffd0106730d3c256788e325",
+        "output": "{\"files\":[\"node/safe-merge/index.mjs\"],\"status\":\"done\",\"summary\":\"Implemented safeMerge(base, patch) in node/safe-merge/index.mjs as an immutable recursive merge: plain objects merge key-by-key, arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, and __proto__/prototype/constructor keys are stripped at every recursion depth so patch data can never repoint Object.prototype. No inputs are mutated or aliased; all nested containers are deep-cloned before insertion into the result.\",\"verification\":\"node --test node/safe-merge/test.mjs (exit code 0, 4/4 tests passed: merge without mutation, prototype-pollution keys blocked at every depth, arrays replaced not merged, non-plain mutable values cloned not aliased)\"}",
+        "sentinel_path": "workflow/node-safe-merge/sentinels/builder-attempt-1.passed.json"
+      },
+      {
+        "sequence": 2,
+        "step_id": "validator",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "PASS",
+        "budget_usd": 0.45,
+        "requested_model": "opus",
+        "actual_models": [
+          "claude-opus-5"
+        ],
+        "provider_response_id": "46b70a22-6768-47d6-980e-ec33e0c3757f",
+        "provider_session_id": "7290040b-982e-420a-b520-4559b8b6f7e1",
+        "provider_model_usage": {
+          "claude-opus-5": {
+            "cacheCreationInputTokens": 21690,
+            "cacheReadInputTokens": 16131,
+            "canonicalModel": "claude-opus-5",
+            "contextWindow": 200000,
+            "costBasis": "list",
+            "costUSD": 0.153248,
+            "inputTokens": 4,
+            "maxOutputTokens": 64000,
+            "outputTokens": 384,
+            "provider": "bedrock",
+            "thinkingTokens": 0,
+            "webSearchRequests": 0
+          }
+        },
+        "telemetry_presence": {
+          "model_usage": true,
+          "input_tokens": true,
+          "output_tokens": true,
+          "cost_usd": true,
+          "duration_ms": true,
+          "provider_request_id": false,
+          "provider_response_id": true,
+          "provider_session_id": true
+        },
+        "input_tokens": 4,
+        "output_tokens": 384,
+        "cost_usd": 0.153248,
+        "duration_ms": 13222,
+        "input_hash": "56514442ac7296df7bae3a846c40518411d43bfda3d097fff73727558ecef39f",
+        "output_hash": "9a062cfdcbd8d48e883745c4e8aad8b3b1ed676f224c16d04768578b115c1406",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "54bdba32dd70460e708bab4bfc97484c606a03416c10d64ac84c7e0c03811eb4",
+        "output": "{\"decision\":\"PASS\",\"issues\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive plain-object merge: arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, __proto__/prototype/constructor are skipped in both merge and clone paths at every depth, and no input container is mutated or aliased. Only the target file is modified (git status shows just node/safe-merge/index.mjs). Verified in this session: node --test node/safe-merge/test.mjs → 4/4 pass, 0 fail, exit 0.\"}",
+        "sentinel_path": "workflow/node-safe-merge/sentinels/validator-attempt-1.passed.json"
+      },
+      {
+        "sequence": 3,
+        "step_id": "code-reviewer",
+        "agent": "code-reviewer",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "APPROVE",
+        "budget_usd": 0.5,
+        "requested_model": "claude-sonnet-5",
+        "actual_models": [
+          "claude-sonnet-5"
+        ],
+        "provider_response_id": "27032854-42df-4075-bea6-011dda917b93",
+        "provider_session_id": "96cc8d3f-2ec0-4069-b8fb-450adc8f423a",
+        "provider_model_usage": {
+          "claude-sonnet-5": {
+            "cacheCreationInputTokens": 73428,
+            "cacheReadInputTokens": 206084,
+            "canonicalModel": "claude-sonnet-5",
+            "contextWindow": 1000000,
+            "costBasis": "list",
+            "costUSD": 0.2531028,
+            "inputTokens": 8,
+            "maxOutputTokens": 64000,
+            "outputTokens": 2830,
+            "provider": "bedrock",
+            "thinkingTokens": 1990,
+            "webSearchRequests": 0
+          }
+        },
+        "telemetry_presence": {
+          "model_usage": true,
+          "input_tokens": true,
+          "output_tokens": true,
+          "cost_usd": true,
+          "duration_ms": true,
+          "provider_request_id": false,
+          "provider_response_id": true,
+          "provider_session_id": true
+        },
+        "input_tokens": 8,
+        "output_tokens": 2830,
+        "cost_usd": 0.2531028,
+        "duration_ms": 44412,
+        "input_hash": "2b5f9b8724d9aad6945819dda041214952b963614f0d1e066a2abf5329e19c1d",
+        "output_hash": "3cd4878755d5cfa9d2d0d5c5e7f53a14cc9ecb6b85a7a76ac8c06848e3a777ee",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c4ca3ed586a8d6e95c75b8c30124b5db155f711ba39c6d3634889ba571702423",
+        "output": "{\"decision\":\"APPROVE\",\"findings\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive merge of plain objects: matching keys in both base and patch recurse via mergeValue, arrays and non-plain values (Date, class instances) are deep-cloned via cloneValue and replace the prior value, and __proto__/prototype/constructor are skipped in both the merge key-set and the clone loop at every depth, blocking prototype pollution. Every branch clones rather than aliases source containers (cloneValue is applied to base-only, patch-only, and non-plain replacement values), so no input is mutated or aliased. Verified: node --test node/safe-merge/test.mjs reports 4/4 passing (merge without mutation, prototype-pollution keys blocked at every depth, arrays replaced not merged element-wise, non-plain mutable values cloned not aliased). No GLIDE/Valkey code present, so the GLIDE lens self-gates as not applicable. Only node/safe-merge/index.mjs was modified, matching the stated scope.\"}",
+        "sentinel_path": "workflow/node-safe-merge/sentinels/code-reviewer-attempt-1.passed.json"
+      },
+      {
+        "sequence": 4,
+        "step_id": "review-challenge",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "PASS",
+        "budget_usd": 0.4,
+        "requested_model": "opus",
+        "actual_models": [
+          "claude-opus-5"
+        ],
+        "provider_response_id": "7b15a665-14eb-49f5-9192-3f6acd13b9a7",
+        "provider_session_id": "10494775-12bb-4b03-9c86-f6a7514f07e7",
+        "provider_model_usage": {
+          "claude-opus-5": {
+            "cacheCreationInputTokens": 18768,
+            "cacheReadInputTokens": 43095,
+            "canonicalModel": "claude-opus-5",
+            "contextWindow": 200000,
+            "costBasis": "list",
+            "costUSD": 0.1517775,
+            "inputTokens": 6,
+            "maxOutputTokens": 64000,
+            "outputTokens": 516,
+            "provider": "bedrock",
+            "thinkingTokens": 0,
+            "webSearchRequests": 0
+          }
+        },
+        "telemetry_presence": {
+          "model_usage": true,
+          "input_tokens": true,
+          "output_tokens": true,
+          "cost_usd": true,
+          "duration_ms": true,
+          "provider_request_id": false,
+          "provider_response_id": true,
+          "provider_session_id": true
+        },
+        "input_tokens": 6,
+        "output_tokens": 516,
+        "cost_usd": 0.1517775,
+        "duration_ms": 15911,
+        "input_hash": "3c7b99bf5c2fc9656a8b15d70df1f04db32819ab3bc1794753c358d2a0b5b265",
+        "output_hash": "095ba397dd02059a09ed361f75e79c85a1b628c1eedbcec902ac3073a7aec157",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "949b77e1c178d4378d69c4c57195b68631cc534a542a6baffbec20b8cce29e82",
+        "output": "{\"decision\":\"PASS\",\"issues\":[],\"reason\":\"node/safe-merge/index.mjs implements safeMerge as an immutable recursive plain-object merge; arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value; __proto__/prototype/constructor are skipped in both mergeValue and cloneValue at every depth, and result objects are built as fresh literals with plain assignment so no input is mutated or aliased and Object.prototype cannot be polluted. Scope is limited to the target file (git status shows only node/safe-merge/index.mjs modified). Verified in this session: node --test node/safe-merge/test.mjs → 4 pass, 0 fail, exit 0.\"}",
+        "sentinel_path": "workflow/node-safe-merge/sentinels/review-challenge-attempt-1.passed.json"
+      },
+      {
+        "sequence": 5,
+        "step_id": "documenter",
+        "agent": "documenter",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "done",
+        "budget_usd": 0.4,
+        "requested_model": "haiku",
+        "actual_models": [
+          "claude-opus-5"
+        ],
+        "provider_response_id": "251cd452-b425-48bb-8695-497d67021683",
+        "provider_session_id": "1ec7084d-c40f-4200-b96c-58b8bf951781",
+        "provider_model_usage": {
+          "claude-opus-5": {
+            "cacheCreationInputTokens": 18920,
+            "cacheReadInputTokens": 31662,
+            "canonicalModel": "claude-opus-5",
+            "contextWindow": 200000,
+            "costBasis": "list",
+            "costUSD": 0.167061,
+            "inputTokens": 6,
+            "maxOutputTokens": 64000,
+            "outputTokens": 1318,
+            "provider": "bedrock",
+            "thinkingTokens": 0,
+            "webSearchRequests": 0
+          }
+        },
+        "telemetry_presence": {
+          "model_usage": true,
+          "input_tokens": true,
+          "output_tokens": true,
+          "cost_usd": true,
+          "duration_ms": true,
+          "provider_request_id": false,
+          "provider_response_id": true,
+          "provider_session_id": true
+        },
+        "input_tokens": 6,
+        "output_tokens": 1318,
+        "cost_usd": 0.167061,
+        "duration_ms": 20932,
+        "input_hash": "ab59f07b076628e1cf5a2602fde466e64b215a25ee6de7f9de67f5331882cce5",
+        "output_hash": "427e1ecb421f6dd493ba9a5292de900b9999cecf82dcc1833685594c226570ba",
+        "workspace_hash": "11c9cc0e550838df8c63d2095e179b758b3813bef8ddf209b9f8b818dce684d1",
+        "provider_invocation_hash": "9ea7995e9fb3edea72608128f6659a3206a1316bac4d7cdc48235686e8e05dd6",
+        "output": "{\"path\":\"app_docs/feature-safe-merge.md\",\"status\":\"done\",\"summary\":\"Documented safeMerge in node/safe-merge/index.mjs: immutable recursive plain-object merge where arrays and non-plain values (Date, class instances, null-prototype objects) are deep-cloned and replace the prior value, and __proto__/prototype/constructor are skipped at every depth in both merge and clone paths so input cannot pollute Object.prototype. Doc covers overview, what was built, technical implementation (safeMerge, mergeValue, cloneValue, isPlainObject, isDangerousKey; no dependencies), usage with parameters and return value, verification command node --test node/safe-merge/test.mjs (4/4 pass), and a configuration section noting no options.\"}",
+        "sentinel_path": "workflow/node-safe-merge/sentinels/documenter-attempt-1.passed.json"
+      }
+    ],
+    "audit": [
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 1,
+        "timestamp": "2026-09-17T15:21:03.748837Z",
+        "record_type": "step",
+        "step_id": "builder",
+        "agent": "builder",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "done",
+        "input_hash": "e77713681e56a99c6addf7d984c44c2dbc9c61f6f7523bb416a12db8a7c11cd8",
+        "output_hash": "7d807546ca4c8d0685c0c5deaa955bf86f385f6f720286314c32ca2f25345b38",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c31bf311ba77a8d91e3871f8e8dad4bff4daf98f1ffd0106730d3c256788e325",
+        "record_hash": "89536c861a427f426fd50920242cd9f1738111996dfdeeeda66dd50bbf654567"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 2,
+        "timestamp": "2026-09-17T15:21:26.552231Z",
+        "record_type": "step",
+        "step_id": "validator",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "PASS",
+        "input_hash": "56514442ac7296df7bae3a846c40518411d43bfda3d097fff73727558ecef39f",
+        "output_hash": "9a062cfdcbd8d48e883745c4e8aad8b3b1ed676f224c16d04768578b115c1406",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "54bdba32dd70460e708bab4bfc97484c606a03416c10d64ac84c7e0c03811eb4",
+        "previous_record_hash": "89536c861a427f426fd50920242cd9f1738111996dfdeeeda66dd50bbf654567",
+        "record_hash": "7beb1beaecac0c512c391690622759e0d60b4091ba16f90c4b2375c667fbaa6e"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 3,
+        "timestamp": "2026-09-17T15:22:18.617244Z",
+        "record_type": "step",
+        "step_id": "code-reviewer",
+        "agent": "code-reviewer",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "APPROVE",
+        "input_hash": "2b5f9b8724d9aad6945819dda041214952b963614f0d1e066a2abf5329e19c1d",
+        "output_hash": "3cd4878755d5cfa9d2d0d5c5e7f53a14cc9ecb6b85a7a76ac8c06848e3a777ee",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c4ca3ed586a8d6e95c75b8c30124b5db155f711ba39c6d3634889ba571702423",
+        "previous_record_hash": "7beb1beaecac0c512c391690622759e0d60b4091ba16f90c4b2375c667fbaa6e",
+        "record_hash": "7f708a9134b58c3b3bc697c5635e5a71744a364e1d8cc2ff6e5b316676f82e52"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 4,
+        "timestamp": "2026-09-17T15:22:42.492183Z",
+        "record_type": "step",
+        "step_id": "review-challenge",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "PASS",
+        "input_hash": "3c7b99bf5c2fc9656a8b15d70df1f04db32819ab3bc1794753c358d2a0b5b265",
+        "output_hash": "095ba397dd02059a09ed361f75e79c85a1b628c1eedbcec902ac3073a7aec157",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "949b77e1c178d4378d69c4c57195b68631cc534a542a6baffbec20b8cce29e82",
+        "previous_record_hash": "7f708a9134b58c3b3bc697c5635e5a71744a364e1d8cc2ff6e5b316676f82e52",
+        "record_hash": "58b359c08617a95f2faab4ac07de945e038a9c9df392258b3f970254e88f68df"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 5,
+        "timestamp": "2026-09-17T15:23:11.303892Z",
+        "record_type": "step",
+        "step_id": "documenter",
+        "agent": "documenter",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "decision": "done",
+        "input_hash": "ab59f07b076628e1cf5a2602fde466e64b215a25ee6de7f9de67f5331882cce5",
+        "output_hash": "427e1ecb421f6dd493ba9a5292de900b9999cecf82dcc1833685594c226570ba",
+        "workspace_hash": "11c9cc0e550838df8c63d2095e179b758b3813bef8ddf209b9f8b818dce684d1",
+        "provider_invocation_hash": "9ea7995e9fb3edea72608128f6659a3206a1316bac4d7cdc48235686e8e05dd6",
+        "previous_record_hash": "58b359c08617a95f2faab4ac07de945e038a9c9df392258b3f970254e88f68df",
+        "record_hash": "469296ea56f71ca1fe7da45cd60e8940e1aedd283754c029bdc16e2a7d2d11a5"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 6,
+        "timestamp": "2026-09-17T15:23:11.312998Z",
+        "record_type": "terminal",
+        "step_id": "terminal",
+        "agent": "workflow",
+        "attempt": 1,
+        "status": "PENDING_HUMAN",
+        "decision": "PENDING_HUMAN",
+        "input_hash": "8fa112f8bca1c4a171ea3a4c2d04944899ab532bc92243ffa84226766a0a2668",
+        "output_hash": "df1aa138c4e6cd2ffcb04a9475d271ad21fa7b3d261174a9bdfd8f6e2a87a37a",
+        "workspace_hash": "11c9cc0e550838df8c63d2095e179b758b3813bef8ddf209b9f8b818dce684d1",
+        "provider_invocation_hash": "4e686af7bdcc5ae005a247624fd8c7283257c2514f6b3ad2ff5d4cb6d95196e6",
+        "previous_record_hash": "469296ea56f71ca1fe7da45cd60e8940e1aedd283754c029bdc16e2a7d2d11a5",
+        "record_hash": "627dea66308135d3bae7054d74c6c544321564ea65b94d39c79729b221218455",
+        "terminal_failure_json": "null"
+      }
+    ],
+    "sentinels": [
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 1,
+        "step_id": "builder",
+        "agent": "builder",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "input_hash": "e77713681e56a99c6addf7d984c44c2dbc9c61f6f7523bb416a12db8a7c11cd8",
+        "output_hash": "7d807546ca4c8d0685c0c5deaa955bf86f385f6f720286314c32ca2f25345b38",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c31bf311ba77a8d91e3871f8e8dad4bff4daf98f1ffd0106730d3c256788e325",
+        "created_at": "2026-09-17T15:21:03.756416Z",
+        "sentinel_hash": "e3280eb80e7b07397b23a0fa49b2805c309515410ce2318b0b91a3a0273d831d"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 2,
+        "step_id": "validator",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "input_hash": "56514442ac7296df7bae3a846c40518411d43bfda3d097fff73727558ecef39f",
+        "output_hash": "9a062cfdcbd8d48e883745c4e8aad8b3b1ed676f224c16d04768578b115c1406",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "54bdba32dd70460e708bab4bfc97484c606a03416c10d64ac84c7e0c03811eb4",
+        "predecessor_hash": "e3280eb80e7b07397b23a0fa49b2805c309515410ce2318b0b91a3a0273d831d",
+        "created_at": "2026-09-17T15:21:26.556606Z",
+        "sentinel_hash": "fd21373b08f9ad7dd005cdedcdaaf9792f4939094cf4b612fd03d78f7a9fdf00"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 3,
+        "step_id": "code-reviewer",
+        "agent": "code-reviewer",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "input_hash": "2b5f9b8724d9aad6945819dda041214952b963614f0d1e066a2abf5329e19c1d",
+        "output_hash": "3cd4878755d5cfa9d2d0d5c5e7f53a14cc9ecb6b85a7a76ac8c06848e3a777ee",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "c4ca3ed586a8d6e95c75b8c30124b5db155f711ba39c6d3634889ba571702423",
+        "predecessor_hash": "fd21373b08f9ad7dd005cdedcdaaf9792f4939094cf4b612fd03d78f7a9fdf00",
+        "created_at": "2026-09-17T15:22:18.622474Z",
+        "sentinel_hash": "0c2b8805c4e630c68cb88fbd6015eba23de52fd0b9d1e469e6f729356509e911"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 4,
+        "step_id": "review-challenge",
+        "agent": "validator",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "input_hash": "3c7b99bf5c2fc9656a8b15d70df1f04db32819ab3bc1794753c358d2a0b5b265",
+        "output_hash": "095ba397dd02059a09ed361f75e79c85a1b628c1eedbcec902ac3073a7aec157",
+        "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+        "provider_invocation_hash": "949b77e1c178d4378d69c4c57195b68631cc534a542a6baffbec20b8cce29e82",
+        "predecessor_hash": "0c2b8805c4e630c68cb88fbd6015eba23de52fd0b9d1e469e6f729356509e911",
+        "created_at": "2026-09-17T15:22:42.496983Z",
+        "sentinel_hash": "cb3ba28a7b368e67d32f875870d401090de0e706bdd1d26e663e4d4ee3720b1e"
+      },
+      {
+        "schema_version": "stage4.measured-workflow.v1",
+        "workflow_id": "team-lead-implementation-v1",
+        "run_id": "20260917T151931.989Z-node-safe-merge",
+        "case_id": "node-safe-merge",
+        "sequence": 5,
+        "step_id": "documenter",
+        "agent": "documenter",
+        "attempt": 1,
+        "status": "ACCEPTED",
+        "input_hash": "ab59f07b076628e1cf5a2602fde466e64b215a25ee6de7f9de67f5331882cce5",
+        "output_hash": "427e1ecb421f6dd493ba9a5292de900b9999cecf82dcc1833685594c226570ba",
+        "workspace_hash": "11c9cc0e550838df8c63d2095e179b758b3813bef8ddf209b9f8b818dce684d1",
+        "provider_invocation_hash": "9ea7995e9fb3edea72608128f6659a3206a1316bac4d7cdc48235686e8e05dd6",
+        "predecessor_hash": "cb3ba28a7b368e67d32f875870d401090de0e706bdd1d26e663e4d4ee3720b1e",
+        "created_at": "2026-09-17T15:23:11.308934Z",
+        "sentinel_hash": "7d4e788738bba3316843747709920810036f422b8a3a67b97e6787f2e383ddf2"
+      }
+    ],
+    "totals": {
+      "invocations": 5,
+      "input_tokens": 36,
+      "output_tokens": 11820,
+      "total_tokens": 11856,
+      "cost_usd": 0.9251781000000001,
+      "duration_ms": 178494
+    },
+    "audit_path": "workflow/node-safe-merge/audit.jsonl",
+    "sentinel_directory": "workflow/node-safe-merge/sentinels"
+  }
+}

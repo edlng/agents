@@ -1,0 +1,104 @@
+{
+  "agent": "team-lead",
+  "case_id": "docs-failure-runbook",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "1c20f5c0-68a9-40c0-b057-b8ac7c496bb8",
+  "provider_session_id": "8c36efa7-c908-4ae1-a98b-77b1dbed9600",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 25151,
+      "cacheReadInputTokens": 122521,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.31673925,
+      "inputTokens": 12,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3929,
+      "provider": "bedrock",
+      "thinkingTokens": 835,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 153012,
+      "cacheReadInputTokens": 478037,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.5865294,
+      "inputTokens": 26,
+      "maxOutputTokens": 64000,
+      "outputTokens": 10834,
+      "provider": "bedrock",
+      "thinkingTokens": 1020,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "c49c7cf9140680669e210d44a94c99d7b581842ad5cb920fab9ba51c18e086d7",
+  "output": "Now delegating to builder.\n\nBuilder reports done. Now running validator and code-reviewer gates.\n\nValidator PASS. Now code-reviewer gate.\n\nAll gates cleared.\n\n```\nPlan: Workflow Failure Runbook | Status: done\nIsolation: harness-provided disposable Git repository\nTasks:\n- Write docs/workflow-failure-runbook.md: builder: done -\u003e validator: PASS -\u003e code-reviewer: APPROVE; cycles: 1/1/1; missing gate: none\nFiles changed: docs/workflow-failure-runbook.md\nValidation: validator PASS — node --test checks/failure-runbook.test.mjs passes (1 pass, 0 fail); all 8 required sections present with ordered numbered steps; no invented vendor/tool names; no other files modified\nCode review: code-reviewer APPROVE — spec-aligned, internally consistent, no unsafe operator guidance, no fabricated services\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "docs/workflow-failure-runbook.md"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "not_regex",
+        "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"
+      },
+      "passed": true,
+      "reason": "output does not match forbidden regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/failure-runbook.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ runbook covers Stage 4 failure response (0.734959ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 63.636583"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 38,
+  "output_tokens": 14763,
+  "cost_usd": 0.9032686499999999,
+  "duration_ms": 240085,
+  "git_diff": "diff --git a/docs/workflow-failure-runbook.md b/docs/workflow-failure-runbook.md\nindex 3142018..20fc46d 100644\n--- a/docs/workflow-failure-runbook.md\n+++ b/docs/workflow-failure-runbook.md\n@@ -1,3 +1,131 @@\n # Workflow Failure Runbook\n \n-TODO: Document how an operator traces and responds to a failed workflow.\n+This runbook guides an operator through responding to a failed workflow or pipeline run: how to triage the page, pin down the exact failure origin, tell an automated failure apart from a human approval gate, decide whether it is safe to retry or necessary to roll back, and escalate when the situation exceeds what a single operator can resolve.\n+\n+Use this document top to bottom on first response, then jump directly to the section that matches where you are in the investigation.\n+\n+## 1. First-Response Triage\n+\n+Immediate actions to take within the first few minutes of being paged or alerted for a failed run.\n+\n+1. Acknowledge the alert in the paging/alerting system so other on-call operators know the failure is being handled.\n+2. Open the workflow orchestration system's run history view and locate the specific failed run referenced by the alert.\n+3. Record the run's current status (failed, stopped, awaiting approval, retrying) exactly as shown, before taking any action that could change it.\n+4. Check whether the same workflow has failed recently (last few hours/days) to determine if this is a new failure or a recurring one.\n+5. Skim the top-level run summary or status page for an explicit error message or failure reason before opening detailed logs.\n+6. Note the time the run started and the time it failed or stalled; a long gap can indicate a hang rather than a hard failure.\n+7. Determine blast radius: is this a single run, or are multiple runs/pipelines failing at the same step around the same time, which would suggest a shared upstream cause.\n+8. Decide the initial severity based on blast radius and business impact, and adjust the incident/ticket priority accordingly.\n+9. Move to Section 2 to gather identifiers before making any remediation decision.\n+\n+## 2. Correlation and Run IDs\n+\n+How to gather the run ID, correlation ID, and related identifiers needed to scope the investigation before touching logs in depth.\n+\n+1. Capture the unique run ID (or execution ID) of the failed run directly from the run history view or the alert payload.\n+2. Capture the workflow/pipeline definition name and version so you know exactly which configuration executed.\n+3. Capture the triggering event or commit/change ID that caused this run to start, if the system records one.\n+4. Capture the correlation ID (sometimes called a trace ID, request ID, or invocation ID) that ties this run to related downstream or upstream activity.\n+5. Search the workflow system's run history for other runs sharing the same correlation ID to see the full chain of related activity, not just this one run.\n+6. Search adjacent systems (queues, downstream services, upstream triggers) for the same correlation ID to confirm whether the failure originated here or was inherited from somewhere upstream.\n+7. Record all collected identifiers (run ID, correlation ID, definition name/version, triggering change ID) in the incident ticket or notes before proceeding, so any operator who picks this up later can reproduce your search.\n+8. Proceed to Section 3 to pinpoint exactly where in the run the failure occurred.\n+\n+## 3. Locating the Exact Failure-Origin Step and Attempt\n+\n+Ordered steps to drill from the overall run down to the specific stage, step, and retry attempt where the failure originated.\n+\n+1. Open the run's detailed execution view (the graph, timeline, or step list) rather than relying on the summary status alone.\n+2. Identify the stage that stopped progressing or reported failure; a run can have multiple stages, and only one is usually the true failure origin.\n+3. Within that stage, identify the specific step (task, action, or job) that reported the failure, rather than a downstream step that merely failed as a consequence.\n+4. If the step has multiple attempts (retries), list all attempts and their individual statuses, not just the final one.\n+5. Identify the exact attempt number at which the failure first occurred; later attempts may show different symptoms (e.g., a timeout on retry after an initial data error), so treat the first failing attempt as the primary evidence.\n+6. Open the logs and error output scoped to that specific step and attempt only, to avoid conflating output from other steps or earlier successful attempts.\n+7. Confirm the failure origin by checking whether upstream steps completed successfully; if an upstream step actually failed silently or returned incomplete output, the true failure origin is upstream, not at the step currently marked failed.\n+8. Document the confirmed failure origin (stage name, step name, attempt number, and timestamp) in the incident ticket.\n+9. Proceed to Section 4 to confirm this is a genuine automated failure and not a human gate.\n+\n+## 4. Distinguishing Automated Failure From a Human Gate/Approval Block\n+\n+How to tell whether the run is stopped because of a genuine automated failure versus waiting on a human approval or manual gate, and what to check to disambiguate.\n+\n+1. Check the step's status label precisely: statuses such as \"awaiting approval,\" \"pending review,\" \"manual gate,\" or \"paused\" indicate a human gate, while \"failed,\" \"error,\" or \"timed out\" indicate an automated failure.\n+2. If the status is ambiguous, check whether the step is configured in the workflow definition as a manual approval/gate step versus an automated task step.\n+3. Check whether the run has been sitting idle with no error output and no retry activity; idle-with-no-error strongly suggests it is waiting on a human action, not failing.\n+4. Check whether the step's log or output actually contains an error, exception, or non-zero exit code; presence of a genuine error confirms an automated failure, absence of one supports a pending human gate.\n+5. Check the notification/approval queue or task list associated with the workflow system to see if an approval request is outstanding and to whom it was routed.\n+6. If a human gate is confirmed, identify the approver(s) and follow up directly with them, or with their on-call/manager if unresponsive; do not treat this as an automated bug and do not attempt an automated retry, since retrying will not clear a pending approval.\n+7. If an automated failure is confirmed, continue to Section 5 to evaluate whether a retry is safe.\n+\n+## 5. Retry Safety\n+\n+Criteria for deciding when it is safe to retry a failed step or run, versus when retrying would be unsafe or would mask an underlying bug.\n+\n+1. Confirm the failure origin and root cause are understood at least at a high level before retrying blindly; retrying without understanding why it failed risks repeating the same failure or hiding a real bug.\n+2. Check whether the failed step is idempotent, meaning it can safely run again and produce the same end state without duplicating side effects (e.g., double-charging, duplicate writes, duplicate messages sent).\n+3. If the step is not idempotent, check whether any side effects from the failed attempt were already committed (e.g., a partial write succeeded before the step reported failure, a downstream call was made, a resource was already created).\n+4. If side effects were already committed and the step is not idempotent, do not retry as-is; first determine whether those side effects need to be reversed or reconciled, or whether the step supports safe resumption from where it left off.\n+5. Check whether the failure was transient (e.g., a timeout, a temporary resource constraint, a brief unavailability) versus deterministic (e.g., a bad input value, a code defect, a configuration error); transient failures are generally safe to retry, deterministic ones will fail again unchanged.\n+6. If the failure is deterministic, fix the underlying input, configuration, or code issue before retrying, rather than retrying repeatedly and expecting a different result.\n+7. If retry safety cannot be established with confidence, treat the situation as unsafe to retry and escalate per Section 8 rather than guessing.\n+8. If retry is determined to be safe, execute the retry through the workflow system's supported retry mechanism (retry the specific failed step/attempt rather than restarting the entire run from the beginning, unless the system requires a full restart).\n+9. After retrying, monitor the run closely until it reaches the next stable state (success, a new failure, or another gate) before considering the incident resolved.\n+\n+## 6. Rollback Criteria\n+\n+Concrete criteria for deciding to roll back versus forward-fix, and ordered steps to execute a rollback safely.\n+\n+Roll back when any of the following are true:\n+\n+1. The failure is caused by the change that this run was deploying or applying, and that change is already partially or fully live in a way that is causing active user or system impact.\n+2. A forward fix cannot be prepared, reviewed, and deployed quickly enough to bound the ongoing impact, making rollback the faster path to restoring a known-good state.\n+3. The failure has caused, or risks causing, data corruption, security exposure, or violation of a safety invariant that outweighs the cost of rolling back.\n+4. Retrying (per Section 5) has already been ruled unsafe or has already failed once, and the underlying cause is the deployed change itself rather than a transient condition.\n+\n+Forward-fix instead of rolling back when the impact is limited, well understood, and a fix is faster and lower-risk than a rollback (for example, when rollback itself would leave the system in a worse or inconsistent intermediate state).\n+\n+If rollback is chosen, execute in this order:\n+\n+1. Confirm the last known-good version, configuration, or state to roll back to, using the run history and deployment/version records rather than assumption.\n+2. Notify stakeholders (team channel, incident channel, or on-call chain) that a rollback is starting, including the target run/version being rolled back to.\n+3. Initiate the rollback through the workflow system's supported rollback or redeploy mechanism, targeting the confirmed known-good version.\n+4. Monitor the rollback run itself as a first-class run, applying Sections 1 to 4 of this runbook if the rollback run also fails.\n+5. Verify the system has actually returned to the known-good state after rollback completes (check health signals, not just the rollback run's success status).\n+6. Record the rollback action, the version rolled back from and to, and the timestamp in the incident ticket for later root cause analysis.\n+7. Keep the originally failed change on hold until root cause analysis is complete and a fix has been reviewed, before attempting to reintroduce it.\n+\n+## 7. Evidence Preservation\n+\n+What to capture and preserve before or while remediating, so root cause analysis remains possible after the incident is resolved.\n+\n+1. Before retrying, rolling back, or otherwise mutating the run's state, capture a copy of the full logs for the failed step and attempt identified in Section 3.\n+2. Capture the run's full configuration or definition version as it existed at the time of the failure, since later edits to the workflow definition can make the failure unreproducible.\n+3. Capture the input parameters, payload, or triggering event that led to this specific run, so the failure condition can be reproduced in a safe environment later.\n+4. Capture the error message, stack trace, or exit code exactly as reported, rather than paraphrasing it in notes.\n+5. Capture the correlation ID and all related run IDs gathered in Section 2, along with any related logs from upstream or downstream systems.\n+6. Capture a timestamped screenshot or export of the run's execution graph/timeline showing the failure state, in case the live view changes or the run is later cleaned up or archived.\n+7. Store all captured evidence in the incident ticket or a linked storage location, not only in local notes, so it survives beyond the current operator's session.\n+8. Only after evidence is captured, proceed with retry (Section 5) or rollback (Section 6) actions.\n+\n+## 8. Escalation\n+\n+Ordered criteria and steps for when and how to escalate, including what information to hand off.\n+\n+Escalate when any of the following apply:\n+\n+1. The failure origin cannot be confidently identified after completing Section 3, or the failure recurs after a safe retry.\n+2. Retry safety cannot be established (Section 5) and the risk of guessing wrong is unacceptable.\n+3. A rollback is required (Section 6) but the operator does not have the access, approval, or confidence to execute it alone.\n+4. The blast radius identified in Section 1 spans multiple teams, pipelines, or systems beyond the current operator's ownership.\n+5. A human approval gate (Section 4) has gone unanswered past its expected response window.\n+6. The incident's severity, based on business impact, exceeds what the current on-call rotation is authorized to resolve alone.\n+\n+When escalating, follow these steps in order:\n+\n+1. Identify the correct next escalation contact or team, based on ownership of the failing workflow, stage, or step, rather than escalating to a generic channel by default.\n+2. Open or update the incident ticket with the current severity level before contacting the next escalation tier.\n+3. Hand off the full evidence package gathered in Section 7: run ID, correlation ID, failure-origin stage/step/attempt, exact error message, and the actions already taken (retried, rolled back, or neither).\n+4. State explicitly what has already been ruled out (for example, \"confirmed not a human gate,\" \"retry judged unsafe because side effects were already committed\") so the next responder does not repeat completed investigation.\n+5. State the current blocking question or decision needed from the escalation contact (for example, \"need approval to roll back,\" \"need owning team to confirm root cause\").\n+6. Remain engaged and available until the escalation contact confirms they have taken ownership, or until the incident is formally handed off and acknowledged.\n+7. Update the incident ticket once escalation is acknowledged, recording who owns the incident going forward.\n",
+  "git_status": " M docs/workflow-failure-runbook.md\n"
+}

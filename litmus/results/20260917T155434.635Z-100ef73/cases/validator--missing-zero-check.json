@@ -1,0 +1,61 @@
+{
+  "agent": "validator",
+  "case_id": "missing-zero-check",
+  "model": "opus",
+  "provider_models": [
+    "claude-opus-5"
+  ],
+  "provider_request_model": "opus",
+  "provider_response_id": "b70fb3d2-8b47-4a27-bf13-3fd06decbfa8",
+  "provider_session_id": "08e1e13c-e902-4b3e-882d-70a6b9c00b75",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 7756,
+      "cacheReadInputTokens": 115145,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.11295749999999999,
+      "inputTokens": 2,
+      "maxOutputTokens": 64000,
+      "outputTokens": 276,
+      "provider": "bedrock",
+      "thinkingTokens": 0,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "995533801ada756d58e71a085b41fbd42f5c5069c4f180ca6e44028d43200189",
+  "output": "\u003cscratchpad\u003e\nCode has no ValueError check; b=0 raises ZeroDivisionError. No tests present. Criterion 2 fails.\n\u003c/scratchpad\u003e\n\nStatus: FAIL\nCorrectness: 1/3 | Coverage: 1/3 | Criteria: 1/3\n\nIssues:\n- [divide, line 2] No zero check; `b=0` raises `ZeroDivisionError`, not `ValueError`. Criterion 2 unmet.\n- No tests supplied for either the valid-input path or the zero-divisor path.\n- Criterion 1 is UNCERTAIN: `a / b` returns correct float division, but with no tests run I have no executed evidence. Running a test suite against this function would resolve it.\n\nCommands run: none (no test suite or verification command specified, and no files in the working directory to inspect)",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?im)^status:\\s*fail\\s*$"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    },
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "ValueError"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)criterion\\s*2|missing"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 2,
+  "output_tokens": 276,
+  "cost_usd": 0.11295749999999999,
+  "duration_ms": 6427
+}

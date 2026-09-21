@@ -1,0 +1,35 @@
+{
+  "id": "20260917T155346.180Z-100ef73",
+  "timestamp": "2026-09-17T15:53:46.180062Z",
+  "revision": "100ef73",
+  "budget_usd": 0.75,
+  "totals": {
+    "cases": 1,
+    "passed": 0,
+    "failed": 1,
+    "agent_failures": 0,
+    "infrastructure_errors": 1,
+    "grader_errors": 0,
+    "input_tokens": 2,
+    "output_tokens": 223,
+    "total_tokens": 225,
+    "cost_usd": 0.77154125,
+    "duration_ms": 7104
+  },
+  "cases": [
+    {
+      "agent": "validator",
+      "case_id": "missing-zero-check",
+      "provider_models": [
+        "claude-opus-5"
+      ],
+      "status": "infra_error",
+      "passed": false,
+      "input_tokens": 2,
+      "output_tokens": 223,
+      "cost_usd": 0.77154125,
+      "duration_ms": 7104,
+      "detail_path": "cases/validator--missing-zero-check.json"
+    }
+  ]
+}

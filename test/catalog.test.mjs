@@ -73,32 +73,92 @@ const AGENT_MATRIX = [
   sandbox,
 }));
 
+const MEASURED_OUTPUT_OVERRIDE_AGENTS = {
+  builder: [
+    /task starts with the exact, case-sensitive\s+marker `Measured Stage 4 workflow step\.`/,
+    /matching the supplied schema/,
+    /exactly one raw JSON object/,
+    /normal final Report or Verdict formatting/,
+    /role guardrails/,
+    /verification/,
+    /"status":"done"/,
+    /"summary":"\.\.\."/,
+    /"files":\["\.\.\."\]/,
+    /"verification":"\.\.\."/,
+    /schema-compatible blocked outcome/,
+  ],
+  validator: [
+    /task starts with the exact, case-sensitive\s+marker `Measured Stage 4 workflow step\.`/,
+    /matching the supplied schema/,
+    /exactly one raw JSON object/,
+    /normal final Report or Verdict formatting/,
+    /read-only boundaries/,
+    /"decision":"PASS"/,
+    /"reason":"\.\.\."/,
+    /"issues":\[\]/,
+    /decision:"FAIL"/,
+    /review-challenge/,
+  ],
+  'code-reviewer': [
+    /task starts with the exact, case-sensitive\s+marker `Measured Stage 4 workflow step\.`/,
+    /matching the supplied schema/,
+    /exactly one raw JSON object/,
+    /normal final Report or Verdict formatting/,
+    /read-only boundaries/,
+    /"decision":"APPROVE"/,
+    /"reason":"\.\.\."/,
+    /"findings":\[\]/,
+    /decision:"BLOCK"/,
+  ],
+  documenter: [
+    /task starts with the exact, case-sensitive\s+marker `Measured Stage 4 workflow step\.`/,
+    /matching the supplied schema/,
+    /exactly one raw JSON object/,
+    /normal final Report or Verdict formatting/,
+    /write boundaries/,
+    /"status":"done"/,
+    /"path":"\.\.\."/,
+    /"summary":"\.\.\."/,
+    /actually created/,
+  ],
+};
+
 const UNIVERSAL_SKILL_NAMES = [
   'code-review-excellence',
   'diagram-valkey-flow',
   'find-skills',
-  'finishing-a-development-branch',
   'glide-skill',
   'implement-cookbook',
   'onboard',
-  'receiving-code-review',
   'revamp-cookbook',
   'review-addressed-comments',
-  'systematic-debugging',
-  'test-driven-development',
   'test-valkey',
   'update-sysprompts',
-  'using-git-worktrees',
   'valkey-spike',
-  'verification-before-completion',
   'write-pr',
 ];
+
+const SUPERPOWERS_SKILL_NAMES = new Set([
+  'brainstorming',
+  'dispatching-parallel-agents',
+  'executing-plans',
+  'finishing-a-development-branch',
+  'receiving-code-review',
+  'requesting-code-review',
+  'subagent-driven-development',
+  'systematic-debugging',
+  'test-driven-development',
+  'using-git-worktrees',
+  'using-superpowers',
+  'verification-before-completion',
+  'writing-plans',
+  'writing-skills',
+]);
 
 const UNIVERSAL_SOURCE_SNAPSHOT = [
   'code-review-excellence/SKILL.md a3b2b01ad6d0b26eb402014f7734fe3fb9d98f7809cb386ccdf6fe2d4cc82604 0644',
   'diagram-valkey-flow/skill.md 45bb7abd604244ce03f6d3293ec0355b7470ddc11a5b066307495abd11630c72 0644',
   'find-skills/SKILL.md 1e85f6f9686e145aca4a124e3b704b9bbea9aa87e08515c1e352eee70f6e6e7a 0644',
-  'finishing-a-development-branch/SKILL.md 5c8d4b59aedb14c94e2f5d787a3265e858e8f53d4ceffe7ff1c15878a52b0e91 0644',
   'glide-skill/.gitignore 6cc5e5fa36c62b6e641ec05981938f0523d2084919ed5a75314178bffb918b93 0644',
   'glide-skill/assets/benchmarks/app-benchmark.js 264373f06b2288156f6292ea498e0873a00e799f6870e327393f12d73f9d0512 0644',
   'glide-skill/assets/benchmarks/package-lock.json 1128d6f2c60e5eeb94a5f1816a600b920ed1e664e44be783c31a06475eee3583 0644',
@@ -156,28 +216,12 @@ const UNIVERSAL_SOURCE_SNAPSHOT = [
   'onboard/references/icons/webhook.svg d387f07f01327fde0a402eb73837b653ede8d8f802cf3c6256ec8ddd1945899e 0644',
   'onboard/references/icons/workflow.svg 7c4cec1ddefdfb48369b8db25bc56155da880f813101df324effd574dd58c796 0644',
   'onboard/SKILL.md 4cdc43e9fd771fb8f2ab3debd88ae3698c0e9858a7dddcdcf0557f29610aa1f6 0644',
-  'receiving-code-review/SKILL.md c9382e92b8f32363566068ecfed19d3b2651eaf40d3942b24840f839dedfc406 0644',
   'revamp-cookbook/SKILL.md cb8ec573b1817599eea32d9242a6deaf3bed736c08b50b30a8cb76119bb83f77 0644',
   'review-addressed-comments/SKILL.md 0322a2d8b8593cf09b15bbda4dceb823f9eadec28a1a94bae3df08f8e1db235f 0644',
-  'systematic-debugging/condition-based-waiting-example.ts 40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e 0644',
-  'systematic-debugging/condition-based-waiting.md e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26 0644',
-  'systematic-debugging/CREATION-LOG.md c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789 0644',
-  'systematic-debugging/defense-in-depth.md 1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7 0644',
-  'systematic-debugging/find-polluter.sh 6462747eae9b175ac145b78bcfaeab755654a75e32637f08eb633f065a9e1d7c 0755',
-  'systematic-debugging/root-cause-tracing.md 6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b 0644',
-  'systematic-debugging/SKILL.md 4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473 0644',
-  'systematic-debugging/test-academic.md fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486 0644',
-  'systematic-debugging/test-pressure-1.md 0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a 0644',
-  'systematic-debugging/test-pressure-2.md b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016 0644',
-  'systematic-debugging/test-pressure-3.md 96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708 0644',
-  'test-driven-development/SKILL.md 7dee67b4af6bdccc7a914ca34533184d64592d0f5b23aeae631538168db14994 0644',
-  'test-driven-development/testing-anti-patterns.md bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283 0644',
   'test-valkey/SKILL.md 19afde7488d288f0fdcc0677b77522ef7d8bdfdb8313d6ccd735759bf5bb9596 0644',
   'update-sysprompts/SKILL.md 65289f52ff11071345d06eb7366d1062d2935618f6e79bf934a6836958d5387b 0644',
-  'using-git-worktrees/SKILL.md 085a45ee3de432bdb2768011591d9a882cb6c759e2317f379226451c5618fe8e 0644',
   'valkey-spike/SKILL.md 81427d95b8bee0b3dbcca1209819ab348657eeb078e250aef4f206199fdad17b 0644',
-  'verification-before-completion/SKILL.md ea52d15aabaf72bc6b558efe2c126f161b53961090ddcd712000273bfe8c7b6c 0644',
-  'write-pr/SKILL.md 3a67d5c5eabf34f9b6d6815f0710f1933db927e13c3face9c25c0baf93e22d99 0644',
+  'write-pr/SKILL.md c9969d80d8c9bf42e958bb55a6ec06d719372dd7d4bd2b8a91361c667a06771e 0644',
 ].map((snapshot) => {
   const [relativePath, hash, mode] = snapshot.split(' ');
   return {
@@ -194,7 +238,7 @@ const CONCRETE_PROVIDER_ID =
   /\b(?:claude-(?:haiku|sonnet|opus)-[\w.-]+|openai\.gpt-[\w.-]+)\b/i;
 
 const KIRO_PROMPT_SHA256 = {
-  builder: 'b80abe7dc201152ddb9d3cd83e1d36b2f82b700f432feedb6f77281d62dabce8',
+  builder: '340286b6f9b8cc69ed680fc2b9a06a887cd02f0ff2f3b012d882ec8dde09f907',
   'code-reviewer': 'c08928400e09e2736360d80d3a8a5047994e39c4efcf17c07fc0c6d3cd8661da',
   'context-curator': 'efe873b6e0beda64a391b0892a2944ad15103245fe76c47974d803e05a9db6ef',
   developer: '8cff13d09ff8c5120eded3a10a24706a5628aba84cc58836071758f523868094',
@@ -208,8 +252,8 @@ const KIRO_PROMPT_SHA256 = {
   superhuman: '98d9cfb66f542a077bca0fa6ea3c08c4745f083612a32a4412ff4f4bbab48fc1',
   'team-lead': '3c37a833671af5ef46226e354da3f107d1de9ab510d9b92e1313d46339844ed2',
   'team-leader': '9b54446e49c78c19cbef17e9a8172823597a3e3920f59a057dc0d2ac00d97a3f',
-  tester: 'f44834eca27637865dd30403f455be7107dba89ae676528e089df392c1ada63b',
-  validator: '7df5fae679dbb5cf14b0f21d8344266a6d596b061b8c2ec78db18337fb01713a',
+  tester: '0f2e6019409d2d404afc08bdcc5420a126b57bbe3f73765d6cb748796cbd0a45',
+  validator: '18e629fb194c2f266abc01c5d6d6c3111fc4c7a7be1eda5d89e702ed88163b23',
   'valkey-glide-implementor': 'e9704b6915d6a89672d25cef6f457286fa0c9c46e3a3f4f67407bde159cc64f6',
 };
 
@@ -355,7 +399,7 @@ developer_instructions = "Test the fixture."
 `);
   }
 
-  for (let index = 1; index <= 17; index += 1) {
+  for (let index = 1; index <= 11; index += 1) {
     const name = `universal-${String(index).padStart(2, '0')}`;
     await writeFixtureFile(root, `skills/universal/${name}/SKILL.md`, `---
 name: ${name}
@@ -364,7 +408,7 @@ description: Universal fixture skill ${index}.
 `);
   }
 
-  for (let index = 1; index <= 22; index += 1) {
+  for (let index = 1; index <= 14; index += 1) {
     const name = `platform-${String(index).padStart(2, '0')}`;
     for (const platform of ['claude', 'codex']) {
       await writeFixtureFile(root, `skills/${platform}/${name}/SKILL.md`, `---
@@ -582,6 +626,53 @@ test('production agent matrix has complete native families and retained Kiro beh
   assert.deepEqual(flatAgentFiles, []);
 });
 
+test('measured Stage 4 output overrides are conditional and native-pair complete', async () => {
+  const catalog = await loadCatalog(REPOSITORY_ROOT);
+
+  for (const [name, patterns] of Object.entries(MEASURED_OUTPUT_OVERRIDE_AGENTS)) {
+    const agent = catalog.agents.find(({ manifest }) => manifest.name === name);
+    assert.ok(agent, `${name}: missing production agent`);
+
+    for (const [platform, instructions] of [
+      ['Claude', agent.claude.instructions],
+      ['Codex', agent.codex.developer_instructions],
+    ]) {
+      const normalized = instructions.replace(/\s+/g, ' ');
+      for (const pattern of patterns) {
+        assert.match(
+          normalized,
+          pattern,
+          `${name} ${platform}: missing measured-output requirement ${pattern}`,
+        );
+      }
+      assert.match(
+        normalized,
+        /similar phrase, or a missing or mismatched schema does not activate/,
+        `${name} ${platform}: measured mode must remain narrowly gated`,
+      );
+      assert.match(
+        normalized,
+        /no Markdown fence and no prose/,
+        `${name} ${platform}: measured output must be raw JSON`,
+      );
+    }
+  }
+});
+
+test('does not distribute skills sourced from obra/superpowers', async () => {
+  for (const relativeRoot of ['skills/universal', 'skills/claude', 'skills/codex']) {
+    const entries = await readdir(path.join(REPOSITORY_ROOT, relativeRoot), {
+      withFileTypes: true,
+    });
+    const importedSkills = entries
+      .filter((entry) => entry.isDirectory() && SUPERPOWERS_SKILL_NAMES.has(entry.name))
+      .map((entry) => entry.name)
+      .sort();
+
+    assert.deepEqual(importedSkills, [], `${relativeRoot} still contains Superpowers skills`);
+  }
+});
+
 test('production universal skills preserve the complete source snapshot for both platforms', async () => {
   const catalog = await loadCatalog(REPOSITORY_ROOT);
   const policy = await loadModelPolicy(REPOSITORY_ROOT);
@@ -593,7 +684,7 @@ test('production universal skills preserve the complete source snapshot for both
   );
   assert.equal(
     universal.reduce((count, variant) => count + variant.files.length, 0),
-    83,
+    66,
   );
 
   const expectedFiles = UNIVERSAL_SOURCE_SNAPSHOT.map((source) => ({
@@ -628,13 +719,6 @@ test('production universal skills preserve the complete source snapshot for both
     ).hash,
     'cb8ec573b1817599eea32d9242a6deaf3bed736c08b50b30a8cb76119bb83f77',
   );
-  assert.equal(
-    actualFiles.find(
-      ({ relativePath }) => relativePath === 'systematic-debugging/find-polluter.sh',
-    ).mode,
-    0o755,
-  );
-
   const universalErrors = validateCatalog(catalog, policy).filter(
     (error) => error.includes('universal skill')
       || error.startsWith('skills/universal/'),
@@ -665,7 +749,7 @@ test('production universal skills preserve the complete source snapshot for both
       };
     })
     .sort((left, right) => left.source.localeCompare(right.source));
-  assert.equal(claudeFiles.length, 83);
+  assert.equal(claudeFiles.length, 66);
   assert.deepEqual(claudeFiles, expectedInstallFiles);
   assert.deepEqual(claudeFiles, codexFiles);
 
@@ -1071,7 +1155,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 17 agents, 41 skills (18 universal, 23 Claude, 23 Codex)\n',
+    'Catalog valid: 17 agents, 27 skills (12 universal, 15 Claude, 15 Codex)\n',
   );
 });
 

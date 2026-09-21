@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,105 @@ func TestParseProbeCommand(t *testing.T) {
 	if command.Name != "probe" || command.Agent != "code-reviewer" ||
 		command.CaseID != "eval-exec-injection" || command.BudgetUSD != 0.10 {
 		t.Fatalf("parseArgs() = %#v", command)
+	}
+}
+
+func TestParseWorkflowCommands(t *testing.T) {
+	probe, err := parseArgs([]string{
+		"workflow-probe", "node-safe-merge", "--budget", "2.50",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if probe.Name != "workflow-probe" || probe.Agent != "team-lead" ||
+		probe.CaseID != "node-safe-merge" || probe.WorkflowName != "stage4-team-lead" ||
+		probe.BudgetUSD != 2.50 {
+		t.Fatalf("workflow probe = %#v", probe)
+	}
+	batch, err := parseArgs([]string{
+		"workflow-batch", "stage4-team-lead-implementation", "--budget", "45",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if batch.Name != "workflow-batch" ||
+		batch.Manifest != "stage4-team-lead-implementation" ||
+		batch.WorkflowName != "stage4-team-lead" || batch.Jobs != 1 {
+		t.Fatalf("workflow batch = %#v", batch)
+	}
+}
+
+func TestRunWorkflowProbePersistsFiveStepsAsPendingHuman(t *testing.T) {
+	root := measuredWorkflowCLIRoot(t, []string{"case"})
+	executor := &workflowCLIExecutor{}
+
+	var stdout, stderr bytes.Buffer
+	code := testApplication(root, executor).run(
+		[]string{"workflow-probe", "case", "--budget", "2.50"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("run(workflow-probe) = %d, stderr = %s", code, stderr.String())
+	}
+	run := readOnlyRun(t, root)
+	if executor.calls != 5 || len(run.Cases) != 1 ||
+		run.Cases[0].Workflow == nil ||
+		run.Cases[0].Workflow.Status != litmus.WorkflowPendingHuman ||
+		len(run.Cases[0].Workflow.Steps) != 5 {
+		t.Fatalf("run = %#v, calls = %d; want five-step PENDING_HUMAN evidence", run, executor.calls)
+	}
+	if !strings.Contains(stdout.String(), "workflow=PENDING_HUMAN") ||
+		strings.Contains(stdout.String(), "COMPLETED") ||
+		strings.Contains(stdout.String(), "APPROVED") {
+		t.Fatalf("workflow probe output = %q, want explicit unauthenticated pending state", stdout.String())
+	}
+}
+
+func TestRunWorkflowBatchIsSerialAndSharesGlobalBudget(t *testing.T) {
+	root := measuredWorkflowCLIRoot(t, []string{"first", "second"})
+	executor := &workflowCLIExecutor{}
+
+	var stdout, stderr bytes.Buffer
+	code := testApplication(root, executor).run(
+		[]string{"workflow-batch", "measured", "--budget", "2.50"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("run(workflow-batch) = %d, stderr = %s", code, stderr.String())
+	}
+	run := readOnlyRun(t, root)
+	if executor.calls != 10 || len(run.Cases) != 2 {
+		t.Fatalf("run = %#v, calls = %d; want two serial five-step workflows", run, executor.calls)
+	}
+	for _, result := range run.Cases {
+		if result.Workflow == nil || result.Workflow.Status != litmus.WorkflowPendingHuman ||
+			result.Workflow.Totals.CostUSD != 0.05 {
+			t.Fatalf("workflow result = %#v, want reconciled pending workflow", result)
+		}
+	}
+}
+
+func TestRunWorkflowBatchStopsAfterGlobalBudgetExhaustion(t *testing.T) {
+	root := measuredWorkflowCLIRoot(t, []string{"first", "second"})
+	executor := &workflowCLIExecutor{firstCost: 0.40}
+
+	var stdout, stderr bytes.Buffer
+	code := testApplication(root, executor).run(
+		[]string{"workflow-batch", "measured", "--budget", "0.75"},
+		&stdout,
+		&stderr,
+	)
+	if code == 0 {
+		t.Fatalf("run(workflow-batch) = %d, want budget failure", code)
+	}
+	run := readOnlyRun(t, root)
+	if executor.calls != 1 || len(run.Cases) != 1 ||
+		run.Cases[0].Workflow == nil ||
+		run.Cases[0].Workflow.Failure == nil ||
+		run.Cases[0].Workflow.Failure.Code != "BUDGET_EXHAUSTED" {
+		t.Fatalf("run = %#v, calls = %d; want stop after first case exhausts global budget", run, executor.calls)
 	}
 }
 
@@ -518,6 +618,74 @@ type fakeExecutor struct {
 	calls    int
 }
 
+type workflowCLIExecutor struct {
+	calls     int
+	firstCost float64
+}
+
+func (executor *workflowCLIExecutor) Execute(
+	_ context.Context,
+	request litmus.ProviderRequest,
+) (litmus.ProviderResponse, error) {
+	executor.calls++
+	output := ""
+	switch {
+	case request.Agent == "builder":
+		output = `{"status":"done","summary":"built","files":["x.go"],"verification":"go test"}`
+	case request.Agent == "validator" && strings.Contains(request.Task, "Step: review-challenge"):
+		output = `{"decision":"PASS","reason":"verified","issues":[]}`
+	case request.Agent == "validator":
+		output = `{"decision":"PASS","reason":"verified","issues":[]}`
+	case request.Agent == "code-reviewer":
+		output = `{"decision":"APPROVE","reason":"sound","findings":[]}`
+	case request.Agent == "documenter":
+		if err := os.MkdirAll(filepath.Join(request.Workspace, "docs"), 0o755); err != nil {
+			return litmus.ProviderResponse{}, err
+		}
+		if err := os.WriteFile(
+			filepath.Join(request.Workspace, "docs", "result.md"),
+			[]byte("# Generated document\n"),
+			0o644,
+		); err != nil {
+			return litmus.ProviderResponse{}, err
+		}
+		output = `{"status":"done","path":"docs/result.md","summary":"documented"}`
+	default:
+		return litmus.ProviderResponse{}, fmt.Errorf("unexpected workflow agent %q", request.Agent)
+	}
+	cost := 0.01
+	if executor.calls == 1 && executor.firstCost != 0 {
+		cost = executor.firstCost
+	}
+	model := "claude-test"
+	return litmus.ProviderResponse{
+		Output:             output,
+		ProviderModels:     []string{model},
+		ProviderResponseID: fmt.Sprintf("response-%d", executor.calls),
+		ProviderSessionID:  fmt.Sprintf("session-%d", executor.calls),
+		ProviderModelUsage: map[string]map[string]json.RawMessage{
+			model: {
+				"inputTokens":  json.RawMessage("10"),
+				"outputTokens": json.RawMessage("5"),
+				"costUSD":      json.RawMessage(fmt.Sprintf("%.8f", cost)),
+			},
+		},
+		InputTokens:  10,
+		OutputTokens: 5,
+		CostUSD:      cost,
+		Duration:     time.Millisecond,
+		TelemetryPresence: litmus.TelemetryPresence{
+			ModelUsage:         true,
+			InputTokens:        true,
+			OutputTokens:       true,
+			CostUSD:            true,
+			DurationMS:         true,
+			ProviderResponseID: true,
+			ProviderSessionID:  true,
+		},
+	}, nil
+}
+
 type gradeExecutor struct {
 	output string
 	calls  int
@@ -617,6 +785,59 @@ func testApplication(root string, executor litmus.Executor) application {
 func testRoot(t *testing.T) string {
 	t.Helper()
 	return t.TempDir()
+}
+
+func measuredWorkflowCLIRoot(t *testing.T, caseIDs []string) string {
+	t.Helper()
+	root := testRoot(t)
+	for _, agent := range []string{"builder", "validator", "code-reviewer", "documenter"} {
+		writeAgent(t, root, agent)
+	}
+	writeFile(t, filepath.Join(root, "scripts", "install.mjs"), `
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
+const target = process.argv.at(-1);
+mkdirSync(path.join(target, '.claude', 'agents'), { recursive: true });
+mkdirSync(path.join(target, '.claude', 'skills'), { recursive: true });
+`)
+	writeFile(t, filepath.Join(root, "litmus", "workflows", "stage4-team-lead.json"), `{
+  "schema_version":"stage4.measured-workflow.v1",
+  "workflow_id":"team-lead-implementation-v1",
+  "max_attempts":3,
+  "steps":[
+    {"id":"builder","agent":"builder","budget_usd":0.75,"allow_workspace_changes":true,"json_schema":{}},
+    {"id":"validator","agent":"validator","budget_usd":0.45,"allow_workspace_changes":false,"json_schema":{}},
+    {"id":"code-reviewer","agent":"code-reviewer","budget_usd":0.50,"allow_workspace_changes":false,"json_schema":{}},
+    {"id":"review-challenge","agent":"validator","budget_usd":0.40,"allow_workspace_changes":false,"json_schema":{}},
+    {"id":"documenter","agent":"documenter","budget_usd":0.40,"allow_workspace_changes":true,"json_schema":{}}
+  ]
+}`)
+	manifestCases := make([]string, 0, len(caseIDs))
+	for _, id := range caseIDs {
+		writeCase(t, root, "team-lead", id, fmt.Sprintf(`{
+  "id":%q,
+  "agent":"team-lead",
+  "task":"Implement the requested change.",
+  "max_budget_usd":2.50,
+  "live":true,
+  "workflow":true,
+  "assertions":[
+    {"type":"contains","value":"builder: done"},
+    {"type":"contains","value":"validator: PASS"},
+    {"type":"contains","value":"code-reviewer: APPROVE"}
+  ]
+}`, id))
+		manifestCases = append(
+			manifestCases,
+			fmt.Sprintf(`{"agent":"team-lead","case":%q}`, id),
+		)
+	}
+	writeFile(
+		t,
+		filepath.Join(root, "litmus", "manifests", "measured.json"),
+		`{"cases":[`+strings.Join(manifestCases, ",")+`]}`,
+	)
+	return root
 }
 
 func writeCase(t *testing.T, root, agent, id, contents string) {

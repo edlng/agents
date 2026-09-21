@@ -1,0 +1,19 @@
+{
+  "id": "go-redact-headers",
+  "agent": "team-lead",
+  "live": true,
+  "workflow": true,
+  "fixture": "stage4-team-lead-lab",
+  "task": "The harness has placed you in an isolated disposable repository; work in it directly. Complete only go/redactheaders/redactheaders.go. Implement Redact(headers) to deep-copy an HTTP-style map[string][]string and replace every value for Authorization, Proxy-Authorization, Cookie, Set-Cookie, and X-API-Key with exactly [REDACTED], matching names case-insensitively. Preserve original key spelling and nonsensitive values. Return nil for nil input and never alias input slices. Do not repair unrelated tasks. Completion criteria: go test ./go/redactheaders passes and the final report names the file, redaction behavior, and command.",
+  "max_budget_usd": 2.50,
+  "assertions": [
+    {"type": "contains", "value": "go/redactheaders/redactheaders.go"},
+    {"type": "regex", "value": "(?i)(redact|secret|security)"},
+    {"type": "regex", "value": "(?is)(validator.*?PASS|validated PASS|PASS\\s*/\\s*APPROVE)"},
+    {"type": "regex", "value": "(?is)((code[- ]?review(er)?|reviewed|final review).*?APPROV(E|ED)|PASS\\s*/\\s*APPROVE)"},
+    {"type": "not_regex", "value": "(?i)(status:\\s*partial|unresolved evidence|stages? skipped|skip(ping)? .*review|no separate validator|implement it directly)"}
+  ],
+  "validators": [
+    {"type": "command", "command": "go test ./go/redactheaders"}
+  ]
+}

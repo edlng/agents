@@ -1,0 +1,65 @@
+{
+  "agent": "team-lead",
+  "case_id": "docs-quickstart",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "01cbaf00-ab69-437a-a211-df05e11e2eeb",
+  "provider_session_id": "77e484d5-7c8b-4cc1-bbd5-ec6962d8550f",
+  "provider_model_usage": {
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 102555,
+      "cacheReadInputTokens": 428474,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.4324763,
+      "inputTokens": 32,
+      "maxOutputTokens": 64000,
+      "outputTokens": 9033,
+      "provider": "bedrock",
+      "thinkingTokens": 573,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "docs/quickstart.md is complete and verified.\n\n```\nPlan: quickstart doc | Status: done\nTasks: write docs/quickstart.md — done, verified by builder (no separate validator/review cycle run, given tight budget and single low-risk doc file)\nFiles changed: docs/quickstart.md\nVerification: `node --test checks/quickstart.test.mjs` → pass 1, fail 0\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "docs/quickstart.md"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test checks/quickstart.test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ quickstart contains runnable cross-language onboarding (0.786791ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 52.736458"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 32,
+  "output_tokens": 9033,
+  "cost_usd": 0.4324763,
+  "duration_ms": 159527,
+  "git_diff": "diff --git a/docs/quickstart.md b/docs/quickstart.md\nindex 1b661c7..7d9b509 100644\n--- a/docs/quickstart.md\n+++ b/docs/quickstart.md\n@@ -1,3 +1,85 @@\n # Quickstart\n \n-TODO: Document how a new contributor runs one Node, Python, and Go check.\n+Get up and running with this repository's cross-language checks in a few minutes.\n+\n+## Prerequisites\n+\n+Per the root `README.md`, this repo intentionally uses only standard-library tooling. You need:\n+\n+- Node.js 20+\n+- Python 3.11+\n+- Go 1.22+\n+\n+No install steps are needed beyond having these runtimes available: none of the checks depend on\n+external packages (no `package.json` dependencies, no `requirements.txt`/`pyproject.toml`, no\n+`go.mod` dependencies). Everything runs against each language's standard test runner.\n+\n+All commands below are run from the **repository root**.\n+\n+## Running the checks\n+\n+### Node check\n+\n+```\n+node --test node/tag-normalizer/test.mjs\n+```\n+\n+Expected output: a passing run looks like `node --test`'s standard summary output, ending with a block similar to:\n+\n+```\n+# pass 1\n+# fail 0\n+```\n+\n+(the exact counts depend on how many test cases exist in the file).\n+\n+### Python check\n+\n+```\n+python3 python/retry_after/test_retry_after.py\n+```\n+\n+Expected output: a passing run looks like Python's `unittest` summary, for example:\n+\n+```\n+Ran 2 tests in 0.001s\n+\n+OK\n+```\n+\n+### Go check\n+\n+```\n+go test ./go/slugify\n+```\n+\n+Expected output: a passing run looks like Go's standard test summary line, for example:\n+\n+```\n+ok  \tstage4-team-lead-lab/go/slugify\t0.002s\n+```\n+\n+Note: the checks above may currently show implementation-in-progress failures in this fixture;\n+the output samples describe what a passing run looks like, not necessarily today's result.\n+\n+## Troubleshooting\n+\n+**\"command not found: node\" / \"command not found: python3\" / \"command not found: go\"**\n+\n+This means the corresponding runtime isn't installed or isn't on your `PATH`. Verify each\n+runtime and version with:\n+\n+```\n+node --version\n+python3 --version\n+go version\n+```\n+\n+Install or update whichever runtime reports \"command not found\" or a version below the\n+minimums listed in Prerequisites (Node.js 20+, Python 3.11+, Go 1.22+).\n+\n+**\"no such file or directory\" when running a check**\n+\n+The commands above use paths like `node/tag-normalizer/test.mjs` that are relative to the\n+repository root. If you see a \"no such file\" error, you are probably running the command from\n+inside a subdirectory. `cd` back to the repository root and re-run the command.\n",
+  "git_status": " M docs/quickstart.md\n?? python/retry_after/__pycache__/retry_after.cpython-313.pyc\n"
+}

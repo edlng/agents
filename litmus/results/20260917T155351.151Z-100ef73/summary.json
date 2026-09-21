@@ -1,0 +1,35 @@
+{
+  "id": "20260917T155351.151Z-100ef73",
+  "timestamp": "2026-09-17T15:53:51.15124Z",
+  "revision": "100ef73",
+  "budget_usd": 0.4,
+  "totals": {
+    "cases": 1,
+    "passed": 1,
+    "failed": 0,
+    "agent_failures": 0,
+    "infrastructure_errors": 0,
+    "grader_errors": 0,
+    "input_tokens": 2,
+    "output_tokens": 546,
+    "total_tokens": 548,
+    "cost_usd": 0.11158175000000001,
+    "duration_ms": 9593
+  },
+  "cases": [
+    {
+      "agent": "documenter",
+      "case_id": "required-sections",
+      "provider_models": [
+        "claude-opus-5"
+      ],
+      "status": "pass",
+      "passed": true,
+      "input_tokens": 2,
+      "output_tokens": 546,
+      "cost_usd": 0.11158175000000001,
+      "duration_ms": 9593,
+      "detail_path": "cases/documenter--required-sections.json"
+    }
+  ]
+}

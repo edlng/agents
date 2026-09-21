@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "node-jsonl-summary",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "cd69a74c-ea25-43e0-95dd-c548b8e48e63",
+  "provider_session_id": "4b54f835-af7e-4000-97fc-dd0d6a2d851d",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 19801,
+      "cacheReadInputTokens": 81975,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.24329375,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3140,
+      "provider": "bedrock",
+      "thinkingTokens": 760,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 164022,
+      "cacheReadInputTokens": 538410,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.5895910000000001,
+      "inputTokens": 32,
+      "maxOutputTokens": 64000,
+      "outputTokens": 7179,
+      "provider": "bedrock",
+      "thinkingTokens": 1665,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Task complete.\n\n```\nPlan: jsonl-summary | Status: done\nTasks: implement summarizeJsonl — PASS (validator), APPROVE (code-reviewer), 1 cycle\nFiles changed: node/jsonl-summary/index.mjs\nFinal review: approved\nCommand: node --test node/jsonl-summary/test.mjs → 2 passed, 0 failed\n```",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "node/jsonl-summary/index.mjs"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(done|complete|pass|approve)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "node --test node/jsonl-summary/test.mjs"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ✔ summarizes nonblank JSONL records with stable currency rounding (1.504125ms)\n✔ reports the one-based line number for malformed or invalid records (0.810875ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 57.925792"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 42,
+  "output_tokens": 10319,
+  "cost_usd": 0.83288475,
+  "duration_ms": 192846,
+  "git_diff": "diff --git a/node/jsonl-summary/index.mjs b/node/jsonl-summary/index.mjs\nindex 9270e54..ba3bd04 100644\n--- a/node/jsonl-summary/index.mjs\n+++ b/node/jsonl-summary/index.mjs\n@@ -1,3 +1,54 @@\n export function summarizeJsonl(text) {\n-  return { runs: 0, passed: 0, failed: 0, costUsd: 0 };\n+  const lines = text.split(\"\\n\");\n+  let runs = 0;\n+  let passed = 0;\n+  let failed = 0;\n+  let costUsd = 0;\n+\n+  for (let i = 0; i \u003c lines.length; i++) {\n+    const lineNumber = i + 1;\n+    const line = lines[i].replace(/\\r$/, \"\");\n+    if (line.trim() === \"\") {\n+      continue;\n+    }\n+\n+    let record;\n+    try {\n+      record = JSON.parse(line);\n+    } catch {\n+      throw new Error(`Invalid JSON on line ${lineNumber}`);\n+    }\n+\n+    if (\n+      typeof record !== \"object\" ||\n+      record === null ||\n+      Array.isArray(record) ||\n+      (record.status !== \"pass\" \u0026\u0026 record.status !== \"fail\")\n+    ) {\n+      throw new Error(`Invalid record on line ${lineNumber}`);\n+    }\n+\n+    let cost = 0;\n+    if (record.cost_usd !== undefined) {\n+      cost = record.cost_usd;\n+      if (typeof cost !== \"number\" || !Number.isFinite(cost) || cost \u003c 0) {\n+        throw new Error(`Invalid record on line ${lineNumber}`);\n+      }\n+    }\n+\n+    runs++;\n+    if (record.status === \"pass\") {\n+      passed++;\n+    } else {\n+      failed++;\n+    }\n+    costUsd += cost;\n+  }\n+\n+  return {\n+    runs,\n+    passed,\n+    failed,\n+    costUsd: Math.round(costUsd * 100) / 100,\n+  };\n }\n",
+  "git_status": " M node/jsonl-summary/index.mjs\n"
+}

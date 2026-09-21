@@ -1,0 +1,18 @@
+{
+  "schema_version": "stage4.measured-workflow.v1",
+  "workflow_id": "team-lead-implementation-v1",
+  "run_id": "20260917T151931.989Z-node-safe-merge",
+  "case_id": "node-safe-merge",
+  "sequence": 2,
+  "step_id": "validator",
+  "agent": "validator",
+  "attempt": 1,
+  "status": "ACCEPTED",
+  "input_hash": "56514442ac7296df7bae3a846c40518411d43bfda3d097fff73727558ecef39f",
+  "output_hash": "9a062cfdcbd8d48e883745c4e8aad8b3b1ed676f224c16d04768578b115c1406",
+  "workspace_hash": "4b7f2482de9bfd3d8b2fbbc225c087bcb11dfed60a0acb4b03e3c3a29e7a680b",
+  "provider_invocation_hash": "54bdba32dd70460e708bab4bfc97484c606a03416c10d64ac84c7e0c03811eb4",
+  "predecessor_hash": "e3280eb80e7b07397b23a0fa49b2805c309515410ce2318b0b91a3a0273d831d",
+  "created_at": "2026-09-17T15:21:26.556606Z",
+  "sentinel_hash": "fd21373b08f9ad7dd005cdedcdaaf9792f4939094cf4b612fd03d78f7a9fdf00"
+}

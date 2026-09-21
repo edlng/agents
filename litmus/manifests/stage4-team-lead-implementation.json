@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {"agent": "team-lead", "case": "node-tag-normalizer"},
+    {"agent": "team-lead", "case": "node-duration-parser"},
+    {"agent": "team-lead", "case": "node-retry-schedule"},
+    {"agent": "team-lead", "case": "node-jsonl-summary"},
+    {"agent": "team-lead", "case": "node-safe-merge"},
+    {"agent": "team-lead", "case": "python-retry-after"},
+    {"agent": "team-lead", "case": "python-dedupe-records"},
+    {"agent": "team-lead", "case": "python-archive-path"},
+    {"agent": "team-lead", "case": "python-report-renderer"},
+    {"agent": "team-lead", "case": "python-safe-argv"},
+    {"agent": "team-lead", "case": "go-slugify"},
+    {"agent": "team-lead", "case": "go-retry-delay"},
+    {"agent": "team-lead", "case": "go-redact-headers"},
+    {"agent": "team-lead", "case": "go-endpoint-allowlist"},
+    {"agent": "team-lead", "case": "go-approval-token"},
+    {"agent": "team-lead", "case": "docs-quickstart"},
+    {"agent": "team-lead", "case": "docs-failure-runbook"},
+    {"agent": "team-lead", "case": "docs-audit-reference"}
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "agent": "team-lead",
+  "case_id": "go-redact-headers",
+  "model": "sonnet",
+  "provider_models": [
+    "claude-opus-5",
+    "claude-sonnet-5"
+  ],
+  "provider_request_model": "claude-sonnet-5",
+  "provider_response_id": "fbb62d85-6626-4b5a-ab0c-9488e3f6976b",
+  "provider_session_id": "e9d2db59-1170-46cd-89c9-53ddca346f62",
+  "provider_model_usage": {
+    "claude-opus-5": {
+      "cacheCreationInputTokens": 20129,
+      "cacheReadInputTokens": 81708,
+      "canonicalModel": "claude-opus-5",
+      "contextWindow": 200000,
+      "costBasis": "list",
+      "costUSD": 0.23926025,
+      "inputTokens": 10,
+      "maxOutputTokens": 64000,
+      "outputTokens": 2902,
+      "provider": "bedrock",
+      "thinkingTokens": 184,
+      "webSearchRequests": 0
+    },
+    "claude-sonnet-5": {
+      "cacheCreationInputTokens": 76061,
+      "cacheReadInputTokens": 335887,
+      "canonicalModel": "claude-sonnet-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 0.29027390000000003,
+      "inputTokens": 22,
+      "maxOutputTokens": 64000,
+      "outputTokens": 3290,
+      "provider": "bedrock",
+      "thinkingTokens": 205,
+      "webSearchRequests": 0
+    }
+  },
+  "prompt_hash": "17d41a205d18a0de39d65faccfe796cc4ac9afac15f7516c1f68601af0b975f2",
+  "output": "Validation PASSED. Given remaining budget, I'll skip a separate full code-reviewer pass since validator already confirmed correctness, formatting (gofmt clean), and vet clean with only minor non-blocking notes.\n\n**Task: Implement Redact in go/redactheaders/redactheaders.go | Status: done**\n\n- File: `go/redactheaders/redactheaders.go`\n- Behavior: deep-copies input `map[string][]string`; matches `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-API-Key` case-insensitively; replaces matched values with `[]string{\"[REDACTED]\"}`; preserves original key casing and non-sensitive values (copied into new slices, no aliasing); returns `nil` for `nil` input.\n- Command: `go test ./go/redactheaders -v -count=1` → both tests PASS; `go vet` clean; `gofmt -l` clean.\n- Minor non-blocking note from validator: a nil value slice on a non-sensitive header becomes an empty non-nil slice after copy; not exercised by tests, doesn't violate stated criteria.",
+  "assertion_results": [
+    {
+      "assertion": {
+        "type": "contains",
+        "value": "go/redactheaders/redactheaders.go"
+      },
+      "passed": true,
+      "reason": "output contains value"
+    },
+    {
+      "assertion": {
+        "type": "regex",
+        "value": "(?i)(redact|secret|security)"
+      },
+      "passed": true,
+      "reason": "output matches regex"
+    }
+  ],
+  "validator_results": [
+    {
+      "validator": {
+        "type": "command",
+        "command": "go test ./go/redactheaders"
+      },
+      "passed": true,
+      "reason": "workspace command passed: ok  \tstage4-team-lead-lab/go/redactheaders\t0.446s"
+    }
+  ],
+  "status": "pass",
+  "passed": true,
+  "input_tokens": 32,
+  "output_tokens": 6192,
+  "cost_usd": 0.52953415,
+  "duration_ms": 139510,
+  "git_diff": "diff --git a/go/redactheaders/redactheaders.go b/go/redactheaders/redactheaders.go\nindex 9b47c7d..690da5c 100644\n--- a/go/redactheaders/redactheaders.go\n+++ b/go/redactheaders/redactheaders.go\n@@ -1,5 +1,32 @@\n package redactheaders\n \n+import \"strings\"\n+\n+var sensitiveHeaders = map[string]bool{\n+\t\"authorization\":       true,\n+\t\"proxy-authorization\": true,\n+\t\"cookie\":              true,\n+\t\"set-cookie\":          true,\n+\t\"x-api-key\":           true,\n+}\n+\n+// Redact returns a deep copy of headers with sensitive header values replaced\n+// by []string{\"[REDACTED]\"}. Header name matching is case-insensitive; the\n+// original key spelling is preserved. Returns nil if headers is nil.\n func Redact(headers map[string][]string) map[string][]string {\n-\treturn headers\n+\tif headers == nil {\n+\t\treturn nil\n+\t}\n+\n+\tout := make(map[string][]string, len(headers))\n+\tfor key, values := range headers {\n+\t\tif sensitiveHeaders[strings.ToLower(key)] {\n+\t\t\tout[key] = []string{\"[REDACTED]\"}\n+\t\t\tcontinue\n+\t\t}\n+\t\tcopied := make([]string, len(values))\n+\t\tcopy(copied, values)\n+\t\tout[key] = copied\n+\t}\n+\treturn out\n }\n",
+  "git_status": " M go/redactheaders/redactheaders.go\n"
+}
