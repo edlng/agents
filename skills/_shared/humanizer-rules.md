@@ -1,6 +1,6 @@
 # Shared: Humanizer Pattern Rules
 
-> Shared reference for humanizer-based skills. Contains the AI writing patterns to detect and strip. Not a standalone skill.
+> Shared reference used by `pr-comment-humanizer`. Contains the AI writing patterns to detect and strip. Not a standalone skill.
 
 Based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup.
 

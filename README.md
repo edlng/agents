@@ -6,9 +6,9 @@ This repository is a source catalog for native Claude Code and Codex agents
 and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
-- 17 agent roles with Claude, Codex, and Kiro definitions.
-- 12 universal skills shared by Claude and Codex.
-- 15 Claude skills and 15 Codex skills for workflows whose tools or models
+- 7 agent roles with Claude, Codex, and Kiro definitions.
+- 5 universal skills shared by Claude and Codex.
+- 8 Claude skills and 8 Codex skills for workflows whose tools or models
   differ.
 - A validated installer, site catalog, and Litmus checks.
 

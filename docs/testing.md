@@ -17,9 +17,6 @@ npm run lint
 npm run build
 ```
 
-The full Go command also scans optional GLIDE sample assets; a missing sample
-dependency is separate from the focused Litmus package check.
-
 ## Litmus
 
 Run deterministic replays without model cost:

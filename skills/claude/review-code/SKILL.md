@@ -83,9 +83,7 @@ Write validated findings to `local:$RUNID:findings_v2`.
 
 ## Phase 4: Report + Auto-Fix Offer
 
-Spawn a `documenter` subagent for report aggregation.
-
-Prompt:
+Write the report yourself in the main session. Do not spawn a subagent for it. Follow these instructions:
 > "Read `local:$RUNID:findings_v<final>`. Drop `verdict: REJECTED`. Group by severity (post-downgrade). Output markdown:
 >
 > ```

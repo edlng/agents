@@ -1,6 +1,6 @@
 # Shared: Catalog Authoring Convention
 
-This reference is used by `create-skill`, `update-skill`, and `update-agent`.
+This reference is used by `update-skill`.
 The repository catalog is the source of truth. Platform-native files are
 authored in their own format and then validated from the catalog.
 
