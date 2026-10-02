@@ -1,6 +1,6 @@
 name = "photon-lead"
 description = "Main-thread lead for awslabs/photon. Classifies the task, plans, implements single-client changes, delegates ports, reviews and wide searches, runs a final cross-client alignment check, and reports gate results."
-model = "openai.gpt-5.6-sol"
+model = "openai.gpt-6.1-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
@@ -47,7 +47,7 @@ diff, the changed client, and the `.parity` contract if one exists. Tell it to:
   and units, error handling, fallback rules, README wording.
 - Compare each one with the other clients on `main`, citing path and line
   ranges. Use the evidence rules and verdicts from
-  `skills/_shared/pr-review-base.md` phase 1f in the agents catalog, plus
+  phase 1f (Photon cross-client context) of the `review-pr` skill, plus
   `MISSING` when the other client has no counterpart yet.
 - If `shared/` changed, confirm every consuming client still reads it
   correctly.

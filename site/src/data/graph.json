@@ -160,7 +160,7 @@
           "effort": "medium"
         },
         "codex": {
-          "model": "openai.gpt-5.6-sol",
+          "model": "openai.gpt-6.1-sol",
           "effort": "high"
         },
         "kiro": {
@@ -355,7 +355,7 @@
           "effort": "medium"
         },
         "codex": {
-          "model": "openai.gpt-5.6-sol",
+          "model": "openai.gpt-6.1-sol",
           "effort": "high"
         },
         "kiro": {
@@ -382,7 +382,7 @@
       "id": "skill:code-review-excellence",
       "type": "skill",
       "name": "code-review-excellence",
-      "description": "Reasoning framework for systematic code review. Provides lenses (correctness, security, design fit, testability), self-challenge rubrics, and severity differentiation. Use as the reasoning frame when a reviewer subagent applies multi-lens analysis to a diff or PR. Reports only findings affecting correctness or stated requirements — explicitly excludes style.",
+      "description": "Reasoning framework for reviewing a diff or PR. Defines the review lenses (design fit, correctness and security, requirements, testability), severity labels (important, nit, pre-existing), a self-challenge check for each finding, and a question style for uncertain findings. Reports only findings that affect correctness or stated requirements and excludes style. Use when a reviewer agent or review skill analyzes a diff or PR and needs a frame for what to flag, how to grade it, and when to drop it.",
       "category": "Code Review",
       "platforms": [
         "claude",
@@ -393,24 +393,23 @@
         "universal": "skills/universal/code-review-excellence/SKILL.md"
       },
       "sourcePath": "skills/universal/code-review-excellence/SKILL.md",
-      "excerpt": "Code Review Excellence Transform code reviews from gatekeeping to knowledge sharing through constructive feedback, systematic analysis, and collaborative improvement. When to Use This Skill - Reviewing pull requests and code changes - Establishing code review standards for teams - Mentoring junior d"
+      "excerpt": "Code review excellence A frame for deciding what to report in a code review and how to grade it. It applies to any diff, PR, or uncommitted change. Scope Report only findings that affect correctness or stated requirements. Do not report style unless the change violates a pattern visible in the surro"
     },
     {
       "id": "skill:crash-course",
       "type": "skill",
       "name": "crash-course",
-      "description": "Research any topic and produce a structured crash course saved to Obsidian. Takes a topic as input, dispatches a researcher subagent with a bounded effort budget, optionally validates findings, formats output as a consistent crash course document, saves to the Obsidian vault, and outputs in chat. Use when asked to learn about, research, get a crash course on, or explore any technology, concept, framework, or project.",
+      "description": "Research any topic and produce a structured crash course saved to Obsidian. Takes a topic as input, dispatches a `researcher` agent, optionally validates findings, formats output as a consistent crash course document, saves to the Obsidian vault, and outputs in chat. Use when asked to learn about, research, get a crash course on, or explore any technology, concept, framework, or project.",
       "category": "Other",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/crash-course/SKILL.md",
-        "codex": "skills/codex/crash-course/SKILL.md"
+        "universal": "skills/universal/crash-course/SKILL.md"
       },
-      "sourcePath": "skills/claude/crash-course/SKILL.md",
+      "sourcePath": "skills/universal/crash-course/SKILL.md",
       "excerpt": "Crash Course Research `$ARGUMENTS` and produce a structured crash course. Save to Obsidian and output in chat. Follow each phase in order. Do not skip phases. --- Phase 1: Scope the Topic Parse `$ARGUMENTS` to determine: - **Topic**: the subject to research (e.g. \"DynamoDB DAX\", \"Kubernetes HPA\", \"R"
     },
     {
@@ -423,72 +422,52 @@
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/daily-log/SKILL.md",
-        "codex": "skills/codex/daily-log/SKILL.md"
+        "universal": "skills/universal/daily-log/SKILL.md"
       },
-      "sourcePath": "skills/claude/daily-log/SKILL.md",
+      "sourcePath": "skills/universal/daily-log/SKILL.md",
       "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
     },
     {
       "id": "skill:implement-task",
       "type": "skill",
       "name": "implement-task",
-      "description": "Single-command entry point that takes a plain-text task description or a Jira issue key (e.g. FOO-123) and runs plan → advisor loop → implement → test → review using existing agents. Do NOT use for quick one-file fixes or when a multi-step plan already exists.",
+      "description": "Takes a plain-text task description or a Jira issue key (e.g. FOO-123) and runs plan, approach advisor loop, implement, test, and review using the catalog agents. Use when the user explicitly asks to implement a task end-to-end. Not for quick one-file fixes or work that already has a multi-step plan.",
       "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/implement-task/SKILL.md",
-        "codex": "skills/codex/implement-task/SKILL.md"
-      },
-      "sourcePath": "skills/claude/implement-task/SKILL.md",
-      "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. If `$ARGUMENTS` is a Jira issue key (e.g. `FOO-123`), Phase 0 turns it into the task requirements. Otherwise the plain-text description is the task requirements and Phase 0 is skipped. Every later phase that says `{$ARGUME"
-    },
-    {
-      "id": "skill:onboard",
-      "type": "skill",
-      "name": "onboard",
-      "description": "Use when a developer needs a thorough technical introduction to an unfamiliar local repository, including its architecture, subsystem responsibilities, runtime behavior, verification evidence, security concerns, and operational risks.",
-      "category": "Other",
       "platforms": [
         "claude",
         "codex"
       ],
       "compatibility": "universal",
       "sources": {
-        "universal": "skills/universal/onboard/SKILL.md"
+        "universal": "skills/universal/implement-task/SKILL.md"
       },
-      "sourcePath": "skills/universal/onboard/SKILL.md",
-      "excerpt": "Onboard Build an evidence-backed technical guide from the current user request. Use the host-provided `$ARGUMENTS` value when the host supplies one; otherwise parse the request text. Never treat an unexpanded literal `$ARGUMENTS` token as a repository path. Accept a repository path, an optional focu"
+      "sourcePath": "skills/universal/implement-task/SKILL.md",
+      "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. If `$ARGUMENTS` is a Jira issue key (e.g. `FOO-123`), Phase 0 turns it into the task requirements. Otherwise the plain-text description is the task requirements and Phase 0 is skipped. Every later phase that says `{$ARGUME"
     },
     {
       "id": "skill:pr-comment-humanizer",
       "type": "skill",
       "name": "pr-comment-humanizer",
-      "description": "Humanize PR review comments to match the author's terse, direct code review voice.\nStrips AI-isms and rewrites comments to sound like a real engineer: short imperatives,\nparenthetical precision, \"nit\" prefix for minor things, \"we should\" for collaborative\nframing, questions to verify rather than assert, links instead of explanations.\n",
+      "description": "Rewrites PR review comments to match the author's terse, direct code review voice. Strips AI phrasing and produces short imperatives, parenthetical precision, a \"nit\" prefix for minor things, \"we should\" framing, verifying questions, and links instead of explanations. Use when drafting or polishing PR review comments before posting.",
       "category": "Writing & Documentation",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/pr-comment-humanizer/SKILL.md",
-        "codex": "skills/codex/pr-comment-humanizer/SKILL.md"
+        "universal": "skills/universal/pr-comment-humanizer/SKILL.md"
       },
-      "sourcePath": "skills/claude/pr-comment-humanizer/SKILL.md",
+      "sourcePath": "skills/universal/pr-comment-humanizer/SKILL.md",
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
     },
     {
       "id": "skill:review-addressed-comments",
       "type": "skill",
       "name": "review-addressed-comments",
-      "description": "Given a PR link, reviews edlng's review comments, verifies each was addressed in the latest code, and provides a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence.",
+      "description": "Reviews edlng's review comments on a PR, verifies each was addressed in the latest code, and gives a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence. Use when given a PR link and asked whether edlng's feedback was addressed.",
       "category": "Code Review",
       "platforms": [
         "claude",
@@ -499,61 +478,75 @@
         "universal": "skills/universal/review-addressed-comments/SKILL.md"
       },
       "sourcePath": "skills/universal/review-addressed-comments/SKILL.md",
-      "excerpt": "Review Addressed Comments Verify that all of edlng's review comments on a PR have been addressed in the current code, providing the new code snippets as evidence, and give a final recommendation. When to Use - When asked to check whether edlng's review feedback has been addressed on a PR - Before ap"
+      "excerpt": "Review Addressed Comments Verify that all of edlng's review comments on a PR have been addressed in the current code, providing the new code snippets as evidence, and give a final recommendation. When to use - When asked to check whether edlng's review feedback has been addressed on a PR - Before ap"
     },
     {
       "id": "skill:review-code",
       "type": "skill",
       "name": "review-code",
-      "description": "Self-review uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, Valkey caching, a single Sonnet reviewer, an Opus validator skeptic pass, and auto-fix offer. Pass a branch name to review vs main, a Jira key to use as requirements source, or leave empty to review staged+unstaged changes.",
+      "description": "Self-reviews uncommitted or unpushed work before opening a PR. Multi-phase review with Jira requirements, a single reviewer agent, a skeptic validator pass, and an auto-fix offer. Use when asked to review local changes, self-review a branch before a PR, or check your own diff. Pass a branch name to review against main, a Jira key as the requirements source, or nothing to review staged and unstaged changes.",
       "category": "Code Review",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/review-code/SKILL.md",
-        "codex": "skills/codex/review-code/SKILL.md"
+        "universal": "skills/universal/review-code/SKILL.md"
       },
-      "sourcePath": "skills/claude/review-code/SKILL.md",
-      "excerpt": "Review My Local Changes Self-review your own uncommitted or unpushed work before opening a PR. The goal is to catch your own mistakes — bugs, sloppy patterns, missed requirements — at the cheapest possible point. Optimized for speed and **fixing in place**: when a finding is unambiguous, this comman"
+      "sourcePath": "skills/universal/review-code/SKILL.md",
+      "excerpt": "Review My Local Changes Self-review your own uncommitted or unpushed work before opening a PR. The goal is to catch your own mistakes (bugs, sloppy patterns, missed requirements) at the cheapest point. The review is fast and fixes in place: when a finding is unambiguous, the skill offers to fix it. "
     },
     {
       "id": "skill:review-pr",
       "type": "skill",
       "name": "review-pr",
-      "description": "Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only - printed in chat and rendered as a temporary self-contained HTML report, never posted to GitHub.",
+      "description": "Reviews a pull request against the linked Jira ticket and the existing codebase. Parallel reviewers per discipline, findings merged and checked by a skeptic validator pass. Output is local only: printed in chat, rendered as a temporary self-contained HTML report, and saved as a findings JSON file. Nothing is posted to GitHub. Use when asked to review someone else's PR by URL or owner/repo#number.",
       "category": "Code Review",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/review-pr/SKILL.md",
-        "codex": "skills/codex/review-pr/SKILL.md"
+        "universal": "skills/universal/review-pr/SKILL.md"
       },
-      "sourcePath": "skills/claude/review-pr/SKILL.md",
-      "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. The full workflow is defined in the shared base file. Run the base workflow Follow `_shared/pr-review-base.md` end to end (relative to this skill's directory — i.e. `../_shared/p"
+      "sourcePath": "skills/universal/review-pr/SKILL.md",
+      "excerpt": "Review PR (senior-dev grade) Review a pull request against the linked Jira ticket and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare. `$ARGUMENTS` is a PR URL or `owner/repo#number`. If em"
+    },
+    {
+      "id": "skill:unslop",
+      "type": "skill",
+      "name": "unslop",
+      "description": "Cut AI tells from any writing. Must always apply.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/unslop/SKILL.md"
+      },
+      "sourcePath": "skills/universal/unslop/SKILL.md",
+      "excerpt": "Unslop Edit text to remove AI patterns. Process 1. Scan for the patterns below. 2. Rewrite. Preserve meaning, match intended tone. Patterns to detect and fix Rule numbers are stable ids that other skills cite. A removed rule leaves a gap. Content 3. **Superficial -ing phrases.** \"highlighting...\", \""
     },
     {
       "id": "skill:update-skill",
       "type": "skill",
       "name": "update-skill",
-      "description": "Use when the user wants to create a new skill or agent, or update or modify an existing skill or agent definition, in their AI agents catalog",
+      "description": "Creates or updates a skill or agent definition in the AI agents catalog, following the catalog layout and authoring rules. Use when the user wants to create a new skill or agent, or modify an existing one.",
       "category": "Meta",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/update-skill/SKILL.md",
-        "codex": "skills/codex/update-skill/SKILL.md"
+        "universal": "skills/universal/update-skill/SKILL.md"
       },
-      "sourcePath": "skills/claude/update-skill/SKILL.md",
-      "excerpt": "Update Skill Create or update a skill or agent in the catalog. **Sync convention:** Follow `_shared/five-root-sync.md` (catalog layout, authoring rules, installation and verification). Creating a skill or agent - Check for a naming conflict across `agents/`, `skills/universal/`, `skills/claude/`, an"
+      "sourcePath": "skills/universal/update-skill/SKILL.md",
+      "excerpt": "Update Skill Create or update a skill or agent in the catalog. The repository catalog is the source of truth. Edit the catalog source, then validate it. Do not treat an installed copy as canonical. Catalog layout | Entity | Source files | |---|---| | Agent | `agents/<name>/{manifest.json,claude.md,c"
     },
     {
       "id": "skill:update-sysprompts",
@@ -587,32 +580,24 @@
         "universal": "skills/universal/write-pr/SKILL.md"
       },
       "sourcePath": "skills/universal/write-pr/SKILL.md",
-      "excerpt": "Write PR Description Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follo"
+      "excerpt": "Write PR description Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follo"
     },
     {
       "id": "skill:write-pr-comments",
       "type": "skill",
       "name": "write-pr-comments",
-      "description": "Post inline PR review comments from an Obsidian review note as a pending review. Filters out non-actionable findings, presents each remaining one for approval, then posts approved comments as a pending GitHub review (visible only to you until manually submitted).",
+      "description": "Posts inline PR review comments from a review-pr findings file as a pending GitHub review. Filters out non-actionable findings, presents each remaining one for approval, humanizes the approved text, and posts a pending review visible only to the user until they submit it. Use when the user explicitly asks to post review findings as PR comments.",
       "category": "Writing & Documentation",
       "platforms": [
         "claude",
         "codex"
       ],
-      "compatibility": "variants",
+      "compatibility": "universal",
       "sources": {
-        "claude": "skills/claude/write-pr-comments/SKILL.md",
-        "codex": "skills/codex/write-pr-comments/SKILL.md"
+        "universal": "skills/universal/write-pr-comments/SKILL.md"
       },
-      "sourcePath": "skills/claude/write-pr-comments/SKILL.md",
-      "excerpt": "Write PR Comments Post actionable review findings as inline GitHub PR comments from a previously saved Obsidian review note. `$ARGUMENTS` is a PR URL, `owner/repo#number`, an Obsidian note slug (e.g. `valkey-samples-feat-add-eino-...`), or empty. If a slug is given, read the note directly from `PRs/"
-    },
-    {
-      "id": "shared-ref:async-dispatch-protocols",
-      "type": "shared-ref",
-      "name": "async-dispatch-protocols",
-      "description": "Shared reference for agents that delegate work asynchronously (assign/fire-and-forget) and receive results via inbox delivery.",
-      "sourcePath": "skills/_shared/async-dispatch-protocols.md"
+      "sourcePath": "skills/universal/write-pr-comments/SKILL.md",
+      "excerpt": "Write PR Comments Post actionable review findings as inline GitHub PR comments from a findings file that `review-pr` saved. `$ARGUMENTS` is a PR URL or `owner/repo#number`. If empty, ask the user for one. --- Phase 1: Load the Findings File 1. Parse `owner`, `repo`, and `number` from `$ARGUMENTS`. 2"
     },
     {
       "id": "shared-ref:codebase-context-checklist",
@@ -622,20 +607,6 @@
       "sourcePath": "skills/_shared/codebase-context-checklist.md"
     },
     {
-      "id": "shared-ref:five-root-sync",
-      "type": "shared-ref",
-      "name": "five-root-sync",
-      "description": "This reference is used by `update-skill`.",
-      "sourcePath": "skills/_shared/five-root-sync.md"
-    },
-    {
-      "id": "shared-ref:humanizer-rules",
-      "type": "shared-ref",
-      "name": "humanizer-rules",
-      "description": "Shared reference used by `pr-comment-humanizer`. Contains the AI writing patterns to detect and strip. Not a standalone skill.",
-      "sourcePath": "skills/_shared/humanizer-rules.md"
-    },
-    {
       "id": "shared-ref:no-github-writes",
       "type": "shared-ref",
       "name": "no-github-writes",
@@ -643,17 +614,10 @@
       "sourcePath": "skills/_shared/no-github-writes.md"
     },
     {
-      "id": "shared-ref:pr-review-base",
-      "type": "shared-ref",
-      "name": "pr-review-base",
-      "description": "Shared reference used by `review-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report).",
-      "sourcePath": "skills/_shared/pr-review-base.md"
-    },
-    {
       "id": "shared-ref:review-findings-schema",
       "type": "shared-ref",
       "name": "review-findings-schema",
-      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.",
+      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses on top of this base.",
       "sourcePath": "skills/_shared/review-findings-schema.md"
     },
     {
@@ -667,15 +631,8 @@
       "id": "shared-ref:validator-skeptic-pass",
       "type": "shared-ref",
       "name": "validator-skeptic-pass",
-      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.",
+      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills may add skill-specific self-challenge questions.",
       "sourcePath": "skills/_shared/validator-skeptic-pass.md"
-    },
-    {
-      "id": "shared-ref:valkey-cache-conventions",
-      "type": "shared-ref",
-      "name": "valkey-cache-conventions",
-      "description": "This is a shared reference file used by multiple skills (`review-pr`, `review-code`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.",
-      "sourcePath": "skills/_shared/valkey-cache-conventions.md"
     },
     {
       "id": "mcp:github",
@@ -1090,7 +1047,7 @@
     "counts": {
       "agents": 8,
       "skills": 13,
-      "sharedRefs": 10,
+      "sharedRefs": 5,
       "mcpServers": 3,
       "workflows": 3
     },
@@ -1107,7 +1064,7 @@
       },
       "codex": {
         "openai.gpt-5.6-luna": 6,
-        "openai.gpt-5.6-sol": 2
+        "openai.gpt-6.1-sol": 2
       },
       "kiro": {
         "claude-sonnet-5": 5,

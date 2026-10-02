@@ -19,13 +19,13 @@ consistent with the native files. Select models only through the policy in
 
 ## Skill Classification
 
-Classify a skill as universal when no platform-specific behavior is needed.
-Otherwise create a Claude and Codex variant with the same trigger and outcome,
-then adapt dispatch, input, MCP, paths, and model-routing instructions to the
-native runtime. Put reusable references in `skills/_shared/`.
+Make a skill universal by default. Write it without model names, provider
+tool names, or install paths, and let each agent's own definition pick the
+model. Create Claude and Codex variants only when a workflow cannot be
+expressed neutrally. Put reusable references in `skills/_shared/`.
 
-Use the catalog convention in `skills/_shared/five-root-sync.md`; installed
-home directories are outputs, not authoring sources.
+The `update-skill` skill describes the catalog layout and authoring rules.
+Installed home directories are outputs, not authoring sources.
 
 ## Validation
 

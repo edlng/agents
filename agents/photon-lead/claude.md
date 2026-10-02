@@ -49,7 +49,7 @@ diff, the changed client, and the `.parity` contract if one exists. Tell it to:
   and units, error handling, fallback rules, README wording.
 - Compare each one with the other clients on `main`, citing path and line
   ranges. Use the evidence rules and verdicts from
-  `skills/_shared/pr-review-base.md` phase 1f in the agents catalog, plus
+  phase 1f (Photon cross-client context) of the `review-pr` skill, plus
   `MISSING` when the other client has no counterpart yet.
 - If `shared/` changed, confirm every consuming client still reads it
   correctly.

@@ -11,9 +11,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED = {
   agents: 8,
   skills: 13,
-  universal: 5,
-  claude: 8,
-  codex: 8,
+  universal: 13,
+  claude: 0,
+  codex: 0,
 };
 
 try {
@@ -45,7 +45,7 @@ try {
     }
     process.exitCode = 1;
   } else {
-    console.log('Catalog valid: 8 agents, 13 skills (5 universal, 8 Claude, 8 Codex)');
+    console.log('Catalog valid: 8 agents, 13 skills (13 universal, 0 Claude, 0 Codex)');
   }
 } catch (error) {
   console.error(`ERROR ${error.message}`);

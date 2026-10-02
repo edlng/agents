@@ -19,7 +19,7 @@ Codex agents are TOML files. The required fields are `name`, `description`,
 |---|---|---|
 | Haiku | `openai.gpt-5.6-luna` | `xhigh` |
 | Sonnet | `openai.gpt-5.6-luna` | `xhigh` |
-| Opus | `openai.gpt-5.6-sol` | `high` |
+| Opus | `openai.gpt-6.1-sol` | `high` |
 
 Validate and preview an install with:
 

@@ -3,7 +3,7 @@ name: write-pr
 description: Generate a concise, human-sounding PR description from current git changes in a reviewer-first format. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a structured default), verifies accuracy, then humanizes the output.
 ---
 
-# Write PR Description
+# Write PR description
 
 Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follow each phase in order.
 
@@ -17,7 +17,7 @@ Parse `$ARGUMENTS` to separate these two inputs. A commit range looks like a git
 
 ---
 
-## Phase 1: Read Changes
+## Phase 1: Read changes
 
 Gather the full diff and commit messages for the target range:
 
@@ -39,9 +39,9 @@ Read through the diff carefully. Understand:
 
 ---
 
-## Phase 2: Draft the PR Description
+## Phase 2: Draft the PR description
 
-### Template Selection
+### Template selection
 1. If the user provided a template path, read that file.
 2. Otherwise, check for `.github/pull_request_template.md` or files in `.github/PULL_REQUEST_TEMPLATE/` in the repo root.
 3. If no template exists, use this default shape:
@@ -75,7 +75,7 @@ Organize the body around the questions a reviewer will have:
 - **Summary:** Start with the behavior or problem that motivated the change. Explain the impact, then say what the implementation does. When behavior changes, add a small `Before`/`After` table. Keep it concrete.
 - **What's in it:** Group files into logical modules or areas and explain each role. Mention new files, changed interfaces, compatibility behavior, migrations, and paired changes where they matter. A short JSON, protocol, or API example is useful when it makes a contract unambiguous.
 - **Design decisions:** Include only non-obvious choices, tradeoffs, failure behavior, rollout constraints, or compatibility rules. Use short subsections when there are multiple decisions. Do not restate the implementation line by line.
-- **Testing:** Report the actual commands, results, counts, coverage, and important edge cases. Include failure-path or regression tests when they are part of the change. Never invent a test result, coverage number, benchmark, or manual verification step.
+- **Testing:** Report the actual commands, results, counts, coverage, and important edge cases. Include failure-path or regression tests when they are part of the change. Do not invent a test result, coverage number, benchmark, or manual verification step.
 - **Not in this PR:** Name deferred work, known limitations, or required follow-ups when they affect how the change should be reviewed or shipped. Omit the section when there is nothing meaningful to say.
 
 Use concrete file names, functions, interfaces, and behaviors. Explain why a change exists, not just what moved. Prefer grouped tables and short paragraphs over a long file-by-file checklist. Include an issue, design document, rollout note, or external dependency only when it is present in the repository context or the supplied template. Keep the body as short as the scope allows; expand for a real protocol, migration, or compatibility contract rather than padding the summary.
@@ -86,7 +86,7 @@ Do not generate a commit title or branch name unless the user explicitly asks fo
 
 Apply the `unslop` skill to the completed draft. The `unslop` skill owns the humanization and anti-AI rules; do not duplicate or override those rules here. Preserve the draft's technical facts, structure, and reviewer-oriented detail. If humanization changes a factual claim, resolve it against the diff and test output during Phase 4.
 
-## Phase 4: Verify Accuracy
+## Phase 4: Verify accuracy
 
 Review the draft against the actual diff and test output. Check:
 
@@ -99,7 +99,7 @@ Review the draft against the actual diff and test output. Check:
 
 Fix anything inaccurate, vague, repetitive, or missing before proceeding.
 
-## Phase 5: Final Output
+## Phase 5: Final output
 
 Print the final PR description inside a single fenced markdown code block so the user can copy and paste it directly:
 

@@ -1,6 +1,6 @@
 name = "validator"
 description = "Read-only validator that checks one completed implementation task against its acceptance criteria and issues a scored PASS or FAIL report."
-model = "openai.gpt-5.6-sol"
+model = "openai.gpt-6.1-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """

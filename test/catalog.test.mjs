@@ -39,7 +39,7 @@ const POLICY = {
     },
     opus: {
       claude: { model: 'opus', effort: 'medium' },
-      codex: { model: 'openai.gpt-5.6-sol', effort: 'high' },
+      codex: { model: 'openai.gpt-6.1-sol', effort: 'high' },
     },
   },
 };
@@ -67,10 +67,18 @@ const AGENT_MATRIX = [
 
 const UNIVERSAL_SKILL_NAMES = [
   'code-review-excellence',
-  'onboard',
+  'crash-course',
+  'daily-log',
+  'implement-task',
+  'pr-comment-humanizer',
   'review-addressed-comments',
+  'review-code',
+  'review-pr',
+  'unslop',
+  'update-skill',
   'update-sysprompts',
   'write-pr',
+  'write-pr-comments',
 ];
 
 const SUPERPOWERS_SKILL_NAMES = new Set([
@@ -91,30 +99,27 @@ const SUPERPOWERS_SKILL_NAMES = new Set([
 ]);
 
 const UNIVERSAL_SOURCE_SNAPSHOT = [
-  'code-review-excellence/SKILL.md a3b2b01ad6d0b26eb402014f7734fe3fb9d98f7809cb386ccdf6fe2d4cc82604 0644',
-  'onboard/references/diagram-style.md 50e42bca32ee64e20dd9d134711e6c1843d2886c9c98452b4dcf2f535c3e57de 0644',
-  'onboard/references/guide-template.md fcd69ad8100d0ec0db71b90391c7c078cc6d103c81c98822aa25e36a4692cdfd 0644',
-  'onboard/references/icons/app-window.svg 2c0e089eaada4cdae6395c570100a8ebffea08f19636e0b1d53b773b9c5b58ac 0644',
-  'onboard/references/icons/boxes.svg 87786d80f6eca2602aad5a6a5d608dc3386219ba71f3cf2746e69b2bb99e7214 0644',
-  'onboard/references/icons/braces.svg ba2f6df733ad2a2833f935681cf6b0c29fe4502b39aa5e2b4f38154789d0e81d 0644',
-  'onboard/references/icons/cloud.svg 3b31d710d15ed6ea4cb0cea314a6541a7c42f00e7af1a3028e0cb83539c4217f 0644',
-  'onboard/references/icons/code-xml.svg b16eb571e2cc579be8a0158bb61b05211774a605b892d1bd3a250a958f4dd6c6 0644',
-  'onboard/references/icons/container.svg ef237ab205bbe0d294896ac20252c89789c8a54c5701d2efb6b84cf296c1fa3b 0644',
-  'onboard/references/icons/database.svg 813151983345d0c31316029f91453d01d76cc6ccaa38904bd51f5f41e7427441 0644',
-  'onboard/references/icons/globe.svg e08a82c0e9862b2a3e4003d14c2c517398ca5776e7e04db2756401d50e734d59 0644',
-  'onboard/references/icons/key-round.svg 619d0e31f5215bca00e63e0c4d19192f822904cd1c787611d95a1823a4a7d7fc 0644',
-  'onboard/references/icons/LICENSE b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57 0644',
-  'onboard/references/icons/lock-keyhole.svg 47f99e5eb871e7c54b047c7987e3af39d06928123a75efa12e950e31b55a2b5d 0644',
-  'onboard/references/icons/MANIFEST.md 4d42601ab803763b4ae9920061a6c805d18066e593f35cc9950e7f09c460ee10 0644',
-  'onboard/references/icons/server.svg e8c4f808587df6c7790336fdf4e5d462d164f12f70ba3d781e0f06d3ae2dc27c 0644',
-  'onboard/references/icons/shield-check.svg d7cfb1de96312a72b987a75cf8ac23aa9518e1665e043120e50a6792b3665ceb 0644',
-  'onboard/references/icons/users.svg e7736ae816f2cc2c1a105113b55d3f9ac53b59d98e776020898a7bfd235c7d64 0644',
-  'onboard/references/icons/webhook.svg d387f07f01327fde0a402eb73837b653ede8d8f802cf3c6256ec8ddd1945899e 0644',
-  'onboard/references/icons/workflow.svg 7c4cec1ddefdfb48369b8db25bc56155da880f813101df324effd574dd58c796 0644',
-  'onboard/SKILL.md 4cdc43e9fd771fb8f2ab3debd88ae3698c0e9858a7dddcdcf0557f29610aa1f6 0644',
-  'review-addressed-comments/SKILL.md 0322a2d8b8593cf09b15bbda4dceb823f9eadec28a1a94bae3df08f8e1db235f 0644',
-  'update-sysprompts/SKILL.md 65289f52ff11071345d06eb7366d1062d2935618f6e79bf934a6836958d5387b 0644',
-  'write-pr/SKILL.md 76e561e0e02b75c334441d5b36940efe9392ff74597391a065b22e53964d3f32 0644',
+  'code-review-excellence/SKILL.md 464ce0078951cdb318fa4ebb1ac307f391b1f0acdc8cbba90b14071bdf68058f 0644',
+  'crash-course/SKILL.md bdfc3cfdfc021128fea76cdc31ddef5e747ec7a26bf42d842eb28620cfd1d449 0644',
+  'crash-course/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'daily-log/SKILL.md 4054ce0816d8e78c6ebad71191322a784076f0e169fc119f726107bdb2699df0 0644',
+  'daily-log/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'implement-task/SKILL.md f6bd977b314e8098d56b1f604783a95faa91a92dfea31424cca1d24d94580a74 0644',
+  'implement-task/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'pr-comment-humanizer/SKILL.md 0e54363f80e6b904198a379e5cbc30444287ae2309c291ad0d135f0fe10b22b2 0644',
+  'review-addressed-comments/SKILL.md 25283cb89fd71a42553277c6617f14d6b2e382af157450f617414592616b8806 0644',
+  'review-addressed-comments/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'review-code/SKILL.md 97463cdb6e0885fd9c94b3c34773ca8ffb3e3de6daa5ca8c1139b8d540dd9a09 0644',
+  'review-pr/SKILL.md 6766a5341a3fcb27f5acc98287e3ebc503465067a419efe1441d80b01c8c23a7 0644',
+  'review-pr/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'unslop/SKILL.md 14238c311775822a2b88aaa8f5ed2edcc6045c2bcd344dff03cb46d372cf396a 0644',
+  'update-skill/SKILL.md 4a51ac9f243a296b654c1a13aab98cbd96c9bae140a47fc3849ac6f603d269d9 0644',
+  'update-skill/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'update-sysprompts/SKILL.md 158a32405176f772b929a3e390761e540b53f4522972cec0a60cec4af9113b73 0644',
+  'update-sysprompts/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'write-pr-comments/SKILL.md 491bba1eca8765a414411bc5fd51aec359c366bdbdd6d672f210b206b15a114a 0644',
+  'write-pr-comments/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'write-pr/SKILL.md 2fb73d049382cfd1847f1f7734a3477f669e8fcde6312dab37b1eb4befcf05b6 0644',
 ].map((snapshot) => {
   const [relativePath, hash, mode] = snapshot.split(' ');
   return {
@@ -130,9 +135,9 @@ const CONCRETE_PROVIDER_ID =
 
 const KIRO_PROMPT_SHA256 = {
   builder: '340286b6f9b8cc69ed680fc2b9a06a887cd02f0ff2f3b012d882ec8dde09f907',
-  'code-reviewer': '715d934faf08f5122bd8b9f7f9c181f85d1c59d4492e940f3db43ec45ced86e5',
+  'code-reviewer': 'bc4e2e9896deac8b0add3a14f4c1184488f64219d33485485ae301d0a1cdc907',
   explore: '2f2a85ea295368ea8a84055ee0c0857f98ff300078826f6774fafac76d2d4cd6',
-  'photon-lead': '6f8a573d678e5eccf1652ea080d1a2d1c2bb467ddd8f14165285d050f2f77d0c',
+  'photon-lead': 'f6a01fd69e25d40785d7faede7fd8b5b80b825a91168a1252fa1b7dd2ceb2fd4',
   'research-validator': 'c0b17309751b84a549e5587cd5cfdbc2be897ac74d8259948ad12ecd36024dfe',
   researcher: '0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263',
   tester: '0f2e6019409d2d404afc08bdcc5420a126b57bbe3f73765d6cb748796cbd0a45',
@@ -240,7 +245,10 @@ async function createFixture(
 async function createCompleteCliFixture(t) {
   const root = await createFixture(
     t,
-    {},
+    {
+      'skills/claude/review-pr/SKILL.md': null,
+      'skills/codex/review-pr/SKILL.md': null,
+    },
     path.join(REPOSITORY_ROOT, 'test', '.catalog-cli-'),
   );
 
@@ -272,7 +280,7 @@ developer_instructions = "Test the fixture."
 `);
   }
 
-  for (let index = 1; index <= 4; index += 1) {
+  for (let index = 1; index <= 12; index += 1) {
     const name = `universal-${String(index).padStart(2, '0')}`;
     await writeFixtureFile(root, `skills/universal/${name}/SKILL.md`, `---
 name: ${name}
@@ -281,7 +289,7 @@ description: Universal fixture skill ${index}.
 `);
   }
 
-  for (let index = 1; index <= 7; index += 1) {
+  for (let index = 1; index <= 0; index += 1) {
     const name = `platform-${String(index).padStart(2, '0')}`;
     for (const platform of ['claude', 'codex']) {
       await writeFixtureFile(root, `skills/${platform}/${name}/SKILL.md`, `---
@@ -441,6 +449,9 @@ test('does not distribute skills sourced from obra/superpowers', async () => {
   for (const relativeRoot of ['skills/universal', 'skills/claude', 'skills/codex']) {
     const entries = await readdir(path.join(REPOSITORY_ROOT, relativeRoot), {
       withFileTypes: true,
+    }).catch((error) => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
     });
     const importedSkills = entries
       .filter((entry) => entry.isDirectory() && SUPERPOWERS_SKILL_NAMES.has(entry.name))
@@ -462,7 +473,7 @@ test('production universal skills preserve the complete source snapshot for both
   );
   assert.equal(
     universal.reduce((count, variant) => count + variant.files.length, 0),
-    24,
+    21,
   );
 
   const expectedFiles = UNIVERSAL_SOURCE_SNAPSHOT.map((source) => ({
@@ -519,30 +530,21 @@ test('production universal skills preserve the complete source snapshot for both
       };
     })
     .sort((left, right) => left.source.localeCompare(right.source));
-  assert.equal(claudeFiles.length, 24);
+  assert.equal(claudeFiles.length, 21);
   assert.deepEqual(claudeFiles, expectedInstallFiles);
   assert.deepEqual(claudeFiles, codexFiles);
 
   for (const name of UNIVERSAL_SKILL_NAMES) {
-    if (name === 'update-sysprompts') {
-      assert.deepEqual(
-        await readFile(
-          path.join(REPOSITORY_ROOT, 'skills', name, 'SKILL.md'),
-          'utf8',
-        ),
-        await readFile(
-          path.join(REPOSITORY_ROOT, 'skills', 'universal', name, 'SKILL.md'),
-          'utf8',
-        ),
-        'update-sysprompts direct sync source must match the catalog source',
-      );
-      continue;
-    }
-    await assert.rejects(
-      stat(path.join(REPOSITORY_ROOT, 'skills', name)),
-      { code: 'ENOENT' },
-      `${name}: legacy source directory still exists`,
+    const { stdout: legacyFiles } = await execFileAsync(
+      'git',
+      ['ls-files', '--', `skills/${name}`],
+      { cwd: REPOSITORY_ROOT },
     );
+    const present = [];
+    for (const file of legacyFiles.split('\n').filter(Boolean)) {
+      if (await stat(path.join(REPOSITORY_ROOT, file)).catch(() => null)) present.push(file);
+    }
+    assert.deepEqual(present, [], `${name}: legacy source directory is still tracked`);
   }
 });
 
@@ -925,7 +927,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 8 agents, 13 skills (5 universal, 8 Claude, 8 Codex)\n',
+    'Catalog valid: 8 agents, 13 skills (13 universal, 0 Claude, 0 Codex)\n',
   );
 });
 

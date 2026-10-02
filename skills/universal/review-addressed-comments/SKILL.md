@@ -1,13 +1,14 @@
 ---
 name: review-addressed-comments
-description: Given a PR link, reviews edlng's review comments, verifies each was addressed in the latest code, and provides a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence.
+description: Reviews edlng's review comments on a PR, verifies each was addressed in the latest code, and gives a final verdict (APPROVE, REQUEST CHANGES, or COMMENT) with code evidence. Use when given a PR link and asked whether edlng's feedback was addressed.
+disable-model-invocation: true
 ---
 
 # Review Addressed Comments
 
 Verify that all of edlng's review comments on a PR have been addressed in the current code, providing the new code snippets as evidence, and give a final recommendation.
 
-## When to Use
+## When to use
 
 - When asked to check whether edlng's review feedback has been addressed on a PR
 - Before approving a PR that edlng previously reviewed
@@ -15,34 +16,34 @@ Verify that all of edlng's review comments on a PR have been addressed in the cu
 
 ## Workflow
 
-1. **Fetch PR review threads** — use `pull_request_read` with `get_review_comments` to retrieve all review threads on the PR.
+1. **Fetch PR review threads.** Use the GitHub MCP `pull_request_read` tool with `get_review_comments` to retrieve all review threads on the PR.
 
-2. **Filter to edlng's comments** — identify every thread where edlng authored a comment. Record the file path, line number, and the substance of each comment.
+2. **Filter to edlng's comments.** Identify every thread where edlng authored a comment. Record the file path, line number, and the substance of each comment.
 
-3. **Check for author responses** — in each thread, look for the PR author's reply describing how they addressed the feedback.
+3. **Check for author responses.** In each thread, look for the PR author's reply describing how they addressed the feedback.
 
-4. **Fetch current file contents** — for each file edlng commented on, use `get_file_contents` on the PR's head branch to retrieve the latest code.
+4. **Fetch current file contents.** For each file edlng commented on, use the GitHub MCP `get_file_contents` tool on the PR's head branch to retrieve the latest code.
 
-5. **Verify with evidence** — for each comment, find the specific code snippet or documentation change that addresses it. Quote the relevant lines as evidence.
+5. **Verify with evidence.** For each comment, find the specific code snippet or documentation change that addresses it. Quote the relevant lines as evidence.
 
-6. **Produce the report** — for each comment, output:
+6. **Produce the report.** For each comment, output:
    - edlng's original concern (one-line summary)
    - File and location
-   - Status: ✅ Addressed, ⚠️ Partially addressed, or ❌ Not addressed
+   - Status: Addressed, Partially addressed, or Not addressed
    - Code evidence (the new snippet proving the fix)
 
-7. **Final verdict** — based on the results:
-   - All addressed → recommend **APPROVE**
-   - Some partially addressed or minor gaps → recommend **COMMENT** with notes
-   - Any not addressed → recommend **REQUEST CHANGES** with specifics
+7. **Final verdict.** Based on the results:
+   - If all are addressed, recommend **APPROVE**
+   - If some are partially addressed or have minor gaps, recommend **COMMENT** with notes
+   - If any is not addressed, recommend **REQUEST CHANGES** with specifics
 
-## Output Format
+## Output format
 
 ```
-## edlng's Comments — Status
+## edlng's comments, status
 
 ### 1. [One-line summary of concern] ([file]:[line])
-**Status**: ✅ Addressed
+**Status**: Addressed
 **Evidence**:
 \```language
 <relevant code snippet>

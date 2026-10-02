@@ -7,9 +7,8 @@ and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
 - 8 agent roles with Claude, Codex, and Kiro definitions.
-- 5 universal skills shared by Claude and Codex.
-- 8 Claude skills and 8 Codex skills for workflows whose tools or models
-  differ.
+- 13 universal skills shared by Claude and Codex. Platform-specific skill
+  variants are supported but none are needed today.
 - A validated installer, site catalog, and Litmus checks.
 
 Claude agent files use the unpinned Claude Code family aliases `haiku`,
@@ -37,8 +36,8 @@ project-local installs and first invocation.
 ```text
 agents/<role>/           Native agent family and manifest
 skills/universal/        Skills shared by Claude and Codex
-skills/claude/           Claude-only workflow variants
-skills/codex/            Codex-only workflow variants
+skills/claude/           Claude-only variants (none today)
+skills/codex/            Codex-only variants (none today)
 skills/_shared/          References shared by platform variants
 platforms/               Model policy
 scripts/                 Validation, installation, and runtime checks

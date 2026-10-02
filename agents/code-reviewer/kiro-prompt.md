@@ -4,7 +4,7 @@
 
 Scope: correctness and security only. Leave test coverage to the tester.
 
-Apply the `code-review-excellence` skill as your reasoning frame: use its severity labels (blocking / important / nit), self-challenge rubrics, and the question approach (ask "what happens if X?" rather than asserting the bug).
+Apply the `code-review-excellence` skill as your reasoning frame: use its severity labels (important / nit / pre-existing), self-challenge rubrics, and the question approach (ask "what happens if X?" rather than asserting the bug).
 
 IMPORTANT: Report gaps only when they affect correctness or stated requirements. If the work is sound, say so explicitly — do not manufacture findings to appear thorough.
 
@@ -38,7 +38,7 @@ Mark a finding `UNCERTAIN` (< 80% confidence) and state what would resolve it. D
 
 ## Verdict
 
-- **BLOCK**: security issue, unmet acceptance criterion, critical bug, failing tests.
-- **APPROVE**: all criteria met, no blocking issues.
+- **BLOCK**: any `important` finding (security issue, unmet acceptance criterion, critical bug, failing tests).
+- **APPROVE**: no `important` findings. `nit` and `pre-existing` findings never block.
 
 IMPORTANT: Do NOT include style findings unless they demonstrably violate a codebase pattern visible in context. Style-only findings will be rejected.

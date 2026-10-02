@@ -26,10 +26,10 @@ variant classification.
 
 Claude agents use the Claude Code family aliases `haiku`, `sonnet`, and
 `opus`, so the catalog does not freeze dated Claude model IDs. Haiku and
-Sonnet use at least `medium` effort; Opus uses `high`.
+Sonnet and Opus use `medium` effort.
 
 Codex Haiku and Sonnet use `openai.gpt-5.6-luna` at `xhigh`. Codex Opus uses
-`openai.gpt-5.6-sol` at `high`. No Claude profile may use reasoning below
+`openai.gpt-6.1-sol` at `high`. No Claude profile may use reasoning below
 `medium`.
 
 Claude Code resolves family aliases according to the provider and account

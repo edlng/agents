@@ -1,6 +1,7 @@
 ---
 name: update-sysprompts
 description: Use when the user invokes the harness-native `update-sysprompts` skill or asks to persist a concise instruction across Kiro, Claude Code, and Codex global context, including commit, test, coding-style, or workflow rules.
+disable-model-invocation: true
 ---
 
 # Update Sysprompts
@@ -26,10 +27,10 @@ Update these effective global instruction surfaces together:
    path `$HOME/.codex/AGENTS.md` (or `$CODEX_HOME/AGENTS.md` when
    `CODEX_HOME` is set), never a project-local `AGENTS.md`.
 
-Do not update only the harness in which this skill was invoked. Do not use
+Update all three, not only the harness in which this skill was invoked. Do not use
 Claude's one-shot `--append-system-prompt` flags; they do not persist.
 
-## Managed Update
+## Managed update
 
 1. Read the skill arguments after the native invocation prefix and trim only
    surrounding whitespace. Reject an empty task or a task containing either
@@ -68,7 +69,7 @@ Claude's one-shot `--append-system-prompt` flags; they do not persist.
 6. Prepare every result before replacing any target. Use same-directory
    temporary files and atomic replacement. Save the original bytes so that if
    a later replacement or verification fails, restore already-replaced
-   targets and report whether rollback succeeded. Never claim completion for a
+   targets and report whether rollback succeeded. Do not claim completion for a
    partial update.
 7. Re-read all three targets. Verify that the exact rendered block, including
    the task text between its markers, matches the prepared result; do not accept
@@ -86,9 +87,9 @@ used for commits.` or `$update-sysprompts Make sure \`git css\` is used for
 commits.`, update all three targets with the same literal sentence, replacing
 the prior managed instruction if one exists.
 
-## Failure Rules
+## Failure rules
 
-| Risk | Required response |
+| Risk | Response |
 | --- | --- |
 | Codex override exists | Update the override, not only `AGENTS.md`. |
 | Existing managed block | Replace it; never append a duplicate. |

@@ -19,7 +19,7 @@ profile.
 |---|---|---|
 | Haiku | `haiku` | `medium` |
 | Sonnet | `sonnet` | `medium` |
-| Opus | `opus` | `high` |
+| Opus | `opus` | `medium` |
 
 These are Claude Code family aliases, not pinned model revisions. Claude Code
 resolves them to the provider's current Haiku, Sonnet, or Opus model. If a

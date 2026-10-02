@@ -2,18 +2,18 @@
 
 > Shared reference used by the local-only review skills (`review-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.
 
-The review is **local-only**. Print it in chat and create only the local artifact specified by the consuming skill. **DO NOT** perform any write operation against GitHub. The user will decide what to post after reviewing the output.
+The review is local-only. Print it in chat and create only the local artifacts specified by the consuming skill. Do not perform any write operation against GitHub. The user decides what to post after reviewing the output.
 
 ## Prohibited write operations
 
-- Post a review (`gh pr review`, `mcp__github__pull_request_review_write`)
-- Add a comment (`gh pr comment`, `mcp__github__add_issue_comment`, `mcp__github__add_comment_to_pending_review`)
+- Post a review (`gh pr review`, the GitHub MCP `pull_request_review_write` tool)
+- Add a comment (`gh pr comment`, the GitHub MCP `add_issue_comment` or `add_comment_to_pending_review` tools)
 - Approve or request changes
-- Update PR title/body (`mcp__github__update_pull_request`)
-- Push to any branch (`mcp__github__push_files`, `mcp__github__create_or_update_file`)
-- Open or merge PRs (`mcp__github__create_pull_request`, `mcp__github__merge_*`)
-- Any other write method (`*_write`, `create_*`, `update_*`, `merge_*`, `delete_*`)
+- Update a PR title or body (`gh pr edit`, the GitHub MCP `update_pull_request` tool)
+- Push to any branch (the GitHub MCP `push_files` or `create_or_update_file` tools)
+- Open or merge PRs (`gh pr create`, `gh pr merge`, the GitHub MCP `create_pull_request` or `merge_*` tools)
+- Any other write method (`*_write`, `create_*`, `update_*`, `merge_*`, `delete_*`, or `gh api` with a method other than GET)
 
 ## Read access
 
-Each skill specifies its read mechanism (some use the `gh` CLI for reads, some use `mcp__github__*` read tools only). Follow the consuming skill's stated read convention. Local `git` for inspecting the working tree is always fine.
+Both skills read GitHub with the `gh` CLI. Local `git` for inspecting the working tree is always fine.

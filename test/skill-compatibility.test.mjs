@@ -39,9 +39,9 @@ async function variantText(variant) {
 test('catalog contains one native Claude and Codex variant for every platform-specific skill', async () => {
   const catalog = await loadCatalog(root);
 
-  assert.equal(catalog.skillVariants.universal.length, 5);
-  assert.equal(catalog.skillVariants.claude.length, 8);
-  assert.equal(catalog.skillVariants.codex.length, 8);
+  assert.equal(catalog.skillVariants.universal.length, 13);
+  assert.equal(catalog.skillVariants.claude.length, 0);
+  assert.equal(catalog.skillVariants.codex.length, 0);
   assert.equal(catalog.skills.length, 13);
   assert.equal(buildInstallSet(catalog, 'claude').skills.length, 13);
   assert.equal(buildInstallSet(catalog, 'codex').skills.length, 13);
@@ -89,6 +89,21 @@ test('Codex variants contain no Claude-specific model, tool, or path vocabulary'
         text,
         pattern,
         `${skill.name} contains Codex-incompatible vocabulary: ${pattern}`,
+      );
+    }
+  }
+});
+
+test('universal skills contain no platform-specific model, tool, or path vocabulary', async () => {
+  const catalog = await loadCatalog(root);
+
+  for (const skill of catalog.skillVariants.universal) {
+    const text = await variantText(skill);
+    for (const pattern of [...CODEX_FORBIDDEN, ...CLAUDE_FORBIDDEN_DESTINATIONS]) {
+      assert.doesNotMatch(
+        text,
+        pattern,
+        `${skill.name} contains platform-specific vocabulary: ${pattern}`,
       );
     }
   }
