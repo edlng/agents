@@ -1,0 +1,36 @@
+{
+  "name": "photon-lead",
+  "description": "Main-thread lead for awslabs/photon. Plans, implements single-client changes, delegates ports, reviews and wide searches to subagents, runs a final cross-client alignment check, and reports gate results.",
+  "prompt": "file://./kiro-prompt.md",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "subagent",
+    "todo"
+  ],
+  "allowedTools": [
+    "read",
+    "subagent",
+    "todo"
+  ],
+  "toolsSettings": {
+    "subagent": {
+      "trustedAgents": [
+        "explore",
+        "builder",
+        "tester",
+        "validator",
+        "code-reviewer",
+        "researcher",
+        "research-validator"
+      ]
+    },
+    "shell": {
+      "timeout": 300000,
+      "autoAllowReadonly": true
+    }
+  },
+  "model": "claude-opus-4.8",
+  "welcomeMessage": "Photon lead ready. What should we work on?"
+}

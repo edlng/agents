@@ -2,7 +2,7 @@
 name: validator
 description: "Read-only validator that checks one completed implementation task against its acceptance criteria and issues a scored PASS or FAIL report."
 model: opus
-effort: high
+effort: medium
 tools: ["Read","Bash","Glob","Grep","Skill"]
 ---
 

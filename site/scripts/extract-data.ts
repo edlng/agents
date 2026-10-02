@@ -17,6 +17,7 @@ const LITMUS_RESULTS_DIR = join(ROOT, 'litmus', 'results');
 
 // Category mappings from README
 const AGENT_CATEGORIES: Record<string, string> = {
+  'photon-lead': 'Orchestration',
   'builder': 'Implementation',
   'tester': 'Quality Assurance',
   'validator': 'Quality Assurance',

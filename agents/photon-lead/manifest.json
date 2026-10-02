@@ -1,0 +1,11 @@
+{
+  "name": "photon-lead",
+  "description": "Main-thread lead for awslabs/photon. Classifies the task, plans, implements single-client changes, delegates ports, reviews and wide searches, runs a final cross-client alignment check, and reports gate results.",
+  "category": "orchestration",
+  "profile": "opus",
+  "platforms": [
+    "claude",
+    "codex",
+    "kiro"
+  ]
+}

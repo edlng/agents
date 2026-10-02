@@ -10,7 +10,7 @@
       "codex": {"model": "openai.gpt-5.6-luna", "effort": "xhigh"}
     },
     "opus": {
-      "claude": {"model": "opus", "effort": "high"},
+      "claude": {"model": "opus", "effort": "medium"},
       "codex": {"model": "openai.gpt-5.6-sol", "effort": "high"}
     }
   }

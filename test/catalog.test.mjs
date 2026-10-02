@@ -38,7 +38,7 @@ const POLICY = {
       codex: { model: 'openai.gpt-5.6-luna', effort: 'xhigh' },
     },
     opus: {
-      claude: { model: 'opus', effort: 'high' },
+      claude: { model: 'opus', effort: 'medium' },
       codex: { model: 'openai.gpt-5.6-sol', effort: 'high' },
     },
   },
@@ -52,6 +52,7 @@ const AGENT_MATRIX = [
   ['builder', 'implementation', 'sonnet', 'workspace-write'],
   ['code-reviewer', 'quality-assurance', 'sonnet', 'read-only'],
   ['explore', 'research', 'haiku', 'read-only'],
+  ['photon-lead', 'orchestration', 'opus', 'workspace-write'],
   ['research-validator', 'research', 'sonnet', 'read-only'],
   ['researcher', 'research', 'sonnet', 'read-only'],
   ['tester', 'quality-assurance', 'sonnet', 'workspace-write'],
@@ -131,6 +132,7 @@ const KIRO_PROMPT_SHA256 = {
   builder: '340286b6f9b8cc69ed680fc2b9a06a887cd02f0ff2f3b012d882ec8dde09f907',
   'code-reviewer': '715d934faf08f5122bd8b9f7f9c181f85d1c59d4492e940f3db43ec45ced86e5',
   explore: '2f2a85ea295368ea8a84055ee0c0857f98ff300078826f6774fafac76d2d4cd6',
+  'photon-lead': '6f8a573d678e5eccf1652ea080d1a2d1c2bb467ddd8f14165285d050f2f77d0c',
   'research-validator': 'c0b17309751b84a549e5587cd5cfdbc2be897ac74d8259948ad12ecd36024dfe',
   researcher: '0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263',
   tester: '0f2e6019409d2d404afc08bdcc5420a126b57bbe3f73765d6cb748796cbd0a45',
@@ -141,6 +143,7 @@ const KIRO_JSON_SHA256 = {
   builder: 'f455232eb0cbdbe8c00d93fe6e8f9970fddd1cd3651abe00a8784df887fda078',
   'code-reviewer': 'da5a22b3cec3c0cd30fb63506b2f9530c2050d23ab749ecbc000b172cfc1feae',
   explore: '423830a5ad8a5ac9e0a99a2d1c1f7d0be8f27e55a2c5678e51dc97babe22febc',
+  'photon-lead': '4ab967e132f6d932314e23fd72bfc2bd27d9d0f7f30878123836c49399d850e6',
   'research-validator': '36bddb25df064a14c45daef63f658e1823c04aafb82537abfa90cb469c93d30c',
   researcher: 'd234a3721fe7a6b666baf92fdcfb3b5512f3225a1d4076f21c1338882fe3a2e9',
   tester: '2dadf5d1b11dd5d24360f5d3a82cc22cb56574a8ed17cceebd62fe0764557cc8',
@@ -241,7 +244,7 @@ async function createCompleteCliFixture(t) {
     path.join(REPOSITORY_ROOT, 'test', '.catalog-cli-'),
   );
 
-  for (let index = 1; index <= 6; index += 1) {
+  for (let index = 1; index <= 7; index += 1) {
     const name = `agent-${String(index).padStart(2, '0')}`;
     const description = `Fixture agent ${index}.`;
     await writeFixtureFile(root, `agents/${name}/manifest.json`, `${JSON.stringify({
@@ -335,7 +338,7 @@ test('production agent matrix has complete native families and retained Kiro beh
   const policy = await loadModelPolicy(REPOSITORY_ROOT);
   const expectedNames = AGENT_MATRIX.map(({ name }) => name);
 
-  assert.equal(catalog.agents.length, 7);
+  assert.equal(catalog.agents.length, 8);
   assert.deepEqual(
     catalog.agents.map(({ manifest }) => manifest.name),
     expectedNames,
@@ -922,7 +925,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 7 agents, 13 skills (5 universal, 8 Claude, 8 Codex)\n',
+    'Catalog valid: 8 agents, 13 skills (5 universal, 8 Claude, 8 Codex)\n',
   );
 });
 
