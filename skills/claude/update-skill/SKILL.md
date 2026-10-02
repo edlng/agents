@@ -1,17 +1,30 @@
 ---
 name: update-skill
-description: Use when the user wants to update or modify an existing skill for their AI agents
+description: Use when the user wants to create a new skill or agent, or update or modify an existing skill or agent definition, in their AI agents catalog
 ---
 
 # Update Skill
 
-Update a skill across all synced roots.
+Create or update a skill or agent in the catalog.
 
-**Entity type:** Skill
-**Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type "Skill").
+**Sync convention:** Follow `_shared/five-root-sync.md` (catalog layout, authoring rules, installation and verification).
 
-## Additional guidance
+## Creating a skill or agent
 
-- If the skill references `_shared/` files, check whether the change belongs in the shared file instead (DRY). If so, update the shared file and sync it per the "Shared ref" row in the sync convention.
-- If the change affects the skill's frontmatter `description`, verify it still accurately reflects when the skill should be invoked.
-- If the skill has auxiliary files (e.g. `references/`, prompt templates), sync those too using the same author-once-replicate pattern.
+- Check for a naming conflict across `agents/`, `skills/universal/`, `skills/claude/`, and `skills/codex/` before writing.
+- Read 1-2 existing skills or agents to match formatting conventions (frontmatter fields, section structure, description style).
+- Names must be kebab-case, descriptive of the capability, and narrow in scope.
+- If the new skill shares logic with an existing skill, move the shared part into `_shared/` rather than duplicating it.
+- Verify the `description` field contains enough keywords for accurate invocation matching.
+
+## Updating a skill
+
+- If the skill references `_shared/` files, check whether the change belongs in the shared file instead. If so, update the shared file.
+- If the change affects the frontmatter `description`, verify it still reflects when the skill should be invoked.
+- If the skill has auxiliary files (e.g. `references/`, prompt templates), update those too.
+
+## Updating an agent
+
+- An agent has five source files: `manifest.json`, `claude.md`, `codex.toml`, `kiro.json`, and `kiro-prompt.md`. Apply the change to every platform file it affects.
+- If the agent prompt references a skill by name (e.g. "Use the `code-review-excellence` skill"), verify the referenced skill exists.
+- If several agents share identical instructions, consider whether they belong in a shared workflow instead of each agent prompt.

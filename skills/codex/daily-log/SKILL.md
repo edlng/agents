@@ -5,7 +5,7 @@ description: Reads today's AI journal entry from Obsidian, appends a concise dai
 
 > **Codex runtime:** Use Codex-native agent dispatch, task plans, user-input requests, MCP capabilities, and skill loading. Resolve agents from `~/.codex/agents` or `.codex/agents`; resolve skills from `~/.agents/skills` or `.agents/skills`.
 >
-> Match work to catalog roles: low effort uses `context-curator`, `explore`, or `documenter`; medium uses `builder`, `code-reviewer`, `tester`, or `researcher`; high uses `validator` or `superhuman`.
+> Match work to catalog roles: low effort uses `explore`; medium uses `builder`, `code-reviewer`, `tester`, or `researcher`; high uses `validator`.
 
 # Daily Log
 

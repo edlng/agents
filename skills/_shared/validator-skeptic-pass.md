@@ -1,6 +1,6 @@
 # Shared: Validator (Skeptic Pass)
 
-> Shared reference used by `review-pr`, `review-cookbook-pr`, `review-code`, and `multi-discipline-review`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.
+> Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.
 
 The validator earns its cost by confirming what is real, downgrading what is overstated, rejecting what is false, and adding only high-confidence misses. This is where false positives that would otherwise reach the user get killed.
 

@@ -1,6 +1,6 @@
 # Shared: Valkey Cache Conventions
 
-> This is a shared reference file used by multiple skills (`review-pr`, `review-cookbook-pr`, `review-code`, `implement-jira`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.
+> This is a shared reference file used by multiple skills (`review-pr`, `review-code`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.
 
 These workflows use Valkey at `localhost:8888` as a shared cache across phases so context (diff, requirements, codebase notes, findings) is loaded once and read cheaply by all downstream subagents.
 

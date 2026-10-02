@@ -84,7 +84,7 @@ Do not generate a commit title or branch name unless the user explicitly asks fo
 
 ## Phase 3: Humanize
 
-Apply the `humanizer` skill to the completed draft. The `humanizer` skill owns the humanization and anti-AI rules; do not duplicate or override those rules here. Preserve the draft's technical facts, structure, and reviewer-oriented detail. If humanization changes a factual claim, resolve it against the diff and test output during Phase 4.
+Apply the `unslop` skill to the completed draft. The `unslop` skill owns the humanization and anti-AI rules; do not duplicate or override those rules here. Preserve the draft's technical facts, structure, and reviewer-oriented detail. If humanization changes a factual claim, resolve it against the diff and test output during Phase 4.
 
 ## Phase 4: Verify Accuracy
 

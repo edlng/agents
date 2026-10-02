@@ -18,7 +18,7 @@ const execFileAsync = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const POLICY_PATH = path.join(ROOT, 'platforms', 'model-policy.json');
 const REPRESENTATIVES = [
-  { name: 'context-curator', profile: 'haiku' },
+  { name: 'explore', profile: 'haiku' },
   { name: 'builder', profile: 'sonnet' },
   { name: 'validator', profile: 'opus' },
 ];

@@ -1,6 +1,6 @@
 # Shared: PR Review Base Workflow
 
-> Shared reference used by `review-pr` and `review-cookbook-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report). Consuming skills invoke this base and add their own specialized phases (e.g. cookbook-specific checks).
+> Shared reference used by `review-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report).
 
 Review a pull request against the linked Jira ticket and the existing codebase. Optimized for **signal over volume** — every finding that reaches the final report has been validated by a skeptic pass, so false positives are rare.
 
@@ -63,7 +63,7 @@ Absence of an implementation is not divergence unless the shared contract requir
 
 **Size gate** (use `additions + deletions` from metadata):
 - `<= 500`: spawn ONE `code-reviewer` subagent, all lenses in one pass.
-- `> 500`: spawn **4 `code-reviewer` subagents in parallel** — one per lens (see below). Each re-reads the same Valkey cache keys, so only use this tier when a single agent would genuinely lose the thread across 500+ lines.
+- `> 500`: spawn **4 subagents in parallel** — one per lens (see below). Each re-reads the same Valkey cache keys, so only use this tier when a single agent would genuinely lose the thread across 500+ lines.
 
 **Photon context for both size paths:** For an `awslabs/photon` review, every subagent that emits findings must also read `pr:$RUNID:photon_client_consistency`. After each finding's normal evidence and reasoning, append a `client_consistency` object with `verdict`, `reasoning`, and the exact comparison-record evidence IDs. Cross-client behavior is supporting context; it does not prove the underlying finding. Use `INSUFFICIENT_EVIDENCE` when the records do not establish alignment or divergence.
 
@@ -76,11 +76,10 @@ Absence of an implementation is not divergence unless the shared contract requir
 
 - **Subagent A — `code-reviewer` — Codebase Alignment & Software Principles (PRIMARY):** Does the code fit this codebase? Flag reimplemented utilities, naming/casing/error-handling deviations, layering violations, premature abstraction, duplication of adjacent code, violations of SOLID/DRY/YAGNI where the codebase visibly follows them. Only flag what conflicts with patterns visible in `pr:$RUNID:codebase_context` — not general preferences.
 - **Subagent B — `code-reviewer` — Correctness & Requirements:** Logic bugs, off-by-ones, race conditions, unhandled errors, broken invariants, boundary/edge cases. Plus: does the implementation satisfy every acceptance criterion from `pr:$RUNID:requirements`? Quote each criterion and mark MET or MISSING. Skip requirements if `pr:$RUNID:requirements` is absent.
-- **Subagent C — `security-reviewer` — Security:** Full CWE-anchored threat model per the security-reviewer agent definition. Receives `pr:$RUNID:diff` and `pr:$RUNID:codebase_context` only — not requirements.
+- **Subagent C — `code-reviewer` — Security:** CWE-anchored threat model: injection, broken access control, secrets and credential logging, crypto misuse, SSRF, path traversal, unsafe deserialization, and trust-boundary violations. Receives `pr:$RUNID:diff` and `pr:$RUNID:codebase_context` only — not requirements.
 - **Subagent D — `tester` — Testability:** New behavior without tests, untested error paths, tests that don't assert behavior, mocks hiding real bugs, flaky patterns, missing edge cases. Only flag code that is new in this diff.
-- **Subagent E — `glide-code-reviewer` — Valkey GLIDE:** Client lifecycle, batch/pipeline usage, cluster awareness, connection management, error handling, resource leaks, and GLIDE anti-patterns. Self-gates if the diff contains no GLIDE code — no findings, no cost.
 
-After all 5 subagents complete, merge their JSON arrays, deduplicate findings on the same file+line (keep highest severity), and write to `pr:$RUNID:findings_v1`.
+After all 4 subagents complete, merge their JSON arrays, deduplicate findings on the same file+line (keep highest severity), and write to `pr:$RUNID:findings_v1`.
 
 ---
 
@@ -96,9 +95,7 @@ For `awslabs/photon`, the validator must also read `pr:$RUNID:photon_client_cons
 
 ## Phase 4: Final Report (local only)
 
-Spawn a `documenter` subagent. Pass `$RUNID`, the final findings version, and whether `pr:$RUNID:photon_client_consistency` exists.
-
-The documenter reads these cache keys:
+Write the report yourself in the main session. Do not spawn a subagent for it. Read these cache keys:
 - `pr:$RUNID:metadata`
 - `pr:$RUNID:requirements`
 - `pr:$RUNID:codebase_context`

@@ -1,6 +1,6 @@
 # Shared: Review Findings Schema & Lenses
 
-> Shared reference used by `review-pr`, `review-cookbook-pr`, and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.
+> Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.
 
 ## Findings JSON schema
 

@@ -83,7 +83,6 @@
         "Bash",
         "Glob",
         "Grep",
-        "Agent",
         "Skill"
       ],
       "mcpServers": [
@@ -93,139 +92,6 @@
         "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
       ],
       "sourcePath": "agents/code-reviewer/manifest.json"
-    },
-    {
-      "id": "agent:context-curator",
-      "type": "agent",
-      "name": "context-curator",
-      "description": "Curates memory context for worker agents from Valkey and Obsidian and returns only a context-memory block; it does not perform tasks.",
-      "category": "orchestration",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "haiku",
-      "models": {
-        "claude": {
-          "model": "haiku",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-haiku-4.5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/context-curator/claude.md",
-        "codex": "agents/context-curator/codex.toml",
-        "kiro": "agents/context-curator/kiro.json"
-      },
-      "model": "haiku",
-      "tools": [
-        "Read",
-        "Bash",
-        "mcp__obsidian__search_notes",
-        "mcp__obsidian__read_note",
-        "mcp__obsidian__list_directory"
-      ],
-      "mcpServers": [
-        "obsidian"
-      ],
-      "resources": [
-        "file://skills/_shared/security-constraints.md"
-      ],
-      "sourcePath": "agents/context-curator/manifest.json"
-    },
-    {
-      "id": "agent:developer",
-      "type": "agent",
-      "name": "developer",
-      "description": "Implementation agent in a multi-agent workflow that makes minimal, reviewable changes, runs focused checks, and leaves independent validation to the tester.",
-      "category": "implementation",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        }
-      },
-      "sources": {
-        "claude": "agents/developer/claude.md",
-        "codex": "agents/developer/codex.toml",
-        "kiro": "agents/developer/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Bash",
-        "Glob",
-        "Grep"
-      ],
-      "mcpServers": [
-        "cao-mcp-server"
-      ],
-      "resources": [
-        "file://~/.aws/cli-agent-orchestrator/agent-context/developer.md",
-        "skill://~/.aws/cli-agent-orchestrator/skills/**/SKILL.md"
-      ],
-      "sourcePath": "agents/developer/manifest.json"
-    },
-    {
-      "id": "agent:documenter",
-      "type": "agent",
-      "name": "documenter",
-      "description": "Generates concise documentation for completed and validated features without modifying implementation code.",
-      "category": "documentation",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "haiku",
-      "models": {
-        "claude": {
-          "model": "haiku",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-haiku-4.5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/documenter/claude.md",
-        "codex": "agents/documenter/codex.toml",
-        "kiro": "agents/documenter/kiro.json"
-      },
-      "model": "haiku",
-      "tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Glob",
-        "Grep"
-      ],
-      "sourcePath": "agents/documenter/manifest.json"
     },
     {
       "id": "agent:explore",
@@ -275,90 +141,6 @@
         "file://skills/_shared/security-constraints.md"
       ],
       "sourcePath": "agents/explore/manifest.json"
-    },
-    {
-      "id": "agent:glide-code-reviewer",
-      "type": "agent",
-      "name": "glide-code-reviewer",
-      "description": "Read-only Valkey GLIDE specialist that reviews client code for correctness, anti-patterns, resource leaks, and cluster awareness.",
-      "category": "quality-assurance",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/glide-code-reviewer/claude.md",
-        "codex": "agents/glide-code-reviewer/codex.toml",
-        "kiro": "agents/glide-code-reviewer/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Bash",
-        "Glob",
-        "Grep",
-        "Skill"
-      ],
-      "resources": [
-        "skill://~/.kiro/skills/glide-skill/SKILL.md"
-      ],
-      "sourcePath": "agents/glide-code-reviewer/manifest.json"
-    },
-    {
-      "id": "agent:research-summarizer",
-      "type": "agent",
-      "name": "research-summarizer",
-      "description": "Orchestrates research and adversarial validation, then produces a final summary containing confirmed findings.",
-      "category": "research",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/research-summarizer/claude.md",
-        "codex": "agents/research-summarizer/codex.toml",
-        "kiro": "agents/research-summarizer/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Agent"
-      ],
-      "sourcePath": "agents/research-summarizer/manifest.json"
     },
     {
       "id": "agent:research-validator",
@@ -459,202 +241,6 @@
       "sourcePath": "agents/researcher/manifest.json"
     },
     {
-      "id": "agent:security-reviewer",
-      "type": "agent",
-      "name": "security-reviewer",
-      "description": "Read-only threat-model-driven security reviewer anchored to CWE taxonomy for injection, access control, secrets, cryptography, SSRF, and path traversal.",
-      "category": "quality-assurance",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/security-reviewer/claude.md",
-        "codex": "agents/security-reviewer/codex.toml",
-        "kiro": "agents/security-reviewer/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Bash",
-        "Glob",
-        "Grep"
-      ],
-      "resources": [
-        "file://skills/_shared/security-constraints.md"
-      ],
-      "sourcePath": "agents/security-reviewer/manifest.json"
-    },
-    {
-      "id": "agent:superhuman",
-      "type": "agent",
-      "name": "superhuman",
-      "description": "Expert implementation agent for complex multi-step engineering across AWS, backend, frontend, user experience, and architecture.",
-      "category": "implementation",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "opus",
-      "models": {
-        "claude": {
-          "model": "opus",
-          "effort": "high"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-sol",
-          "effort": "high"
-        },
-        "kiro": {
-          "model": "claude-opus-4.8",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/superhuman/claude.md",
-        "codex": "agents/superhuman/codex.toml",
-        "kiro": "agents/superhuman/kiro.json"
-      },
-      "model": "opus",
-      "tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Bash",
-        "Glob",
-        "Grep",
-        "WebFetch",
-        "WebSearch",
-        "mcp__firecrawl__firecrawl_search",
-        "mcp__firecrawl__firecrawl_scrape"
-      ],
-      "mcpServers": [
-        "firecrawl",
-        "sequential-thinking"
-      ],
-      "resources": [
-        "file://skills/_shared/security-constraints.md"
-      ],
-      "sourcePath": "agents/superhuman/manifest.json"
-    },
-    {
-      "id": "agent:team-lead",
-      "type": "agent",
-      "name": "team-lead",
-      "description": "Team orchestrator that plans work and delegates implementation, validation, review, testing, research, and documentation to specialized agents.",
-      "category": "orchestration",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/team-lead/claude.md",
-        "codex": "agents/team-lead/codex.toml",
-        "kiro": "agents/team-lead/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Agent",
-        "TodoWrite"
-      ],
-      "trustedAgents": [
-        "explore",
-        "builder",
-        "validator",
-        "documenter",
-        "researcher",
-        "context-curator",
-        "code-reviewer",
-        "tester",
-        "superhuman"
-      ],
-      "resources": [
-        "file://specs/**/*.md",
-        "file://README.md",
-        "file://skills/_shared/security-constraints.md"
-      ],
-      "sourcePath": "agents/team-lead/manifest.json"
-    },
-    {
-      "id": "agent:team-leader",
-      "type": "agent",
-      "name": "team-leader",
-      "description": "Read-only orchestrator that creates specifications, delegates one implementation task at a time, tracks progress, and requires independent testing and review.",
-      "category": "orchestration",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/team-leader/claude.md",
-        "codex": "agents/team-leader/codex.toml",
-        "kiro": "agents/team-leader/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Agent",
-        "TodoWrite"
-      ],
-      "trustedAgents": [
-        "researcher",
-        "developer",
-        "tester",
-        "code-reviewer"
-      ],
-      "sourcePath": "agents/team-leader/manifest.json"
-    },
-    {
       "id": "agent:tester",
       "type": "agent",
       "name": "tester",
@@ -739,47 +325,6 @@
       "sourcePath": "agents/validator/manifest.json"
     },
     {
-      "id": "agent:valkey-glide-implementor",
-      "type": "agent",
-      "name": "valkey-glide-implementor",
-      "description": "Read-only Valkey GLIDE specialist that generates production-ready client code snippets for supported languages and usage patterns.",
-      "category": "valkey-glide",
-      "platforms": [
-        "claude",
-        "codex",
-        "kiro"
-      ],
-      "profile": "sonnet",
-      "models": {
-        "claude": {
-          "model": "sonnet",
-          "effort": "medium"
-        },
-        "codex": {
-          "model": "openai.gpt-5.6-luna",
-          "effort": "xhigh"
-        },
-        "kiro": {
-          "model": "claude-sonnet-5",
-          "effort": "unspecified"
-        }
-      },
-      "sources": {
-        "claude": "agents/valkey-glide-implementor/claude.md",
-        "codex": "agents/valkey-glide-implementor/codex.toml",
-        "kiro": "agents/valkey-glide-implementor/kiro.json"
-      },
-      "model": "sonnet",
-      "tools": [
-        "Read",
-        "Skill"
-      ],
-      "resources": [
-        "skill://~/.kiro/skills/glide-skill/SKILL.md"
-      ],
-      "sourcePath": "agents/valkey-glide-implementor/manifest.json"
-    },
-    {
       "id": "skill:code-review-excellence",
       "type": "skill",
       "name": "code-review-excellence",
@@ -815,24 +360,6 @@
       "excerpt": "Crash Course Research `$ARGUMENTS` and produce a structured crash course. Save to Obsidian and output in chat. Follow each phase in order. Do not skip phases. --- Phase 1: Scope the Topic Parse `$ARGUMENTS` to determine: - **Topic**: the subject to research (e.g. \"DynamoDB DAX\", \"Kubernetes HPA\", \"R"
     },
     {
-      "id": "skill:create-skill",
-      "type": "skill",
-      "name": "create-skill",
-      "description": "Use when the user wants to create a new skill for their AI agents",
-      "category": "Meta",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/create-skill/SKILL.md",
-        "codex": "skills/codex/create-skill/SKILL.md"
-      },
-      "sourcePath": "skills/claude/create-skill/SKILL.md",
-      "excerpt": "Create Skill Create a new skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). For create operations, also check for naming conflicts across all five directories before writing"
-    },
-    {
       "id": "skill:daily-log",
       "type": "skill",
       "name": "daily-log",
@@ -851,115 +378,11 @@
       "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
     },
     {
-      "id": "skill:diagram-valkey-flow",
-      "type": "skill",
-      "name": "diagram-valkey-flow",
-      "description": "Analyze a project and generate a Mermaid sequence diagram showing the full data flow from the application layer through any framework/middleware down to Valkey operations. Works for any language or framework.",
-      "category": "Valkey & GLIDE",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/diagram-valkey-flow/SKILL.md"
-      },
-      "sourcePath": "skills/universal/diagram-valkey-flow/SKILL.md",
-      "excerpt": "Diagram Valkey Flow Analyze the project at `$ARGUMENTS` (or the current working directory if blank) and produce a Mermaid sequence diagram showing how data flows from the application entry point through to Valkey. Run all phases in order. Do not skip phases. --- Phase 1: Discover Entry Points and Fr"
-    },
-    {
-      "id": "skill:find-skills",
-      "type": "skill",
-      "name": "find-skills",
-      "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
-      "category": "Meta",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/find-skills/SKILL.md"
-      },
-      "sourcePath": "skills/universal/find-skills/SKILL.md",
-      "excerpt": "Find Skills This skill helps you discover and install skills from the open agent skills ecosystem. When to Use This Skill Use this skill when the user: - Asks \"how do I do X\" where X might be a common task with an existing skill - Says \"find a skill for X\" or \"is there a skill for X\" - Asks \"can you"
-    },
-    {
-      "id": "skill:glide-skill",
-      "type": "skill",
-      "name": "glide-skill",
-      "description": "Production-ready patterns for Valkey GLIDE clients across 6 languages. Activate when generating, reviewing, or debugging Valkey GLIDE code including client creation, batch/pipeline/transaction operations, clustering, authentication, TLS, error handling, and timeout configuration.",
-      "category": "Valkey & GLIDE",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/glide-skill/SKILL.md"
-      },
-      "sourcePath": "skills/universal/glide-skill/SKILL.md",
-      "excerpt": "**Based on valkey-glide v2.4.0** ⚠️ CRITICAL: Version Verification **BEFORE writing or reviewing any GLIDE code, determine the target GLIDE version.** Detect version from: `package.json` (`@valkey/valkey-glide`), `requirements.txt`/`pyproject.toml` (`valkey-glide`), `pom.xml`/`build.gradle` (`io.val"
-    },
-    {
-      "id": "skill:humanizer",
-      "type": "skill",
-      "name": "humanizer",
-      "description": "Remove signs of AI-generated writing from text. Use when editing or reviewing\ntext to make it sound more natural and human-written. Based on Wikipedia's\ncomprehensive \"Signs of AI writing\" guide. Detects and fixes patterns including:\ninflated symbolism, promotional language, superficial -ing analyses, vague\nattributions, em dash overuse, rule of three, AI vocabulary words, passive\nvoice, negative parallelisms, and filler phrases.\n",
-      "category": "Writing & Documentation",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/humanizer/SKILL.md",
-        "codex": "skills/codex/humanizer/SKILL.md"
-      },
-      "sourcePath": "skills/claude/humanizer/SKILL.md",
-      "excerpt": "Humanizer: Remove AI Writing Patterns You are a writing editor that identifies and removes signs of AI-generated text to make writing sound more natural and human. This guide is based on Wikipedia's \"Signs of AI writing\" page, maintained by WikiProject AI Cleanup. Your Task When given text to humani"
-    },
-    {
-      "id": "skill:implement-cookbook",
-      "type": "skill",
-      "name": "implement-cookbook",
-      "description": "Given a PR link containing a Valkey integration in a project, create a cookbook matching the style of valkey-io/Valkey-Samples (you can find it in ~/valkey/Valkey-Samples). Builds the cookbook locally in the project directory, verifies it runs, then copies to ~/valkey/valkey-samples/ and removes the local copy. Use when asked to create a cookbook, write a cookbook, or implement a cookbook from a PR. Also works from local git commits on the current branch.",
-      "category": "Valkey & GLIDE",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/implement-cookbook/SKILL.md"
-      },
-      "sourcePath": "skills/universal/implement-cookbook/SKILL.md",
-      "excerpt": "Implement Cookbook Produce a working cookbook that demonstrates the Valkey integration in the current project. --- Phase 1: Analyze the Integration Determine the input source: - If `$ARGUMENTS` is a PR link: fetch the PR diff and description using GitHub tools. - If `$ARGUMENTS` is empty or not a UR"
-    },
-    {
-      "id": "skill:implement-jira",
-      "type": "skill",
-      "name": "implement-jira",
-      "description": "Implement a Jira task end-to-end — fetches requirements, scans the codebase, plans with Opus, runs an Opus advisor loop over Sonnet's approach for medium-complexity subtasks before any code is written, implements with Sonnet (delegating low-complexity subtasks to Haiku), runs tests with a fix loop, then runs a merged code review. Uses Valkey at localhost:8888 as a two-tier cache. Use when given a Jira issue key (e.g. FOO-123). Do NOT use for tasks without a Jira ticket, quick fixes, or exploratory coding — handle those directly.",
-      "category": "Development Workflows",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/implement-jira/SKILL.md",
-        "codex": "skills/codex/implement-jira/SKILL.md"
-      },
-      "sourcePath": "skills/claude/implement-jira/SKILL.md",
-      "excerpt": "Implement Jira Task Implement the Jira task `$ARGUMENTS` end-to-end using the workflow below. Follow each phase in order. Do not skip phases. This workflow assigns specific models to each subagent for cost efficiency, and uses a two-tier cache (Anthropic prompt caching + Valkey at `localhost:8888`) "
-    },
-    {
       "id": "skill:implement-task",
       "type": "skill",
       "name": "implement-task",
-      "description": "Single-command entry point that takes a plain-text task description and runs plan → advisor loop → implement → test → review using existing agents. Use when given a task description without a Jira ticket. Do NOT use for tasks that have a Jira ticket (use implement-jira), for quick one-file fixes, or when a multi-step plan already exists.",
-      "category": "Other",
+      "description": "Single-command entry point that takes a plain-text task description or a Jira issue key (e.g. FOO-123) and runs plan → advisor loop → implement → test → review using existing agents. Do NOT use for quick one-file fixes or when a multi-step plan already exists.",
+      "category": "Development Workflows",
       "platforms": [
         "claude",
         "codex"
@@ -970,25 +393,7 @@
         "codex": "skills/codex/implement-task/SKILL.md"
       },
       "sourcePath": "skills/claude/implement-task/SKILL.md",
-      "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. **Announce at start:** \"Implementing task: $ARGUMENTS\" **Continuous execution:** Do not pause between phases. The only reasons to stop are: a blocking review finding that needs human input, or ambiguity that genuinely prev"
-    },
-    {
-      "id": "skill:multi-discipline-review",
-      "type": "skill",
-      "name": "multi-discipline-review",
-      "description": "Run a parallel multi-discipline review across codebase alignment, correctness, security, testability, and Valkey GLIDE using dedicated sub-agents (code-reviewer, security-reviewer, tester, glide-code-reviewer). Codebase alignment is the primary lens. Findings are merged and validated by an Opus validator. Use when a single-lens review is insufficient for a PR or diff.\n",
-      "category": "Code Review",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/multi-discipline-review/SKILL.md",
-        "codex": "skills/codex/multi-discipline-review/SKILL.md"
-      },
-      "sourcePath": "skills/claude/multi-discipline-review/SKILL.md",
-      "excerpt": "Multi-Discipline Code Review `$ARGUMENTS`: diff, file path, branch name, or PR reference. Phase 1: Gather Context Read the code, language, framework, existing patterns, and any linked requirements. **Size gating — determine review depth:** - Count `additions + deletions` in the diff. - If `<= 150 li"
+      "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. If `$ARGUMENTS` is a Jira issue key (e.g. `FOO-123`), Phase 0 turns it into the task requirements. Otherwise the plain-text description is the task requirements and Phase 0 is skipped. Every later phase that says `{$ARGUME"
     },
     {
       "id": "skill:onboard",
@@ -1026,23 +431,6 @@
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
     },
     {
-      "id": "skill:revamp-cookbook",
-      "type": "skill",
-      "name": "revamp-cookbook",
-      "description": "Use when refreshing an existing Valkey cookbook from archive/main-pre-reorg to current CONTRIBUTING.md guidance, checking for duplicate or overlapping cookbook PRs, adding runnable validation, or preparing local draft materials for language-specific CI.",
-      "category": "Other",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/revamp-cookbook/SKILL.md"
-      },
-      "sourcePath": "skills/universal/revamp-cookbook/SKILL.md",
-      "excerpt": "Revamp Cookbook Overview Update one existing Valkey-Samples cookbook into a locally reviewable draft. The source is the original cookbook on `archive/main-pre-reorg`; the acceptance contract comes from the current CONTRIBUTING.md guidance, including any open contributing-guidelines PR. The first del"
-    },
-    {
       "id": "skill:review-addressed-comments",
       "type": "skill",
       "name": "review-addressed-comments",
@@ -1078,28 +466,10 @@
       "excerpt": "Review My Local Changes Self-review your own uncommitted or unpushed work before opening a PR. The goal is to catch your own mistakes — bugs, sloppy patterns, missed requirements — at the cheapest possible point. Optimized for speed and **fixing in place**: when a finding is unambiguous, this comman"
     },
     {
-      "id": "skill:review-cookbook-pr",
-      "type": "skill",
-      "name": "review-cookbook-pr",
-      "description": "Senior-grade PR review for cookbook PRs. Same as review-pr but adds two cookbook-specific checks: (1) code snippets call project functions directly rather than simulating Valkey internals, and (2) valkey/valkey-bundle version tags are verified against Docker Hub.",
-      "category": "Code Review",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/review-cookbook-pr/SKILL.md",
-        "codex": "skills/codex/review-cookbook-pr/SKILL.md"
-      },
-      "sourcePath": "skills/claude/review-cookbook-pr/SKILL.md",
-      "excerpt": "Review Cookbook PR (senior-dev grade) Review a cookbook pull request. This is the standard PR review **plus** two cookbook-specific checks. Run the base workflow Follow `_shared/pr-review-base.md` (relative path: `../_shared/pr-review-base.md`) for cache setup, Phase 1 (context), Phase 2 (merged-len"
-    },
-    {
       "id": "skill:review-pr",
       "type": "skill",
       "name": "review-pr",
-      "description": "Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only — printed in chat and saved to Obsidian, never posted to GitHub.",
+      "description": "Senior-grade PR review against the linked Jira ticket and existing codebase. Parallel Sonnet reviewers per discipline, findings merged and validated by a single Opus validator pass. Output is local-only - printed in chat and rendered as a temporary self-contained HTML report, never posted to GitHub.",
       "category": "Code Review",
       "platforms": [
         "claude",
@@ -1111,48 +481,13 @@
         "codex": "skills/codex/review-pr/SKILL.md"
       },
       "sourcePath": "skills/claude/review-pr/SKILL.md",
-      "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. This is the **standard** PR review. The full workflow is defined in the shared base file so it can be reused by specialized variants (e.g. `review-cookbook-pr`). Run the base wor"
-    },
-    {
-      "id": "skill:test-valkey",
-      "type": "skill",
-      "name": "test-valkey",
-      "description": "Test Valkey integration code against a live valkey-bundle container. Starts Valkey from a clean slate, exercises staged/unstaged git changes (cache backend, vector search provider, rate limiter, connection parsing), validates all configurations by tearing down and recreating the container as needed. Use when Valkey integration code has been written and needs end-to-end verification before commit.",
-      "category": "Valkey & GLIDE",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/test-valkey/SKILL.md"
-      },
-      "sourcePath": "skills/universal/test-valkey/SKILL.md",
-      "excerpt": "Test Valkey Run integration tests against the staged/unstaged Valkey changes in the current repository. Proves correctness by exercising the code against a real `valkey/valkey-bundle` container. --- Prerequisites Before starting, verify: ```bash Container runtime podman -v 2>/dev/null || docker -v 2"
-    },
-    {
-      "id": "skill:update-agent",
-      "type": "skill",
-      "name": "update-agent",
-      "description": "Use when the user wants to update or modify an existing agent definition for their AI agents",
-      "category": "Meta",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/update-agent/SKILL.md",
-        "codex": "skills/codex/update-agent/SKILL.md"
-      },
-      "sourcePath": "skills/claude/update-agent/SKILL.md",
-      "excerpt": "Update Agent Update an agent definition across all synced roots. **Entity type:** Agent **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Agent\"). Additional guidance - Agent files are flat markdown (no subdirectory structure). The sync"
+      "excerpt": "Review PR (senior-dev grade) Review someone else's pull request against the linked Jira ticket and the existing codebase. The full workflow is defined in the shared base file. Run the base workflow Follow `_shared/pr-review-base.md` end to end (relative to this skill's directory — i.e. `../_shared/p"
     },
     {
       "id": "skill:update-skill",
       "type": "skill",
       "name": "update-skill",
-      "description": "Use when the user wants to update or modify an existing skill for their AI agents",
+      "description": "Use when the user wants to create a new skill or agent, or update or modify an existing skill or agent definition, in their AI agents catalog",
       "category": "Meta",
       "platforms": [
         "claude",
@@ -1164,7 +499,7 @@
         "codex": "skills/codex/update-skill/SKILL.md"
       },
       "sourcePath": "skills/claude/update-skill/SKILL.md",
-      "excerpt": "Update Skill Update a skill across all synced roots. **Entity type:** Skill **Sync convention:** Follow `_shared/five-root-sync.md` (paths, sync rules, and workflow pattern for entity type \"Skill\"). Additional guidance - If the skill references `_shared/` files, check whether the change belongs in t"
+      "excerpt": "Update Skill Create or update a skill or agent in the catalog. **Sync convention:** Follow `_shared/five-root-sync.md` (catalog layout, authoring rules, installation and verification). Creating a skill or agent - Check for a naming conflict across `agents/`, `skills/universal/`, `skills/claude/`, an"
     },
     {
       "id": "skill:update-sysprompts",
@@ -1182,41 +517,6 @@
       },
       "sourcePath": "skills/universal/update-sysprompts/SKILL.md",
       "excerpt": "Update Sysprompts Persist the skill arguments as one managed instruction in all three harnesses: Kiro, Claude Code, and Codex. The invocation prefix is harness-specific (typically `/update-sysprompts` in Kiro or Claude Code and `$update-sysprompts` in Codex). When the host provides parsed skill argu"
-    },
-    {
-      "id": "skill:valkey-spike",
-      "type": "skill",
-      "name": "valkey-spike",
-      "description": "Analyze a repository for Valkey integration opportunities and empirically verify feasibility. Combines static codebase analysis (existing Redis/cache usage, command compatibility, vector search potential) with a live spike against a running Valkey instance to prove the riskiest assumptions before committing to a full implementation. Use when evaluating whether a project is a good candidate for Valkey integration.",
-      "category": "Valkey & GLIDE",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "universal",
-      "sources": {
-        "universal": "skills/universal/valkey-spike/SKILL.md"
-      },
-      "sourcePath": "skills/universal/valkey-spike/SKILL.md",
-      "excerpt": "Valkey Spike Analyze the repository `$ARGUMENTS` (or the current working directory if blank) for Valkey integration opportunities, then **prove the riskiest assumptions work** against a live Valkey instance. This is a four-phase workflow: 1. **Evidence Collection** - scan the codebase 2. **Compatibi"
-    },
-    {
-      "id": "skill:write-narrative",
-      "type": "skill",
-      "name": "write-narrative",
-      "description": "Given a Jira issue key, fetch the issue, research the topic with a research subagent, and draft a humanized technical narrative. Saves to ~/Documents/work/narratives/ and outputs in chat. Use when asked to write a narrative, technical assessment, or compatibility analysis for a Jira ticket. Do NOT use for PR descriptions (use write-pr), code reviews, or general documentation.",
-      "category": "Writing & Documentation",
-      "platforms": [
-        "claude",
-        "codex"
-      ],
-      "compatibility": "variants",
-      "sources": {
-        "claude": "skills/claude/write-narrative/SKILL.md",
-        "codex": "skills/codex/write-narrative/SKILL.md"
-      },
-      "sourcePath": "skills/claude/write-narrative/SKILL.md",
-      "excerpt": "Write Narrative Given a Jira issue key in `$ARGUMENTS` (e.g. `AEA-468`), fetch the issue, research the topic, and draft a Narrative for me and send it in the chat, and also create the file (see Phase 4). Follow each phase in order. Do not skip phases. --- Phase 1: Fetch Jira Issue Use `mcp__atlassia"
     },
     {
       "id": "skill:write-pr",
@@ -1264,49 +564,42 @@
       "id": "shared-ref:codebase-context-checklist",
       "type": "shared-ref",
       "name": "codebase-context-checklist",
-      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, `review-code`, and `implement-jira`. Not a standalone skill. Single source of truth for what to capture when scanning a codebase before reviewing or implementing.",
+      "description": "Shared reference used by `review-pr`, `review-code`, and `implement-task`. Not a standalone skill. Single source of truth for what to capture when scanning a codebase before reviewing or implementing.",
       "sourcePath": "skills/_shared/codebase-context-checklist.md"
     },
     {
       "id": "shared-ref:five-root-sync",
       "type": "shared-ref",
       "name": "five-root-sync",
-      "description": "This reference is used by `create-skill`, `update-skill`, and `update-agent`.",
+      "description": "This reference is used by `update-skill`.",
       "sourcePath": "skills/_shared/five-root-sync.md"
     },
     {
       "id": "shared-ref:humanizer-rules",
       "type": "shared-ref",
       "name": "humanizer-rules",
-      "description": "Shared reference for humanizer-based skills. Contains the AI writing patterns to detect and strip. Not a standalone skill.",
+      "description": "Shared reference used by `pr-comment-humanizer`. Contains the AI writing patterns to detect and strip. Not a standalone skill.",
       "sourcePath": "skills/_shared/humanizer-rules.md"
-    },
-    {
-      "id": "shared-ref:memory-protocol",
-      "type": "shared-ref",
-      "name": "memory-protocol",
-      "description": "Shared reference for agents that store or consume persistent memory. Defines scopes, storage backends, injection format, and conventions.",
-      "sourcePath": "skills/_shared/memory-protocol.md"
     },
     {
       "id": "shared-ref:no-github-writes",
       "type": "shared-ref",
       "name": "no-github-writes",
-      "description": "Shared reference used by the local-only review skills (`review-pr`, `review-cookbook-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.",
+      "description": "Shared reference used by the local-only review skills (`review-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.",
       "sourcePath": "skills/_shared/no-github-writes.md"
     },
     {
       "id": "shared-ref:pr-review-base",
       "type": "shared-ref",
       "name": "pr-review-base",
-      "description": "Shared reference used by `review-pr` and `review-cookbook-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report). Consuming skills invoke this base and add their own specialized phases (e.g. cookbook-specific checks).",
+      "description": "Shared reference used by `review-pr`. Not a standalone skill. Single source of truth for the senior-grade PR review workflow (context gathering, merged-lens review, validator pass, local report).",
       "sourcePath": "skills/_shared/pr-review-base.md"
     },
     {
       "id": "shared-ref:review-findings-schema",
       "type": "shared-ref",
       "name": "review-findings-schema",
-      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.",
+      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the findings JSON schema, the review lenses, and the filing rules. Consuming skills may add skill-specific lenses or severity vocabularies on top of this base.",
       "sourcePath": "skills/_shared/review-findings-schema.md"
     },
     {
@@ -1320,14 +613,14 @@
       "id": "shared-ref:validator-skeptic-pass",
       "type": "shared-ref",
       "name": "validator-skeptic-pass",
-      "description": "Shared reference used by `review-pr`, `review-cookbook-pr`, `review-code`, and `multi-discipline-review`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.",
+      "description": "Shared reference used by `review-pr` and `review-code`. Not a standalone skill. Single source of truth for the adversarial validator pass that maximizes signal by killing false positives. Consuming skills choose the model/subagent role and may add skill-specific self-challenge questions.",
       "sourcePath": "skills/_shared/validator-skeptic-pass.md"
     },
     {
       "id": "shared-ref:valkey-cache-conventions",
       "type": "shared-ref",
       "name": "valkey-cache-conventions",
-      "description": "This is a shared reference file used by multiple skills (`review-pr`, `review-cookbook-pr`, `review-code`, `implement-jira`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.",
+      "description": "This is a shared reference file used by multiple skills (`review-pr`, `review-code`). It is not a standalone skill. Do not edit one skill's copy in isolation — this file is the single source of truth for how those skills use Valkey caching.",
       "sourcePath": "skills/_shared/valkey-cache-conventions.md"
     },
     {
@@ -1343,22 +636,10 @@
       "description": "MCP server: obsidian"
     },
     {
-      "id": "mcp:cao-mcp-server",
-      "type": "mcp-server",
-      "name": "cao-mcp-server",
-      "description": "MCP server: cao-mcp-server"
-    },
-    {
       "id": "mcp:firecrawl",
       "type": "mcp-server",
       "name": "firecrawl",
       "description": "MCP server: firecrawl"
-    },
-    {
-      "id": "mcp:sequential-thinking",
-      "type": "mcp-server",
-      "name": "sequential-thinking",
-      "description": "MCP server: sequential-thinking"
     }
   ],
   "edges": [
@@ -1387,30 +668,6 @@
       "type": "uses-skill"
     },
     {
-      "id": "edge:context-curator->mcp->obsidian",
-      "source": "agent:context-curator",
-      "target": "mcp:obsidian",
-      "type": "uses-mcp"
-    },
-    {
-      "id": "edge:context-curator->shared-ref->security-constraints",
-      "source": "agent:context-curator",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:context-curator->shared-ref->security-constraints",
-      "source": "agent:context-curator",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:developer->mcp->cao-mcp-server",
-      "source": "agent:developer",
-      "target": "mcp:cao-mcp-server",
-      "type": "uses-mcp"
-    },
-    {
       "id": "edge:explore->shared-ref->security-constraints",
       "source": "agent:explore",
       "target": "shared-ref:security-constraints",
@@ -1421,12 +678,6 @@
       "source": "agent:explore",
       "target": "shared-ref:security-constraints",
       "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:glide-code-reviewer->skill->glide-skill",
-      "source": "agent:glide-code-reviewer",
-      "target": "skill:glide-skill",
-      "type": "uses-skill"
     },
     {
       "id": "edge:research-validator->mcp->obsidian",
@@ -1475,298 +726,14 @@
       "source": "agent:researcher",
       "target": "shared-ref:security-constraints",
       "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:security-reviewer->shared-ref->security-constraints",
-      "source": "agent:security-reviewer",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:security-reviewer->shared-ref->security-constraints",
-      "source": "agent:security-reviewer",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:superhuman->mcp->firecrawl",
-      "source": "agent:superhuman",
-      "target": "mcp:firecrawl",
-      "type": "uses-mcp"
-    },
-    {
-      "id": "edge:superhuman->mcp->sequential-thinking",
-      "source": "agent:superhuman",
-      "target": "mcp:sequential-thinking",
-      "type": "uses-mcp"
-    },
-    {
-      "id": "edge:superhuman->shared-ref->security-constraints",
-      "source": "agent:superhuman",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:superhuman->shared-ref->security-constraints",
-      "source": "agent:superhuman",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:team-lead->delegates->explore",
-      "source": "agent:team-lead",
-      "target": "agent:explore",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->builder",
-      "source": "agent:team-lead",
-      "target": "agent:builder",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->validator",
-      "source": "agent:team-lead",
-      "target": "agent:validator",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->documenter",
-      "source": "agent:team-lead",
-      "target": "agent:documenter",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->researcher",
-      "source": "agent:team-lead",
-      "target": "agent:researcher",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->context-curator",
-      "source": "agent:team-lead",
-      "target": "agent:context-curator",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->code-reviewer",
-      "source": "agent:team-lead",
-      "target": "agent:code-reviewer",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->tester",
-      "source": "agent:team-lead",
-      "target": "agent:tester",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->delegates->superhuman",
-      "source": "agent:team-lead",
-      "target": "agent:superhuman",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-lead->shared-ref->security-constraints",
-      "source": "agent:team-lead",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:team-lead->shared-ref->security-constraints",
-      "source": "agent:team-lead",
-      "target": "shared-ref:security-constraints",
-      "type": "uses-shared-ref"
-    },
-    {
-      "id": "edge:team-leader->delegates->researcher",
-      "source": "agent:team-leader",
-      "target": "agent:researcher",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-leader->delegates->developer",
-      "source": "agent:team-leader",
-      "target": "agent:developer",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-leader->delegates->tester",
-      "source": "agent:team-leader",
-      "target": "agent:tester",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:team-leader->delegates->code-reviewer",
-      "source": "agent:team-leader",
-      "target": "agent:code-reviewer",
-      "type": "delegates-to"
-    },
-    {
-      "id": "edge:valkey-glide-implementor->skill->glide-skill",
-      "source": "agent:valkey-glide-implementor",
-      "target": "skill:glide-skill",
-      "type": "uses-skill"
     }
   ],
   "workflows": [
     {
-      "id": "workflow:team-lead",
-      "name": "Team Lead Pipeline",
-      "description": "Full implementation workflow from spec to merged code. Context and research run in parallel before each build; both review stages can loop back.",
-      "orchestrator": "team-lead",
-      "nodes": [
-        {
-          "id": "start",
-          "type": "start",
-          "label": "Start"
-        },
-        {
-          "id": "explore",
-          "type": "process",
-          "label": "Explore",
-          "agent": "explore",
-          "description": "Survey codebase: existing patterns, relevant files, interfaces, conventions"
-        },
-        {
-          "id": "plan",
-          "type": "process",
-          "label": "Plan",
-          "agent": "team-lead",
-          "description": "Extract all tasks from spec findings, create TODO, classify complexity"
-        },
-        {
-          "id": "context",
-          "type": "process",
-          "label": "Gather Context",
-          "agent": "context-curator",
-          "description": "Fetch relevant memories from Valkey + Obsidian for the builder"
-        },
-        {
-          "id": "research",
-          "type": "process",
-          "label": "Research",
-          "agent": "researcher",
-          "description": "Investigate unfamiliar APIs/libraries before implementation",
-          "optional": true
-        },
-        {
-          "id": "build",
-          "type": "process",
-          "label": "Build",
-          "agent": "builder",
-          "description": "Implement the task (or superhuman for complex tasks)"
-        },
-        {
-          "id": "validate",
-          "type": "process",
-          "label": "Validate Spec",
-          "agent": "validator",
-          "description": "Verify requirements are met - nothing missing, nothing extra"
-        },
-        {
-          "id": "d1",
-          "type": "decision",
-          "label": "Spec met?",
-          "description": "Did the builder satisfy every requirement?"
-        },
-        {
-          "id": "review",
-          "type": "process",
-          "label": "Review Quality",
-          "agent": "code-reviewer",
-          "description": "Check correctness, codebase alignment, maintainability"
-        },
-        {
-          "id": "d2",
-          "type": "decision",
-          "label": "Approved?",
-          "description": "Is the code correct and well-built?"
-        },
-        {
-          "id": "document",
-          "type": "process",
-          "label": "Document",
-          "agent": "documenter",
-          "description": "Generate documentation for completed features",
-          "optional": true
-        },
-        {
-          "id": "end",
-          "type": "end",
-          "label": "Done"
-        }
-      ],
-      "edges": [
-        {
-          "from": "start",
-          "to": "explore"
-        },
-        {
-          "from": "explore",
-          "to": "plan"
-        },
-        {
-          "from": "plan",
-          "to": "context"
-        },
-        {
-          "from": "plan",
-          "to": "research"
-        },
-        {
-          "from": "context",
-          "to": "build"
-        },
-        {
-          "from": "research",
-          "to": "build"
-        },
-        {
-          "from": "build",
-          "to": "validate"
-        },
-        {
-          "from": "validate",
-          "to": "d1"
-        },
-        {
-          "from": "d1",
-          "to": "build",
-          "label": "no",
-          "loop": true
-        },
-        {
-          "from": "d1",
-          "to": "review",
-          "label": "yes"
-        },
-        {
-          "from": "review",
-          "to": "d2"
-        },
-        {
-          "from": "d2",
-          "to": "build",
-          "label": "no",
-          "loop": true
-        },
-        {
-          "from": "d2",
-          "to": "document",
-          "label": "yes"
-        },
-        {
-          "from": "document",
-          "to": "end"
-        }
-      ]
-    },
-    {
       "id": "workflow:research",
       "name": "Research Pipeline",
       "description": "Research a topic with adversarial validation. Unverified findings loop back for another pass; only confirmed findings reach the summary.",
-      "orchestrator": "research-summarizer",
+      "orchestrator": "crash-course",
       "nodes": [
         {
           "id": "start",
@@ -1797,7 +764,6 @@
           "id": "synthesize",
           "type": "process",
           "label": "Synthesize",
-          "agent": "research-summarizer",
           "description": "Produce final summary using only CONFIRMED findings with citations."
         },
         {
@@ -1878,14 +844,12 @@
           "id": "block",
           "type": "process",
           "label": "Report BLOCK",
-          "agent": "documenter",
           "description": "Aggregate and format findings into BLOCK verdict report"
         },
         {
           "id": "approve",
           "type": "process",
           "label": "Report APPROVE",
-          "agent": "documenter",
           "description": "Aggregate and format findings into APPROVE verdict report"
         },
         {
@@ -1932,10 +896,10 @@
       ]
     },
     {
-      "id": "workflow:implement-jira",
-      "name": "Jira Implementation",
-      "description": "End-to-end implementation from a Jira ticket. Tests loop back to implementation until green.",
-      "orchestrator": "implement-jira",
+      "id": "workflow:implement-task",
+      "name": "Task Implementation",
+      "description": "End-to-end implementation from a task description or Jira ticket. Tests loop back to implementation until green.",
+      "orchestrator": "implement-task",
       "nodes": [
         {
           "id": "start",
@@ -1945,30 +909,21 @@
         {
           "id": "fetch",
           "type": "process",
-          "label": "Fetch Requirements + Scan",
-          "agent": "explore",
-          "description": "Read Jira ticket and survey codebase in one pass"
+          "label": "Requirements + Scan",
+          "description": "Read the task or Jira ticket and survey the codebase"
         },
         {
           "id": "plan",
           "type": "process",
           "label": "Plan",
-          "agent": "superhuman",
           "description": "Break requirements into implementation tasks with dependency ordering"
-        },
-        {
-          "id": "context",
-          "type": "process",
-          "label": "Gather Context",
-          "agent": "context-curator",
-          "description": "Load relevant memories and prior decisions"
         },
         {
           "id": "implement",
           "type": "process",
           "label": "Implement",
           "agent": "builder",
-          "description": "Execute each task (with complexity routing to superhuman if needed)"
+          "description": "Execute each task, delegating low-complexity subtasks"
         },
         {
           "id": "test",
@@ -2007,10 +962,6 @@
         },
         {
           "from": "plan",
-          "to": "context"
-        },
-        {
-          "from": "context",
           "to": "implement"
         },
         {
@@ -2037,136 +988,48 @@
           "to": "end"
         }
       ]
-    },
-    {
-      "id": "workflow:security-review",
-      "name": "Security Review",
-      "description": "Threat-model-driven security analysis anchored to CWE taxonomy.",
-      "orchestrator": "security-reviewer",
-      "nodes": [
-        {
-          "id": "start",
-          "type": "start",
-          "label": "Start"
-        },
-        {
-          "id": "threat",
-          "type": "process",
-          "label": "Threat Model",
-          "agent": "security-reviewer",
-          "description": "Identify attack surface: inputs, boundaries, data flows"
-        },
-        {
-          "id": "cwe",
-          "type": "process",
-          "label": "CWE Analysis",
-          "agent": "security-reviewer",
-          "description": "Check for injection, access control, secrets, crypto, SSRF, path traversal"
-        },
-        {
-          "id": "d1",
-          "type": "decision",
-          "label": "Vulns found?",
-          "description": "Did analysis surface any vulnerabilities?"
-        },
-        {
-          "id": "report",
-          "type": "process",
-          "label": "Report Findings",
-          "agent": "security-reviewer",
-          "description": "Report vulnerabilities with CWE IDs, severity, and remediation guidance"
-        },
-        {
-          "id": "clear",
-          "type": "process",
-          "label": "Report Clear",
-          "agent": "security-reviewer",
-          "description": "No blocking vulnerabilities found"
-        },
-        {
-          "id": "end",
-          "type": "end",
-          "label": "Done"
-        }
-      ],
-      "edges": [
-        {
-          "from": "start",
-          "to": "threat"
-        },
-        {
-          "from": "threat",
-          "to": "cwe"
-        },
-        {
-          "from": "cwe",
-          "to": "d1"
-        },
-        {
-          "from": "d1",
-          "to": "report",
-          "label": "yes"
-        },
-        {
-          "from": "d1",
-          "to": "clear",
-          "label": "no"
-        },
-        {
-          "from": "report",
-          "to": "end"
-        },
-        {
-          "from": "clear",
-          "to": "end"
-        }
-      ]
     }
   ],
   "stats": {
     "counts": {
-      "agents": 17,
-      "skills": 27,
-      "sharedRefs": 11,
-      "mcpServers": 5,
-      "workflows": 5
+      "agents": 7,
+      "skills": 13,
+      "sharedRefs": 10,
+      "mcpServers": 3,
+      "workflows": 3
     },
     "profileDistribution": {
-      "sonnet": 12,
-      "haiku": 3,
-      "opus": 2
+      "sonnet": 5,
+      "haiku": 1,
+      "opus": 1
     },
     "modelDistribution": {
       "claude": {
-        "sonnet": 12,
-        "haiku": 3,
-        "opus": 2
+        "sonnet": 5,
+        "haiku": 1,
+        "opus": 1
       },
       "codex": {
-        "openai.gpt-5.6-luna": 15,
-        "openai.gpt-5.6-sol": 2
+        "openai.gpt-5.6-luna": 6,
+        "openai.gpt-5.6-sol": 1
       },
       "kiro": {
-        "claude-sonnet-5": 11,
-        "claude-haiku-4.5": 3,
-        "claude-opus-4.8": 2
+        "claude-sonnet-5": 5,
+        "claude-haiku-4.5": 1,
+        "claude-opus-4.8": 1
       }
     },
     "agentCategories": {
-      "implementation": 3,
-      "quality-assurance": 5,
-      "orchestration": 3,
-      "documentation": 1,
-      "research": 4,
-      "valkey-glide": 1
+      "implementation": 1,
+      "quality-assurance": 3,
+      "research": 3
     },
     "skillCategories": {
-      "Code Review": 6,
-      "Other": 6,
-      "Meta": 4,
-      "Valkey & GLIDE": 5,
-      "Writing & Documentation": 5,
-      "Development Workflows": 1
+      "Code Review": 4,
+      "Other": 4,
+      "Development Workflows": 1,
+      "Writing & Documentation": 3,
+      "Meta": 1
     },
     "evals": {
       "caseCount": 40,

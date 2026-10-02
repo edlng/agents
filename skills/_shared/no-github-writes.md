@@ -1,6 +1,6 @@
 # Shared: No GitHub Writes (read-only output)
 
-> Shared reference used by the local-only review skills (`review-pr`, `review-cookbook-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.
+> Shared reference used by the local-only review skills (`review-pr`, `review-code`). Not a standalone skill. Single source of truth for the read-only output rule.
 
 The review is **local-only**. Print it in chat and create only the local artifact specified by the consuming skill. **DO NOT** perform any write operation against GitHub. The user will decide what to post after reviewing the output.
 
