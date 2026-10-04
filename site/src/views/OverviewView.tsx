@@ -1,17 +1,20 @@
 import { useNavigate } from 'react-router';
 import graphData from '../data/graph.json';
 import { type GraphData } from '../types';
+import { useState } from 'react';
+import { Clawd } from '../components/Clawd';
+import { ACTION_CAPTIONS, type ClawdAction } from '../components/clawdActions';
 import './OverviewView.css';
 
 const data = graphData as GraphData;
 const { stats } = data;
 
 const STAT_CHIPS = [
-  { key: 'agents',      label: 'Agents',      color: '#58a6ff', count: stats.counts.agents },
-  { key: 'skills',      label: 'Skills',      color: '#3fb950', count: stats.counts.skills },
-  { key: 'sharedRefs',  label: 'Shared Refs', color: '#d29922', count: stats.counts.sharedRefs },
-  { key: 'mcpServers',  label: 'MCP Servers', color: '#bc8cff', count: stats.counts.mcpServers },
-  { key: 'workflows',   label: 'Workflows',   color: '#8b949e', count: stats.counts.workflows },
+  { key: 'agents',      label: 'Agents',      color: '#d97757', count: stats.counts.agents },
+  { key: 'skills',      label: 'Skills',      color: '#8fbf7f', count: stats.counts.skills },
+  { key: 'sharedRefs',  label: 'Shared Refs', color: '#e3b04b', count: stats.counts.sharedRefs },
+  { key: 'mcpServers',  label: 'MCP Servers', color: '#b58fd0', count: stats.counts.mcpServers },
+  { key: 'workflows',   label: 'Workflows',   color: '#a89f93', count: stats.counts.workflows },
 ] as const;
 
 function formatCost(usd: number): string {
@@ -46,7 +49,7 @@ function ModelTable({
   const entries = Object.entries(models).sort((a, b) => b[1] - a[1]);
   const max = entries[0]?.[1] || 1;
   return (
-    <div className="model-table">
+    <div className="panel">
       <h3 className="column-title">{platform} models</h3>
       <div className="model-bars">
         {entries.map(([model, count]) => (
@@ -59,6 +62,7 @@ function ModelTable({
 
 export function OverviewView() {
   const navigate = useNavigate();
+  const [action, setAction] = useState<ClawdAction | null>(null);
 
   const profileEntries = Object.entries(stats.profileDistribution).sort((a, b) => b[1] - a[1]);
   const maxProfileCount = profileEntries.length > 0 ? profileEntries[0][1] : 1;
@@ -72,14 +76,25 @@ export function OverviewView() {
   return (
     <div className="page-container overview-view">
 
+      <section className="overview-hero">
+        <div className="hero-crab">
+          <Clawd size={104} roam interactive onAction={setAction} />
+          <span className="hero-caption">{action ? `> ${ACTION_CAPTIONS[action]}` : '\u00a0'}</span>
+        </div>
+        <div className="hero-bubble">
+          <span className="hero-typed">Agents &amp; Skills Visualizer</span>
+          <span className="hero-cursor" aria-hidden="true" />
+        </div>
+      </section>
+
       {/* Hero counts */}
       <section className="overview-section">
         <div className="hero-chips">
-          {STAT_CHIPS.map(chip => (
+          {STAT_CHIPS.map((chip, i) => (
             <div
               key={chip.key}
               className="stat-chip"
-              style={{ borderTopColor: chip.color }}
+              style={{ borderTopColor: chip.color, animationDelay: `${i * 80}ms` }}
             >
               <span className="stat-number" style={{ color: chip.color }}>{chip.count}</span>
               <span className="stat-label">{chip.label}</span>
@@ -88,24 +103,39 @@ export function OverviewView() {
         </div>
       </section>
 
-      {/* Profile and platform model distribution */}
       <section className="overview-section">
-        <h2 className="section-title">Agent Profiles</h2>
-        <div className="model-bars">
-          {profileEntries.map(([profile, count]) => (
-            <ModelBar key={profile} model={profile} count={count} max={maxProfileCount} />
-          ))}
+        <div className="quick-links">
+          <button className="quick-link-card" onClick={() => navigate('/catalog')}>
+            <span className="quick-link-label">Browse Catalog</span>
+            <span className="quick-link-arrow">→</span>
+          </button>
+          <button className="quick-link-card" onClick={() => navigate('/workflows')}>
+            <span className="quick-link-label">View Workflows</span>
+            <span className="quick-link-arrow">→</span>
+          </button>
         </div>
-        <div className="platform-model-grid">
+      </section>
+
+      <section className="overview-section">
+        <h2 className="section-title">Models</h2>
+        <div className="panel-grid panel-grid-3">
+          <div className="panel">
+            <h3 className="column-title">Agent profiles</h3>
+            <div className="model-bars">
+              {profileEntries.map(([profile, count]) => (
+                <ModelBar key={profile} model={profile} count={count} max={maxProfileCount} />
+              ))}
+            </div>
+          </div>
           <ModelTable platform="Claude" models={stats.modelDistribution.claude || {}} />
           <ModelTable platform="Codex" models={stats.modelDistribution.codex || {}} />
         </div>
       </section>
 
-      {/* Category breakdown */}
       <section className="overview-section">
-        <div className="categories-grid">
-          <div className="category-column">
+        <h2 className="section-title">Categories</h2>
+        <div className="panel-grid">
+          <div className="panel">
             <h3 className="column-title">Agent categories</h3>
             <ul className="category-list">
               {agentCategoryEntries.map(([cat, count]) => (
@@ -116,7 +146,7 @@ export function OverviewView() {
               ))}
             </ul>
           </div>
-          <div className="category-column">
+          <div className="panel">
             <h3 className="column-title">Skill categories</h3>
             <ul className="category-list">
               {skillCategoryEntries.map(([cat, count]) => (
@@ -146,7 +176,7 @@ export function OverviewView() {
         </div>
 
         {hasEvalData ? (
-          <div className="eval-table-wrap">
+          <div className="panel eval-table-wrap">
             <table className="eval-table">
               <thead>
                 <tr>
@@ -165,8 +195,8 @@ export function OverviewView() {
                     <td className="agent-cell">{row.agent}</td>
                     <td className="model-cell">{row.model}</td>
                     <td className="num-col">{row.runs}</td>
-                    <td className="num-col">{formatTokens(row.avgIn)}k</td>
-                    <td className="num-col">{formatTokens(row.avgOut)}k</td>
+                    <td className="num-col">{formatTokens(row.avgIn)}</td>
+                    <td className="num-col">{formatTokens(row.avgOut)}</td>
                     <td className="num-col">{row.avgDurationS}s</td>
                     <td className="num-col cost-cell">{formatCost(row.totalCostUsd)}</td>
                   </tr>
@@ -187,20 +217,6 @@ export function OverviewView() {
         ) : (
           <p className="eval-empty">Run a Litmus replay or probe to record evaluation metrics.</p>
         )}
-      </section>
-
-      {/* Quick links */}
-      <section className="overview-section">
-        <div className="quick-links">
-          <button className="quick-link-card" onClick={() => navigate('/catalog')}>
-            <span className="quick-link-label">Browse Catalog</span>
-            <span className="quick-link-arrow">→</span>
-          </button>
-          <button className="quick-link-card" onClick={() => navigate('/workflows')}>
-            <span className="quick-link-label">View Workflows</span>
-            <span className="quick-link-arrow">→</span>
-          </button>
-        </div>
       </section>
 
     </div>

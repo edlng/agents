@@ -55,9 +55,9 @@
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #3fb950;
-  background: rgba(63, 185, 80, 0.15);
-  border: 1px solid rgba(63, 185, 80, 0.3);
+  color: #8fbf7f;
+  background: rgba(143, 191, 127, 0.15);
+  border: 1px solid rgba(143, 191, 127, 0.3);
 }
 
 .detail-header-badges .compatibility-badge {
@@ -75,22 +75,22 @@
 
 .detail-type-badge.type-agent {
   color: var(--node-agent);
-  background: rgba(88, 166, 255, 0.12);
+  background: rgba(217, 119, 87, 0.12);
 }
 
 .detail-type-badge.type-skill {
   color: var(--node-skill);
-  background: rgba(63, 185, 80, 0.12);
+  background: rgba(143, 191, 127, 0.12);
 }
 
 .detail-type-badge.type-shared-ref {
   color: var(--node-shared-ref);
-  background: rgba(210, 153, 34, 0.12);
+  background: rgba(227, 176, 75, 0.12);
 }
 
 .detail-type-badge.type-mcp-server {
   color: var(--node-mcp);
-  background: rgba(188, 140, 255, 0.12);
+  background: rgba(181, 143, 208, 0.12);
 }
 
 .detail-close {
@@ -230,27 +230,27 @@
 
 .detail-tag.tag-agent {
   color: var(--node-agent);
-  background: rgba(88, 166, 255, 0.08);
+  background: rgba(217, 119, 87, 0.08);
 }
 
 .detail-tag.tag-skill {
   color: var(--node-skill);
-  background: rgba(63, 185, 80, 0.08);
+  background: rgba(143, 191, 127, 0.08);
 }
 
 .detail-tag.tag-shared-ref {
   color: var(--node-shared-ref);
-  background: rgba(210, 153, 34, 0.08);
+  background: rgba(227, 176, 75, 0.08);
 }
 
 .detail-tag.tag-mcp {
   color: var(--node-mcp);
-  background: rgba(188, 140, 255, 0.08);
+  background: rgba(181, 143, 208, 0.08);
 }
 
 .detail-tag.tag-mcp-server {
   color: var(--node-mcp);
-  background: rgba(188, 140, 255, 0.08);
+  background: rgba(181, 143, 208, 0.08);
 }
 
 .detail-connections {
@@ -292,7 +292,7 @@
   text-align: left;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: rgba(88, 166, 255, 0.4);
+  text-decoration-color: rgba(217, 119, 87, 0.4);
 }
 
 .detail-workflow-link:hover {

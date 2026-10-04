@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
+import { Clawd, ClawdWalker } from './Clawd';
 import './Layout.css';
 
 export function Layout() {
@@ -6,8 +7,8 @@ export function Layout() {
     <div className="layout">
       <header className="nav-bar">
         <div className="nav-left">
-          <span className="nav-logo">⬡</span>
-          <h1 className="nav-title">agents</h1>
+          <Clawd size={26} />
+          <h1 className="nav-title"><span className="nav-prompt">&gt;</span> agents<span className="nav-cursor" aria-hidden="true" /></h1>
         </div>
         <nav className="nav-links">
           <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
@@ -34,6 +35,7 @@ export function Layout() {
           </a>
         </div>
       </header>
+      <ClawdWalker />
       <main className="main-content">
         <Outlet />
       </main>

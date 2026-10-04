@@ -111,9 +111,9 @@ function buildFlowchart(workflow: Workflow) {
     const isLoop = !!e.loop;
     const fromDecision = workflow.nodes.find(n => n.id === e.from)?.type === 'decision';
 
-    let stroke = '#58a6ff';
-    if (isLoop) stroke = '#f85149';
-    else if (fromDecision) stroke = '#3fb950';
+    let stroke = '#d97757';
+    if (isLoop) stroke = '#e5675f';
+    else if (fromDecision) stroke = '#8fbf7f';
 
     const pathOptions = isLoop
       ? { offset: 25 + loopIdx * 45, borderRadius: 12 }
@@ -126,7 +126,7 @@ function buildFlowchart(workflow: Workflow) {
       type: 'smoothstep',
       label: e.label,
       labelStyle: { fill: stroke, fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 600 },
-      labelBgStyle: { fill: '#0d1117', fillOpacity: 0.9 },
+      labelBgStyle: { fill: '#1a1714', fillOpacity: 0.9 },
       labelBgPadding: [4, 6] as [number, number],
       labelBgBorderRadius: 3,
       style: { stroke, strokeWidth: 1.75, strokeDasharray: isLoop ? '6 4' : undefined },
@@ -211,10 +211,10 @@ function FlowchartInner({ workflow }: { workflow: Workflow }) {
           nodesDraggable={false}
           nodesConnectable={false}
         >
-          <Background color="#21262d" gap={20} />
+          <Background color="#2d2823" gap={20} />
           <Controls
             showInteractive={false}
-            style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '6px' }}
+            style={{ background: '#231f1b', border: '1px solid #3d362f', borderRadius: '6px' }}
           />
         </ReactFlow>
       </div>
