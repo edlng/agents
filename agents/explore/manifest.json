@@ -1,6 +1,6 @@
 {
   "name": "explore",
-  "description": "Read-only exploration agent that surveys codebases, Jira tickets, and Confluence documentation to build planning context without modifying files.",
+  "description": "Read-only exploration agent that surveys codebases, Jira tickets, Confluence, Pippin, and Amazon wiki documentation to build planning context without modifying files.",
   "category": "research",
   "profile": "haiku",
   "platforms": [

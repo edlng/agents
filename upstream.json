@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "pstack",
+      "repo": "cursor/plugins",
+      "branch": "main",
+      "ref": "e43c7ee26e0038c6c1fa8380dd34ce86ff94cb2a",
+      "license": "MIT",
+      "skills": {
+        "benchmark-checklist": "pstack/skills/benchmark-checklist",
+        "blast-radius": "pstack/skills/blast-radius",
+        "how": "pstack/skills/how",
+        "principle-explain-the-number": "pstack/skills/principle-explain-the-number",
+        "principle-make-operations-idempotent": "pstack/skills/principle-make-operations-idempotent",
+        "principle-separate-before-serializing-shared-state": "pstack/skills/principle-separate-before-serializing-shared-state",
+        "principle-test-behavior-not-implementation": "pstack/skills/principle-test-behavior-not-implementation",
+        "tdd": "pstack/skills/tdd",
+        "why": "pstack/skills/why"
+      }
+    }
+  ]
+}

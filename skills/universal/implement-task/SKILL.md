@@ -1,6 +1,6 @@
 ---
 name: implement-task
-description: Takes a plain-text task description or a Jira issue key (e.g. FOO-123) and runs plan, approach advisor loop, implement, test, and review using the catalog agents. Use when the user explicitly asks to implement a task end-to-end. Not for quick one-file fixes or work that already has a multi-step plan.
+description: Takes a plain-text task description or a Jira issue key (e.g. FOO-123) and runs plan, approach advisor loop, failing tests first, implement, test, and review using the catalog agents. Use when the user explicitly asks to implement a task end-to-end. Not for quick one-file fixes or work that already has a multi-step plan.
 disable-model-invocation: true
 ---
 
@@ -82,7 +82,7 @@ Spawn a `builder` agent:
 
 "Subtask: {subtask description}. Files: {subtask files}. Codebase context: {Phase 1 note}.
 
-Do not write code. Produce a short approach note (under 200 words): (1) the concrete change you'll make, (2) which existing utilities/patterns you'll reuse, (3) any interface or data-shape decisions, (4) risks or ambiguities."
+Do not write code. Produce a short approach note (under 200 words): (1) the concrete change you'll make, (2) which existing utilities/patterns you'll reuse, (3) any interface or data-shape decisions, (4) risks or ambiguities, (5) if the subtask retries, restarts, refreshes, or writes state another actor also writes: how it holds up under the `principle-make-operations-idempotent` and `principle-separate-before-serializing-shared-state` skills."
 
 ### 4.2 Advise
 
@@ -109,11 +109,31 @@ If `APPROVED`: store the approach note for use in Phase 5.
 
 ---
 
+## Phase 4b: Failing tests first
+
+**Why:** A test written before the code encodes the requirement instead of the implementation, and proves it can fail.
+
+Skip this phase when every subtask is `low` and mechanical (config, boilerplate, format conversion).
+
+Spawn a `tester` agent:
+
+"Follow the `tdd` skill and `principle-test-behavior-not-implementation`. Task requirements: {$ARGUMENTS}. Codebase context: {Phase 1 note}. Plan: {Phase 2 JSON}. Approved approaches: {Phase 4 notes}.
+
+For each subtask whose behavior has a cheap local test path that the existing test harness already supports, write the smallest test that encodes the required behavior. Run it and confirm it fails for the intended reason: the behavior is missing or wrong, not a typo or setup error. For a symbol that does not exist yet, use the signature from the approach note; a compile or import error on that missing symbol counts as the intended failure. Do not edit production code.
+
+Report one line per subtask: the test path and name with its failure output, or `SKIPPED: <reason>` when the `tdd` skill says a test would be impractical."
+
+Hold the report for Phases 5 and 6.
+
+---
+
 ## Phase 5: Implementation
 
 Spawn a `builder` agent as the implementor.
 
-Prompt: "You are the implementor. Task: {$ARGUMENTS}. Codebase context: {Phase 1 note}. Research findings: {Phase 3 findings, if any}. Plan: {Phase 2 JSON}.
+Prompt: "You are the implementor. Task: {$ARGUMENTS}. Codebase context: {Phase 1 note}. Research findings: {Phase 3 findings, if any}. Plan: {Phase 2 JSON}. Failing tests: {Phase 4b report, if any}.
+
+Make every failing test from Phase 4b pass. Do not edit or weaken those tests. If one encodes the wrong behavior, stop and report which test and why.
 
 For each subtask in the plan, in dependency order:
 - If `complexity == medium`: implement it yourself, following the approved approach note for this subtask (below) rather than re-deriving the design.
@@ -139,6 +159,8 @@ Prompt: "Task requirements: {$ARGUMENTS}. Codebase context: {Phase 1 note}.
 
 Scan for test files, frameworks, and conventions. Read 2-3 existing tests to internalize the style.
 
+Tests from Phase 4b already exist: {Phase 4b report, if any}. Keep them and add coverage only for behavior they miss. Apply `principle-test-behavior-not-implementation` to every test you write or keep.
+
 ### 6.2 Unit tests
 
 Write unit tests for every non-trivial function/method introduced. Derive test cases from the task requirements and edge cases. Each test must assert a concrete, meaningful outcome.
@@ -149,7 +171,7 @@ If the codebase has integration tests, follow that pattern. If the task involves
 
 ### 6.4 Run the test suite
 
-Detect the test runner from project config. Run and capture output.
+Detect the test runner from project config. Run and capture output. If the task claims a performance change, measure before and after and vet the numbers with the `benchmark-checklist` skill before reporting them.
 
 ### Fix loop (autonomous)
 If tests fail:

@@ -7,7 +7,9 @@ and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
 - 8 agent roles with Claude, Codex, and Kiro definitions.
-- 13 universal skills shared by Claude and Codex. Platform-specific skill
+- 21 universal skills shared by Claude, Codex, and Kiro. `unslop` lives outside
+  the catalog at `~/.claude/skills/unslop/SKILL.md`; `CLAUDE.md` imports it and
+  the Codex and Kiro skill folders link to it. Platform-specific skill
   variants are supported but none are needed today.
 - A validated installer, site catalog, and Litmus checks.
 
@@ -24,9 +26,11 @@ npm install
 node scripts/validate-catalog.mjs
 node scripts/install.mjs claude
 node scripts/install.mjs codex
+node scripts/install-kiro.mjs
 ```
 
-Use `--dry-run` to inspect an install. Use `--force` only when replacing an
+Use `--dry-run` to inspect an install. The Kiro installer never deletes files, skips
+symlinks, and keeps settings that exist only in an installed agent config. Use `--force` only when replacing an
 unowned destination. Use `--migrate-legacy` only when moving from the previous
 shared-skill symlink layout. See [Getting Started](docs/getting-started.md) for
 project-local installs and first invocation.
@@ -41,6 +45,7 @@ skills/codex/            Codex-only variants (none today)
 skills/_shared/          References shared by platform variants
 platforms/               Model policy
 scripts/                 Validation, installation, and runtime checks
+upstream.json            Pinned upstream commits for ported skills
 site/                    Read-only catalog browser
 litmus/                  Claude evaluation and replay harness
 ```
@@ -65,3 +70,13 @@ installer.
 The orchestration and review conventions are informed by
 [CLI Agent Orchestrator](https://github.com/awslabs/cli-agent-orchestrator)
 from AWS Labs.
+
+`blast-radius`, `tdd`, `how`, `why`, `benchmark-checklist`, and four
+`principle-*` skills are adapted from [pstack](https://github.com/cursor/plugins/tree/main/pstack) by
+Lauren Tan, MIT License. `upstream.json` pins the upstream commit each port
+was taken from. Run `npm run check:upstream` (add `-- --diff` for patches) to
+list upstream changes since that commit. It exits with code 1 when a ported
+skill changed. Merge the changes by hand, keep the local edits (no multi-model
+panels, one reviewer instead of `arena`, `explore` as the worker agent,
+synthesis in the main session, and `why` limited to git and `gh`, Pippin, and
+the Amazon wiki), then update `ref` to the new SHA.

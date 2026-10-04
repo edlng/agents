@@ -16,6 +16,7 @@ Follow each phase in order. Do not skip phases.
 
 Parse `$ARGUMENTS` to determine:
 - **Topic**: the subject to research (e.g. "DynamoDB DAX", "Kubernetes HPA", "React Server Components")
+- **Kind**: CODEBASE when the topic is code in the current repository or a local repository the user names (e.g. "how Photon's config refresh works"). Otherwise EXTERNAL.
 - **Depth flag** (optional): if the user says "deep" or "comprehensive", set depth to DEEP. Otherwise default to STANDARD.
 - **Vault folder** (optional): if user specifies a folder, use it. Otherwise derive a folder name from the topic in PascalCase or kebab-case matching the existing vault structure.
 
@@ -25,7 +26,9 @@ If `$ARGUMENTS` is empty, ask the user what topic they want to learn about and s
 
 ## Phase 2: Research
 
-Spawn a `researcher` agent with the following brief:
+**If Kind is CODEBASE:** run the `how` skill on the topic instead of the researcher. If the topic asks why something is built the way it is, or depth is DEEP, also run the `why` skill. Use their output as the research report, then go to Phase 4. Phase 3 does not apply, because both skills cite code and documents directly.
+
+**If Kind is EXTERNAL:** spawn a `researcher` agent with the following brief:
 
 > Research the following topic to produce a crash course for an engineer being onboarded. Cover: (1) what it is and why it exists, (2) how it works architecturally, (3) key APIs/interfaces/commands, (4) when to use it and when not to use it, (5) limitations and gotchas, (6) pricing or cost model if applicable, (7) how it compares to alternatives, (8) best practices. Topic: {TOPIC}. Prioritize official documentation and authoritative sources over blog posts. Return a structured report with source URLs for every claim. No padding, no filler.
 
@@ -46,6 +49,8 @@ If depth is STANDARD, skip this phase.
 ## Phase 4: Format as Crash Course
 
 Structure the research into the following template. Adapt sections to fit the topic - omit sections that would be empty or forced, add topic-specific sections if the research warrants them.
+
+For a CODEBASE topic, drop template sections that do not apply (usually Pricing / Cost Model and Comparison to Alternatives). Fill Architecture / How It Works from the `how` output, and add a Why It Is Built This Way section from the `why` output when it ran. Cite `file:line` in place of URLs.
 
 ### Template
 

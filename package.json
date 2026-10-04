@@ -10,7 +10,9 @@
     "install:claude": "node scripts/install.mjs claude",
     "install:codex": "node scripts/install.mjs codex",
     "smoke:claude": "node scripts/runtime-smoke.mjs claude",
-    "smoke:codex": "node scripts/runtime-smoke.mjs codex"
+    "smoke:codex": "node scripts/runtime-smoke.mjs codex",
+    "install:kiro": "node scripts/install-kiro.mjs",
+    "check:upstream": "node scripts/check-upstream.mjs"
   },
   "keywords": [],
   "author": "",

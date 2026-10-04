@@ -10,8 +10,8 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED = {
   agents: 8,
-  skills: 13,
-  universal: 13,
+  skills: 21,
+  universal: 21,
   claude: 0,
   codex: 0,
 };
@@ -45,7 +45,7 @@ try {
     }
     process.exitCode = 1;
   } else {
-    console.log('Catalog valid: 8 agents, 13 skills (13 universal, 0 Claude, 0 Codex)');
+    console.log('Catalog valid: 8 agents, 21 skills (21 universal, 0 Claude, 0 Codex)');
   }
 } catch (error) {
   console.error(`ERROR ${error.message}`);

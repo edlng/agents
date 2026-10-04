@@ -1,6 +1,6 @@
 {
   "name": "explore",
-  "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence docs to build context for planning. Never modifies files.",
+  "description": "Read-only exploration agent. Surveys codebases, reads Jira tickets, and searches Confluence, Pippin, and Amazon wiki docs to build context for planning. Never modifies files.",
   "prompt": "file://./kiro-prompt.md",
   "tools": [
     "read",
@@ -18,7 +18,13 @@
     "mcp__atlassian__getConfluenceSpaces",
     "mcp__atlassian__searchConfluenceUsingCql",
     "mcp__atlassian__search",
-    "mcp__atlassian__fetch"
+    "mcp__atlassian__fetch",
+    "mcp__pippin-mcp__pippin_search",
+    "mcp__pippin-mcp__pippin_get_artifact",
+    "mcp__pippin-mcp__pippin_get_artifact_comments",
+    "mcp__pippin-mcp__pippin_get_project",
+    "mcp__pippin-mcp__pippin_list_artifacts",
+    "mcp__pippin-mcp__pippin_get_folder_children"
   ],
   "allowedTools": [
     "read",
@@ -36,7 +42,13 @@
     "mcp__atlassian__getConfluenceSpaces",
     "mcp__atlassian__searchConfluenceUsingCql",
     "mcp__atlassian__search",
-    "mcp__atlassian__fetch"
+    "mcp__atlassian__fetch",
+    "mcp__pippin-mcp__pippin_search",
+    "mcp__pippin-mcp__pippin_get_artifact",
+    "mcp__pippin-mcp__pippin_get_artifact_comments",
+    "mcp__pippin-mcp__pippin_get_project",
+    "mcp__pippin-mcp__pippin_list_artifacts",
+    "mcp__pippin-mcp__pippin_get_folder_children"
   ],
   "toolsSettings": {
     "shell": {

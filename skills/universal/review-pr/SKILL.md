@@ -69,6 +69,10 @@ Absence of an implementation is not divergence unless the shared contract requir
 
 **Photon context for both size paths:** For an `awslabs/photon` review, every agent that emits findings also reads `photon_client_consistency.json`. After each finding's normal evidence and reasoning, append a `client_consistency` object with `verdict`, `reasoning`, and the exact comparison-record evidence IDs. Cross-client behavior is supporting context and does not prove the underlying finding. Use `INSUFFICIENT_EVIDENCE` when the records do not establish alignment or divergence.
 
+**Blast radius for both size paths:** When the diff changes a shared contract (for `awslabs/photon`: `shared/`, RESP or wire encoding, auth, or the connection, session, or config-refresh lifecycle; elsewhere: a public API, serialized format, or schema), the agent that reviews correctness (the single agent, or Agent B) also follows steps 1-4 of the `blast-radius` skill against the PR head. Breakage it confirms goes into the findings JSON as normal findings. It writes `blast_radius.md` with the one fact the change is safe because of and the evidence level it reached (1 to 3; this review runs no code), plus the risks it checked and cleared. Skip steps 5 and 6. Skip the whole check when no shared contract changed.
+
+**Retry and shared state for both size paths:** When the diff changes retry, reconnect, restart, or refresh logic, or state that more than one actor writes, the correctness reviewer also applies the `principle-make-operations-idempotent` and `principle-separate-before-serializing-shared-state` skills and reports violations as normal findings. When the PR claims a performance change, it checks the claimed numbers against the `benchmark-checklist` skill and reports missing run counts, spread, or limiter as a finding.
+
 **Prompt for the single-agent path (`<= 500`):**
 > Read `/tmp/agent-runs/<RUNID>/diff.patch`, `requirements.md`, `codebase_context.md`, and `photon_client_consistency.json` when present. If you need a file beyond the codebase context, use `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. Do not invent file contents.
 >
@@ -93,6 +97,8 @@ Follow the self-challenge rubric in `../_shared/validator-skeptic-pass.md`. The 
 
 For `awslabs/photon`, the validator also reads `photon_client_consistency.json`. It verifies that every client-consistency statement follows from its cited path, lines, and source snippet; that cited open PRs concern the same behavior; that links use the recorded immutable commit SHA; and that one client's behavior is not generalized to all clients. It replaces an unsupported consistency conclusion with `INSUFFICIENT_EVIDENCE`. The normal reject and downgrade rules apply to the underlying finding independently.
 
+When `blast_radius.md` exists, the validator also checks that its cited lines support the safety fact and lowers the stated evidence level when they don't.
+
 ---
 
 ## Phase 4: Final Report (local only)
@@ -103,6 +109,7 @@ Write the report yourself in the main session. Do not spawn an agent for it. Rea
 - `codebase_context.md`
 - the final `findings_v<n>.json`
 - `photon_client_consistency.json` when present
+- `blast_radius.md` when present
 
 Drop every `verdict: REJECTED` finding. Use the post-downgrade severity for `DOWNGRADE` findings.
 
@@ -132,6 +139,9 @@ For each important finding:
 
 ## What This PR Does
 <concise explanation of the implementation and its structure>
+
+## Blast radius
+<only when `blast_radius.md` exists: the safety fact, its evidence level, and the cleared risks in one line each>
 
 ## Summary
 <overall state, residual risk, and test coverage>

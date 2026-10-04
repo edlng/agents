@@ -66,17 +66,25 @@ const AGENT_MATRIX = [
 
 
 const UNIVERSAL_SKILL_NAMES = [
+  'benchmark-checklist',
+  'blast-radius',
   'code-review-excellence',
   'crash-course',
   'daily-log',
+  'how',
   'implement-task',
   'pr-comment-humanizer',
+  'principle-explain-the-number',
+  'principle-make-operations-idempotent',
+  'principle-separate-before-serializing-shared-state',
+  'principle-test-behavior-not-implementation',
   'review-addressed-comments',
   'review-code',
   'review-pr',
-  'unslop',
+  'tdd',
   'update-skill',
   'update-sysprompts',
+  'why',
   'write-pr',
   'write-pr-comments',
 ];
@@ -99,27 +107,45 @@ const SUPERPOWERS_SKILL_NAMES = new Set([
 ]);
 
 const UNIVERSAL_SOURCE_SNAPSHOT = [
+  'benchmark-checklist/SKILL.md 5197c3779e7f84e2d21965e8b23b26c2f56b04ef6ee3cd0301aac9c6d82709cf 0644',
+  'blast-radius/SKILL.md e15ce604ed5202c0750c344972d1c7d1c9f6deecbb6b7d968d357e5085d16b3d 0644',
   'code-review-excellence/SKILL.md 464ce0078951cdb318fa4ebb1ac307f391b1f0acdc8cbba90b14071bdf68058f 0644',
-  'crash-course/SKILL.md bdfc3cfdfc021128fea76cdc31ddef5e747ec7a26bf42d842eb28620cfd1d449 0644',
+  'crash-course/SKILL.md 4f379d601320cf816ab26d33e84d8fc943e0b1304677388f74f00cf783ea9620 0644',
   'crash-course/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'daily-log/SKILL.md 4054ce0816d8e78c6ebad71191322a784076f0e169fc119f726107bdb2699df0 0644',
   'daily-log/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
-  'implement-task/SKILL.md f6bd977b314e8098d56b1f604783a95faa91a92dfea31424cca1d24d94580a74 0644',
+  'how/SKILL.md 9f6c00a2482d5e4162dd58f0a867bdcae957320867ce937bddc9236566dc7cd0 0644',
+  'how/references/explainer-prompt.md ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff 0644',
+  'how/references/explorer-prompt.md a3b44a6e5bb16a6d4d1cac19db8ed5322ffd5f5f5d45baca4e73990ca096f8be 0644',
+  'implement-task/SKILL.md 3cd80214c9dfdbf5fdc3ac6e5eed29b4905c54400159b604079e240bcf01e785 0644',
   'implement-task/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'pr-comment-humanizer/SKILL.md 0e54363f80e6b904198a379e5cbc30444287ae2309c291ad0d135f0fe10b22b2 0644',
+  'principle-explain-the-number/SKILL.md 5801620f8fbf9194276de8ce73ce0842acbe543d28ee1e224d1aebc6f821acf6 0644',
+  'principle-make-operations-idempotent/SKILL.md 6ff9aed07af7c3e57c4ef247f1a236b6ffdd1b294732cfedb9845413395d659c 0644',
+  'principle-separate-before-serializing-shared-state/SKILL.md 8b1770a78e89adb0076a30aba568d0a9fe3072048a96d908eff1b20394161d60 0644',
+  'principle-test-behavior-not-implementation/SKILL.md dd4631068333a554e3362e8fa519cb70f97bcdda76f6ecf679d63c866e02a739 0644',
   'review-addressed-comments/SKILL.md 25283cb89fd71a42553277c6617f14d6b2e382af157450f617414592616b8806 0644',
   'review-addressed-comments/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'review-code/SKILL.md 97463cdb6e0885fd9c94b3c34773ca8ffb3e3de6daa5ca8c1139b8d540dd9a09 0644',
-  'review-pr/SKILL.md 6766a5341a3fcb27f5acc98287e3ebc503465067a419efe1441d80b01c8c23a7 0644',
+  'review-pr/SKILL.md 08fedc9d42ba28320cff38759cf5c9fdfbc76a586c622f5be67c9d0c529ee3b9 0644',
   'review-pr/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
-  'unslop/SKILL.md 14238c311775822a2b88aaa8f5ed2edcc6045c2bcd344dff03cb46d372cf396a 0644',
+  'tdd/SKILL.md c80ccd382d26288085623e307aeafa91e0a23dc36b3f64030e72793ff070037d 0644',
   'update-skill/SKILL.md 4a51ac9f243a296b654c1a13aab98cbd96c9bae140a47fc3849ac6f603d269d9 0644',
   'update-skill/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'update-sysprompts/SKILL.md 158a32405176f772b929a3e390761e540b53f4522972cec0a60cec4af9113b73 0644',
   'update-sysprompts/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
+  'why/SKILL.md 140619e7ca1931ed2012932fa06c90c49c2bb7a3f5895b40e830a7d89c80633f 0644',
+  'why/references/epistemics.md fcc0f559c072832c869a5ada72434b4849320a637ae63c09e8ee14f7ad787059 0644',
+  'why/references/investigator-prompt.md 762c970fc74c0de46bda0b6944a335dfa055fd5afdc3a3a508165b0f6588f4a3 0644',
+  'why/references/source-playbook.md 66e640e6943b91ffcf774e5558faaf3659636eee6d4c552ee2b40eb63f19b95d 0644',
+  'why/references/sources/code-archaeology.md 8c14aa382f0de40829b2668d43e3f54814480bb93a486c9282ada4003f6b9dbd 0644',
+  'why/references/sources/incident-postmortem.md 11289668e55190e752eabb5085bdb41d085e1eaecf1c968c252a2a80471bc3b5 0644',
+  'why/references/sources/pippin.md 6068b4add52455585c181e0bf59fd104446a0551e32d00985380ceb608c7c656 0644',
+  'why/references/sources/wiki.md a3a7a019ede6546b960004bffb9e9fcb52ad724f26b3706a6265daaf1ea922b8 0644',
+  'why/references/synthesizer-prompt.md 733a3e9cf897b1aca56aaddeae01a3832e4bfed024c2f602db2d1bf807d7a73b 0644',
+  'write-pr/SKILL.md 2fb73d049382cfd1847f1f7734a3477f669e8fcde6312dab37b1eb4befcf05b6 0644',
   'write-pr-comments/SKILL.md 491bba1eca8765a414411bc5fd51aec359c366bdbdd6d672f210b206b15a114a 0644',
   'write-pr-comments/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
-  'write-pr/SKILL.md 2fb73d049382cfd1847f1f7734a3477f669e8fcde6312dab37b1eb4befcf05b6 0644',
 ].map((snapshot) => {
   const [relativePath, hash, mode] = snapshot.split(' ');
   return {
@@ -136,8 +162,8 @@ const CONCRETE_PROVIDER_ID =
 const KIRO_PROMPT_SHA256 = {
   builder: '340286b6f9b8cc69ed680fc2b9a06a887cd02f0ff2f3b012d882ec8dde09f907',
   'code-reviewer': 'bc4e2e9896deac8b0add3a14f4c1184488f64219d33485485ae301d0a1cdc907',
-  explore: '2f2a85ea295368ea8a84055ee0c0857f98ff300078826f6774fafac76d2d4cd6',
-  'photon-lead': 'f6a01fd69e25d40785d7faede7fd8b5b80b825a91168a1252fa1b7dd2ceb2fd4',
+  explore: 'fa5ce2ea004cc1258061970f98d3916690f4db4e527df032430c8e950594face',
+  'photon-lead': 'b7a85077c67752a73ab4a07e0c803b244ef35ed38de74215e6c8a2e30d0c4390',
   'research-validator': 'c0b17309751b84a549e5587cd5cfdbc2be897ac74d8259948ad12ecd36024dfe',
   researcher: '0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263',
   tester: '0f2e6019409d2d404afc08bdcc5420a126b57bbe3f73765d6cb748796cbd0a45',
@@ -147,7 +173,7 @@ const KIRO_PROMPT_SHA256 = {
 const KIRO_JSON_SHA256 = {
   builder: 'f455232eb0cbdbe8c00d93fe6e8f9970fddd1cd3651abe00a8784df887fda078',
   'code-reviewer': 'da5a22b3cec3c0cd30fb63506b2f9530c2050d23ab749ecbc000b172cfc1feae',
-  explore: '423830a5ad8a5ac9e0a99a2d1c1f7d0be8f27e55a2c5678e51dc97babe22febc',
+  explore: 'c9288066fc5443680a6b9faed447e21da78ece2e1c49b2f79f3f57b9739d24e5',
   'photon-lead': '4ab967e132f6d932314e23fd72bfc2bd27d9d0f7f30878123836c49399d850e6',
   'research-validator': '36bddb25df064a14c45daef63f658e1823c04aafb82537abfa90cb469c93d30c',
   researcher: 'd234a3721fe7a6b666baf92fdcfb3b5512f3225a1d4076f21c1338882fe3a2e9',
@@ -280,7 +306,7 @@ developer_instructions = "Test the fixture."
 `);
   }
 
-  for (let index = 1; index <= 12; index += 1) {
+  for (let index = 1; index <= 20; index += 1) {
     const name = `universal-${String(index).padStart(2, '0')}`;
     await writeFixtureFile(root, `skills/universal/${name}/SKILL.md`, `---
 name: ${name}
@@ -473,7 +499,7 @@ test('production universal skills preserve the complete source snapshot for both
   );
   assert.equal(
     universal.reduce((count, variant) => count + variant.files.length, 0),
-    21,
+    39,
   );
 
   const expectedFiles = UNIVERSAL_SOURCE_SNAPSHOT.map((source) => ({
@@ -530,7 +556,7 @@ test('production universal skills preserve the complete source snapshot for both
       };
     })
     .sort((left, right) => left.source.localeCompare(right.source));
-  assert.equal(claudeFiles.length, 21);
+  assert.equal(claudeFiles.length, 39);
   assert.deepEqual(claudeFiles, expectedInstallFiles);
   assert.deepEqual(claudeFiles, codexFiles);
 
@@ -927,7 +953,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 8 agents, 13 skills (13 universal, 0 Claude, 0 Codex)\n',
+    'Catalog valid: 8 agents, 21 skills (21 universal, 0 Claude, 0 Codex)\n',
   );
 });
 

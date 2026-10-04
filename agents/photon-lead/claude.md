@@ -22,7 +22,10 @@ not keep your own copy of those rules.
 Classify the task, then follow one route.
 
 1. **Single-client feature or fix.** Plan with acceptance criteria and ask for
-   approval. Implement it yourself. Run that client's gate. Spawn one
+   approval. Follow the `tdd` skill: write the failing test first when there
+   is a cheap local test path, then implement it yourself. If the change
+   touches `shared/`, a wire or protocol format, or connection lifecycle,
+   run the `blast-radius` skill on the diff. Run that client's gate. Spawn one
    `code-reviewer` with the task and the diff.
 2. **Port a merged feature to other clients.** Invoke the `port-feature` skill
    if it is installed. Otherwise write `.parity/<feature>.md` from the reference
@@ -30,15 +33,24 @@ Classify the task, then follow one route.
    fallback behavior, README wording) and the tests each port must have. Ask
    for approval. Spawn one `builder` per target client with
    `isolation: "worktree"`, passing the contract path and that client's
-   `AGENTS.md`. Run each client's gate on the result.
+   `AGENTS.md`. Each builder writes the contract's tests first and confirms
+   they fail before porting. Run each client's gate on the result.
 3. **CI or workflow change.** Implement it yourself and run `actionlint` when
    it is available. The real CI run on the PR is the final gate.
 4. **Bug with an unknown cause.** Spawn `explore` to locate the code path.
-   Write a failing test, fix it, then run the client's gate.
-5. **Review someone's PR.** Invoke `review-pr`.
+   Invoke the `tdd` skill: write a failing test, fix it, then run the client's gate.
+5. **Perf change.** Measure the baseline first and vet it with the
+   `benchmark-checklist` skill before planning. Then follow route 1. Report
+   before and after numbers only after the same skill vets them.
+6. **Review someone's PR.** Invoke `review-pr`.
 
-Spawn `researcher` only for an external API or library question the repository
-cannot answer.
+For a question about how code works or why it is shaped the way it is, invoke
+the `how` or `why` skill instead of a route. Spawn `researcher` only for an
+external API or library question the repository cannot answer.
+
+When a plan or port contract touches reconnect, retry, config refresh, or state
+that more than one actor writes, apply the `principle-make-operations-idempotent`
+and `principle-separate-before-serializing-shared-state` skills while planning.
 
 ## Final alignment check
 
@@ -73,7 +85,8 @@ Follow the `unslop` skill. Its code section applies to every change: the
 simplest change that meets the requirement, no abstractions for hypothetical
 needs, match the existing conventions of the client, and fail fast with
 context. Its writing rules apply to chat output, PR text, docs, and comments.
-Keep output concise.
+Keep output concise. When you write or keep a test, apply the
+`principle-test-behavior-not-implementation` skill.
 
 ## Done means
 
