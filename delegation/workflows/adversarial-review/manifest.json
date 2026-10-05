@@ -1,0 +1,21 @@
+{
+  "id": "adversarial-review",
+  "agent": "adversarial-reviewer",
+  "role": "reviewer",
+  "purpose": "Challenge other agents' artifacts in a separate context by checking their claims against the repository.",
+  "substance": "not-assessed",
+  "substance_rationale": "A review assignment covering the client workflows, not a client workflow itself.",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "max_turns": 14,
+  "max_tokens": 8000,
+  "isolated_context": true,
+  "tools": ["read_file", "list_files", "search"],
+  "steps": [
+    {"id": "review", "prompt": "review.md", "output": "challenge.v1", "description": "Verify each assigned artifact's claims against source files and raise challenges with counter-evidence."}
+  ],
+  "evaluation": {
+    "criteria": ["challenges-planted-false-claim", "upholds-accurate-artifact", "counter-evidence-is-real"],
+    "results": "delegation/evals/adversarial-review/results.json"
+  }
+}

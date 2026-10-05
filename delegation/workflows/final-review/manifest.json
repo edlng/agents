@@ -1,0 +1,20 @@
+{
+  "id": "final-review",
+  "agent": "final-review-writer",
+  "purpose": "Synthesize every artifact, adversarial verdict, and coordinator disposition into the client-facing review report.",
+  "substance": "core",
+  "substance_rationale": "The written review report is the deliverable the client receives.",
+  "model": "claude-sonnet-5-5",
+  "effort": "low",
+  "max_turns": 2,
+  "max_tokens": 8000,
+  "isolated_context": true,
+  "tools": [],
+  "steps": [
+    {"id": "write", "prompt": "write.md", "output": "final-review.v1", "description": "Write the summary and one prose section per artifact; the harness builds the headings."}
+  ],
+  "evaluation": {
+    "criteria": ["adds-no-new-findings", "covers-every-artifact-and-challenge", "no-headings-in-prose", "tone-polite-direct"],
+    "results": "delegation/evals/final-review/results.json"
+  }
+}

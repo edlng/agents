@@ -1,0 +1,21 @@
+{
+  "id": "documentation",
+  "agent": "documenter",
+  "purpose": "Write handover documentation for a reviewed client change: what it does, how to use it, and its limitations.",
+  "substance": "peripheral",
+  "substance_rationale": "Handover docs are useful to the client but are rarely bought on their own; they ride on the review engagement.",
+  "source": "Stage 4 agents/documenter/claude.md",
+  "model": "claude-sonnet-5-5",
+  "effort": "low",
+  "max_turns": 10,
+  "max_tokens": 8000,
+  "isolated_context": true,
+  "tools": ["read_file", "list_files", "search", "write_doc"],
+  "steps": [
+    {"id": "write", "prompt": "write.md", "output": "documentation.v1", "description": "Write docs/<feature>.md with Overview, Usage, and Limitations sections."}
+  ],
+  "evaluation": {
+    "criteria": ["has-required-sections", "documents-only-real-apis", "writes-only-docs"],
+    "results": "delegation/evals/documentation/results.json"
+  }
+}
