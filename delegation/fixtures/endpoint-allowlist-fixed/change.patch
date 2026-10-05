@@ -1,0 +1,89 @@
+diff --git a/endpoint/endpoint.go b/endpoint/endpoint.go
+index 4ac3dc1..ab69c3f 100644
+--- a/endpoint/endpoint.go
++++ b/endpoint/endpoint.go
+@@ -1,8 +1,39 @@
+ package endpoint
+ 
+-import "net/url"
++import (
++	"errors"
++	"net"
++	"net/url"
++	"strings"
++)
+ 
+-// Validate parses an outbound webhook URL.
++// Validate parses an outbound webhook URL and checks it against the host
++// allowlist before the service sends any request to it.
+ func Validate(raw string, allowedHosts []string) (*url.URL, error) {
+-	return url.Parse(raw)
++	if len(allowedHosts) == 0 {
++		return nil, errors.New("endpoint: empty allowlist")
++	}
++	u, err := url.Parse(raw)
++	if err != nil {
++		return nil, err
++	}
++	if u.Scheme != "https" {
++		return nil, errors.New("endpoint: https required")
++	}
++	if u.User != nil {
++		return nil, errors.New("endpoint: credentials in URL")
++	}
++	host := strings.ToLower(u.Hostname())
++	if host == "" {
++		return nil, errors.New("endpoint: missing host")
++	}
++	if net.ParseIP(host) != nil {
++		return nil, errors.New("endpoint: IP literal hosts are not allowed")
++	}
++	for _, allowed := range allowedHosts {
++		if allowed != "" && host == strings.ToLower(allowed) {
++			return u, nil
++		}
++	}
++	return nil, errors.New("endpoint: host not allowed")
+ }
+diff --git a/endpoint/endpoint_test.go b/endpoint/endpoint_test.go
+new file mode 100644
+index 0000000..e47adb2
+--- /dev/null
++++ b/endpoint/endpoint_test.go
+@@ -0,0 +1,36 @@
++package endpoint
++
++import "testing"
++
++func TestValidateAcceptsAllowedHTTPSHost(t *testing.T) {
++	got, err := Validate("https://API.example.com/v1?q=ok", []string{"api.example.com"})
++	if err != nil {
++		t.Fatal(err)
++	}
++	if got.Path != "/v1" || got.RawQuery != "q=ok" {
++		t.Fatalf("Validate() = %#v", got)
++	}
++}
++
++func TestValidateRejectsUnsafeShapes(t *testing.T) {
++	for _, raw := range []string{
++		"http://api.example.com/v1",
++		"https://user:pass@api.example.com/v1",
++		"https://127.0.0.1/v1",
++		"https://[::1]/v1",
++		"//api.example.com/v1",
++		"https://api.example.com.evil.test/v1",
++		"https://evilapi.example.com/v1",
++		"https://sub.api.example.com/v1",
++	} {
++		if _, err := Validate(raw, []string{"api.example.com"}); err == nil {
++			t.Errorf("Validate(%q) unexpectedly succeeded", raw)
++		}
++	}
++}
++
++func TestValidateIgnoresEmptyAllowlistEntries(t *testing.T) {
++	if _, err := Validate("https://api.example.com/v1", []string{""}); err == nil {
++		t.Fatal("empty allowlist entry matched a host")
++	}
++}

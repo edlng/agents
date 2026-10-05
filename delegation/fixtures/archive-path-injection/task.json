@@ -1,0 +1,14 @@
+{
+  "id": "archive-path-injection",
+  "title": "Reject archive entries that escape the extraction root",
+  "description": "The client's export service extracts uploaded zip archives under a per-tenant root. This change makes archive.EntryPath refuse entry names that would place a file outside that root.",
+  "acceptance_criteria": [
+    {"id": "AC1", "text": "Empty and absolute entry names are rejected."},
+    {"id": "AC2", "text": "No entry name, including '..' and names that end in '..', produces a path outside root."},
+    {"id": "AC3", "text": "Names that stay inside root are joined unchanged."},
+    {"id": "AC4", "text": "go test ./... passes."}
+  ],
+  "test_command": ["go", "test", "./..."],
+  "repo": "repo",
+  "patch": "change.patch"
+}

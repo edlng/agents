@@ -1,0 +1,49 @@
+diff --git a/retry/retry.go b/retry/retry.go
+index d49fd7e..3202b4c 100644
+--- a/retry/retry.go
++++ b/retry/retry.go
+@@ -2,7 +2,15 @@ package retry
+ 
+ import "time"
+ 
+-// Delay returns how long to wait before retry attempt n.
++// Delay returns how long to wait before retry attempt n (1-based): base for
++// the first retry, doubling each attempt, never more than max.
+ func Delay(n int, base, max time.Duration) time.Duration {
+-	return base
++	if n < 1 {
++		return 0
++	}
++	d := base << n
++	if d > max || d <= 0 {
++		return max
++	}
++	return d
+ }
+diff --git a/retry/retry_test.go b/retry/retry_test.go
+new file mode 100644
+index 0000000..336f523
+--- /dev/null
++++ b/retry/retry_test.go
+@@ -0,0 +1,21 @@
++package retry
++
++import (
++	"testing"
++	"time"
++)
++
++func TestDelayDoublesFromBase(t *testing.T) {
++	base, max := 100*time.Millisecond, 5*time.Second
++	for n, want := range map[int]time.Duration{1: 100 * time.Millisecond, 2: 200 * time.Millisecond, 3: 400 * time.Millisecond} {
++		if got := Delay(n, base, max); got != want {
++			t.Errorf("Delay(%d) = %v, want %v", n, got, want)
++		}
++	}
++}
++
++func TestDelayCapsAtMax(t *testing.T) {
++	if got := Delay(20, 100*time.Millisecond, 5*time.Second); got != 5*time.Second {
++		t.Errorf("Delay(20) = %v", got)
++	}
++}

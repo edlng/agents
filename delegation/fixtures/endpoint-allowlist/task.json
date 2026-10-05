@@ -1,0 +1,15 @@
+{
+  "id": "endpoint-allowlist",
+  "title": "Validate outbound webhook URLs against a host allowlist",
+  "description": "The client's notification service sends webhooks to URLs that tenants configure. This change makes endpoint.Validate refuse any URL that could reach an internal or unapproved host before the service sends a request.",
+  "acceptance_criteria": [
+    {"id": "AC1", "text": "Only absolute https URLs are accepted; scheme-relative and http URLs are rejected."},
+    {"id": "AC2", "text": "The hostname must match an allowlist entry exactly, compared case-insensitively. Subdomains and look-alike hosts are rejected."},
+    {"id": "AC3", "text": "URLs with userinfo, an empty host, or an IP-literal host are rejected."},
+    {"id": "AC4", "text": "An accepted URL is returned with its path and query unchanged."},
+    {"id": "AC5", "text": "go test ./... passes."}
+  ],
+  "test_command": ["go", "test", "./..."],
+  "repo": "repo",
+  "patch": "change.patch"
+}
