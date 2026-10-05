@@ -1,0 +1,145 @@
+{
+  "schema_version": "stage5.eval-results.v1",
+  "workflow": "final-review",
+  "agent": "final-review-writer",
+  "model": "claude-sonnet-5-5",
+  "provider": "claude-cli (evals/ exemption)",
+  "prompt_sha256": "00ffc4214cf43378789970670b26cabdb27cba57ad7c6bfafa0a0089485a4fca",
+  "generated_at": "2026-10-05T17:19:45Z",
+  "trials_per_case": 3,
+  "criteria": {
+    "adds-no-new-findings": {
+      "passed": 6,
+      "total": 6,
+      "rate": 1
+    },
+    "covers-every-artifact-and-challenge": {
+      "passed": 6,
+      "total": 6,
+      "rate": 1
+    },
+    "no-headings-in-prose": {
+      "passed": 6,
+      "total": 6,
+      "rate": 1
+    },
+    "tone-polite-direct": {
+      "passed": 6,
+      "total": 6,
+      "rate": 1
+    }
+  },
+  "cases": [
+    {
+      "id": "fr-blocked",
+      "fixture": "endpoint-allowlist",
+      "purpose": "Blocked change with a minor unresolved challenge (C2).",
+      "criteria": [
+        "adds-no-new-findings",
+        "covers-every-artifact-and-challenge",
+        "no-headings-in-prose",
+        "tone-polite-direct"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261005T171139Z-aa6fa527-fr-blocked",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:The review is polite: no blame or sarcasm, acknowledges prior reviewer consensus, and thanks the author for the allowlist addition. It's encouraging: credits four passing criteria and frames the fix constructively as a straightforward comparison change. It's direct: states the verdict immediately, pinpoints the exact defect and line number, specifies the required fix, and lists pass/fail status for all acceptance criteria without hedging.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.015221499999999999
+        },
+        {
+          "correlation_id": "20261005T171204Z-90edd878-fr-blocked",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:Polite: Uses neutral technical language to state facts; no blame, sarcasm, or condescension. Vulnerability explained via code behavior (strings.HasSuffix example) rather than author criticism. Encouraging: Explicitly credits AC1, AC3, AC4, AC5 as 'good progress'; frames security fix constructively ('exact-match fix should unblock'); acknowledges what works ('Enforcing https and rejecting bad URLs work as intended'). Direct: Opens with clear verdict ('not ready to merge'), states blocker plainly ('This blocks the change'), prescribes specific fix (exact hostname comparison), provides file paths and line numbers (endpoint/endpoint.go line 35, line 20), no hedging language, ends with unambiguous requirement ('exact-match fix for AC2 is what needs to change before this can pass').} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.0071906
+        },
+        {
+          "correlation_id": "20261005T171227Z-e7a6481b-fr-blocked",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:The review opens with a clear verdict ('not ready to merge') and immediately identifies the blocking SSRF flaw without blame or sarcasm. It credits what works well ('HTTPS enforcement, rejection of disallowed URLs, and existing tests look good') and explicitly notes that four of five criteria pass, framing the situation constructively. The fix is stated plainly ('compare hostnames for exact equality') with specific line references, and the minor documentation gap is characterized as straightforward to address. No hedging, filler, or condescension—just facts about what blocks the merge and how to fix it.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.0069705999999999995
+        }
+      ]
+    },
+    {
+      "id": "fr-rework",
+      "fixture": "endpoint-allowlist",
+      "purpose": "Security review revised after critical challenge C1.",
+      "criteria": [
+        "adds-no-new-findings",
+        "covers-every-artifact-and-challenge",
+        "no-headings-in-prose",
+        "tone-polite-direct"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261005T171638Z-cec5d2e4-fr-rework",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:Polite: No blame or condescension; technical and professional language. Encouraging: Explicitly credits HTTPS enforcement, rejection behavior, tests, and four of five criteria as \"good progress,\" frames the exact-match fix as moving toward readiness. Direct: Opens with unambiguous verdict (\"blocked\"), specifies the critical failure (suffix match at line 35, CWE-918), prescribes the fix (exact equality, skip empty entries), identifies what unblocks (AC2 fix), and resolves the minor note (line 20 citation). No hedging or filler.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.033492299999999996
+        },
+        {
+          "correlation_id": "20261005T171711Z-33658f32-fr-rework",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:Polite: The review is factual and respectful, avoiding blame or sarcasm. It frames the security issue technically without criticizing the developer, and includes genuine appreciation ('Thanks for the clear evidence'). Encouraging: It explicitly credits what works well (HTTPS enforcement, rejection, test suite) and notes 4 of 5 criteria pass. The required fix is characterized as 'narrow' and 'small and well defined,' framing the work as manageable. Direct: Opens with 'The change should not merge yet' and states 'This review blocks the change'—no hedging. Specifies the exact problem (suffix match at line 35 enables SSRF), severity (security critical), and solution (compare hostnames for exact equality). Each detail serves the blocking verdict or enables the fix.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.008131
+        },
+        {
+          "correlation_id": "20261005T171734Z-0c3641a2-fr-rework",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:The review opens with a clear, unhedged verdict: the change cannot merge due to a critical SSRF vulnerability in the suffix-match logic. It cites specific locations (endpoint.go line 35), identifies the security risk plainly, and states 'This blocks the change' without ambiguity. At the same time, it credits four passing criteria and frames the needed fix constructively—'exact hostname comparison should fix it'—with concrete steps rather than blame. The tone is professional and technical throughout, with no sarcasm, condescension, or accusatory language. The minor feedback from C2 is accurately marked as non-blocking, showing proportionate severity assessment. Overall: direct about the blocker, encouraging about what works and how to proceed, and polite in its framing.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.011141000000000002
+        }
+      ]
+    }
+  ],
+  "total_cost_usd": 0.08214699999999998
+}
