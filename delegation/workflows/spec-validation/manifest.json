@@ -1,0 +1,22 @@
+{
+  "id": "spec-validation",
+  "agent": "validator",
+  "purpose": "Verify a client change against its acceptance criteria: run the task's test command, then mark each criterion PASS or FAIL with evidence.",
+  "substance": "core",
+  "substance_rationale": "Acceptance testing against the client's stated requirements is billable delivery assurance.",
+  "source": "agents/validator/claude.md",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "max_turns": 10,
+  "max_tokens": 8000,
+  "isolated_context": true,
+  "tools": ["read_file", "list_files", "search", "run_tests"],
+  "steps": [
+    {"id": "tests", "prompt": "tests.md", "output": "tests.v1", "tools": ["read_file", "run_tests"], "description": "Run the task's fixed test command and report the result the harness recorded."},
+    {"id": "criteria", "prompt": "criteria.md", "output": "criteria.v1", "tools": ["read_file", "list_files", "search"], "inputs": ["tests"], "description": "Judge every acceptance criterion PASS or FAIL against the code and the tests artifact."}
+  ],
+  "evaluation": {
+    "criteria": ["fails-unmet-criterion", "passes-compliant-change", "reports-recorded-exit-code", "never-writes-files"],
+    "results": "delegation/evals/spec-validation/results.json"
+  }
+}

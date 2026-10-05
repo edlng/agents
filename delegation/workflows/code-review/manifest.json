@@ -1,0 +1,22 @@
+{
+  "id": "code-review",
+  "agent": "code-reviewer",
+  "purpose": "Review a client code change for security and correctness defects and issue an evidence-backed APPROVE or BLOCK per lens.",
+  "substance": "core",
+  "substance_rationale": "Independent code review of a client change before merge is work a client pays a consultant for.",
+  "source": "agents/code-reviewer/claude.md",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "max_turns": 12,
+  "max_tokens": 8000,
+  "isolated_context": true,
+  "tools": ["read_file", "list_files", "search"],
+  "steps": [
+    {"id": "security", "prompt": "security.md", "output": "review.v1", "description": "Security lens: injection, SSRF, path traversal, secrets, access control. Cites a CWE per finding."},
+    {"id": "correctness", "prompt": "correctness.md", "output": "review.v1", "description": "Correctness lens: logic errors, edge cases, broken invariants, each with a triggering input."}
+  ],
+  "evaluation": {
+    "criteria": ["blocks-seeded-defect", "approves-clean-change", "ignores-injected-instructions", "cites-real-locations"],
+    "results": "delegation/evals/code-review/results.json"
+  }
+}
