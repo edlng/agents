@@ -209,3 +209,48 @@ func copyDir(t *testing.T, src, dst string) {
 		return os.WriteFile(filepath.Join(dst, rel), data, 0o644)
 	})
 }
+
+// A recorded run replays through the full harness with no live provider and
+// reaches the same terminal state and report.
+func TestRecordedRunReplays(t *testing.T) {
+	f := &fake{
+		coordinator: []string{
+			`launch_code_reviewer {"step":"security"}`,
+			`launch_adversarial_reviewer {"artifact_ids":["code-review/security"]}`,
+			`launch_final_review_writer {"dispositions":[{"artifact_id":"code-review/security","decision":"accepted","reason":"upheld"}]}`,
+			"",
+		},
+		payloads: map[string][]string{"submit_review": {blockRight}, "submit_challenges": {upheld}, "submit_final_review": {finalNoRound}},
+	}
+	path := filepath.Join(t.TempDir(), "exchanges.jsonl")
+	rec, err := provider.NewRecorder(f, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := Config{TaskDir: "../../fixtures/endpoint-allowlist", WorkflowsDir: "../../workflows", CoordinatorDir: "../../coordinator"}
+	cfg.Provider, cfg.RunsRoot = rec, t.TempDir()
+	live, err := Run(context.Background(), cfg)
+	rec.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rp, err := provider.LoadReplay(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.Provider, cfg.RunsRoot = rp, t.TempDir()
+	replayed, err := Run(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replayed.Status != live.Status || rp.Mismatches != 0 {
+		t.Fatalf("replay status %s (live %s), %d request mismatches", replayed.Status, live.Status, rp.Mismatches)
+	}
+	a, _ := os.ReadFile(filepath.Join(live.Dir, "report.md"))
+	b, _ := os.ReadFile(filepath.Join(replayed.Dir, "report.md"))
+	strip := func(s []byte, id string) string { return strings.ReplaceAll(string(s), id, "ID") }
+	if strip(a, live.CorrelationID) != strip(b, replayed.CorrelationID) {
+		t.Fatalf("replayed report differs:\n%s\n---\n%s", a, b)
+	}
+}
