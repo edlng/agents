@@ -1,0 +1,46 @@
+{
+  "agent": "coordinator",
+  "purpose": "Govern a change review: decide which workflow steps to launch, read their validated artifacts, send challenged artifacts back for rework, and hand the results to the final review writer.",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "max_turns": 30,
+  "max_tokens": 8000,
+  "dispatch_only": true,
+  "tools": [
+    {
+      "name": "launch_code_reviewer",
+      "workflow": "code-review"
+    },
+    {
+      "name": "launch_spec_validator",
+      "workflow": "spec-validation"
+    },
+    {
+      "name": "launch_documenter",
+      "workflow": "documentation"
+    },
+    {
+      "name": "launch_adversarial_reviewer",
+      "workflow": "adversarial-review"
+    },
+    {
+      "name": "launch_final_review_writer",
+      "workflow": "final-review"
+    },
+    {
+      "name": "request_human_decision",
+      "workflow": "human"
+    }
+  ],
+  "evaluation": {
+    "criteria": [
+      "relaunches-challenged-step",
+      "re-reviews-after-rework",
+      "no-rework-for-minor",
+      "retries-after-error",
+      "flags-injection",
+      "ends-pending-human"
+    ],
+    "results": "delegation/evals/coordinator/results.json"
+  }
+}
