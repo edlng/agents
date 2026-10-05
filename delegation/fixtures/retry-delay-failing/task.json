@@ -1,0 +1,14 @@
+{
+  "id": "retry-delay-failing",
+  "title": "Exponential backoff for API client retries",
+  "description": "The client's API SDK retries failed calls. This change replaces the fixed retry delay with exponential backoff capped at a maximum.",
+  "acceptance_criteria": [
+    {"id": "AC1", "text": "Delay(1) returns base, and each later attempt doubles the previous delay."},
+    {"id": "AC2", "text": "No delay exceeds max, including when the doubling overflows."},
+    {"id": "AC3", "text": "Attempts below 1 return 0."},
+    {"id": "AC4", "text": "go test ./... passes."}
+  ],
+  "test_command": ["go", "test", "./..."],
+  "repo": "repo",
+  "patch": "change.patch"
+}
