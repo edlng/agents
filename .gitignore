@@ -20,5 +20,11 @@ __pycache__/
 .langgraph_api/
 litmus/.grader-cache/
 langgraph-agents/.langgraph/
-certification/
+certification/*
+!certification/stage5/
+certification/stage5/edward-liang-stage5/
+certification/stage5/*.zip
 .skill-drafts/
+
+# Delegation run trails (sample runs are copied into certification/stage5)
+delegation/runs/
