@@ -1,6 +1,7 @@
 // Package coordinator runs the governing LLM. It holds only dispatch tools,
 // defined here, and reaches sub-agents only through the Dispatcher interface.
-// It cannot import the tools, sub-agent, or dispatch packages (enforced by
+// Every tool name starts with a dispatch verb (launch_ or invoke_). It cannot
+// import the tools, sub-agent, or dispatch packages (enforced by
 // imports_test.go), so it has no path to files, commands, or the network.
 package coordinator
 
@@ -46,7 +47,7 @@ type Manifest struct {
 }
 
 // DispatchVerbs are the only tool-name prefixes a coordinator may hold.
-var DispatchVerbs = []string{"launch_", "request_"}
+var DispatchVerbs = []string{"launch_", "invoke_"}
 
 // LoadManifest reads <dir>/manifest.json and <dir>/prompt.md and checks that
 // every declared tool is a dispatch tool with a definition in this package.
@@ -139,9 +140,9 @@ var definitions = map[string]provider.Tool{
 			"artifact_id":{"type":"string"},"decision":{"type":"string","enum":["accepted","revised","unresolved"]},"reason":{"type":"string"}},
 			"required":["artifact_id","decision","reason"]}}},"required":["dispositions"]}`),
 	},
-	"request_human_decision": {
-		Name:        "request_human_decision",
-		Description: "Flag something a human must decide before the report goes out. Records the request; it does not pause or approve anything.",
+	"invoke_human_review": {
+		Name:        "invoke_human_review",
+		Description: "Invoke human review for something a person must decide before the report goes out. Records the request in the audit trail; it does not pause or approve anything.",
 		InputSchema: json.RawMessage(`{"type":"object","properties":{"reason":{"type":"string"}},"required":["reason"]}`),
 	},
 }

@@ -35,7 +35,7 @@ type Workflow struct {
 	Agent              string     `json:"agent"`
 	Role               string     `json:"role,omitempty"` // "" for client workflows, "reviewer" for the adversarial reviewer
 	Purpose            string     `json:"purpose"`
-	Substance          string     `json:"substance"` // core | peripheral | toy | not-assessed
+	Substance          string     `json:"substance"` // core | peripheral | toy
 	SubstanceRationale string     `json:"substance_rationale"`
 	Source             string     `json:"source,omitempty"`
 	Model              string     `json:"model"`
@@ -98,9 +98,7 @@ func load(path, trust string) (*Workflow, error) {
 		return nil, fmt.Errorf("id %q does not match directory %q", w.ID, filepath.Base(w.dir))
 	}
 	switch {
-	case w.Substance == "not-assessed" && w.Role != "reviewer":
-		return nil, fmt.Errorf("only the reviewer role may skip the substance assessment")
-	case w.Substance != "not-assessed" && w.Substance != "core" && w.Substance != "peripheral" && w.Substance != "toy":
+	case w.Substance != "core" && w.Substance != "peripheral" && w.Substance != "toy":
 		return nil, fmt.Errorf("substance %q must be core, peripheral, or toy", w.Substance)
 	case !w.IsolatedContext:
 		return nil, fmt.Errorf("isolated_context must be true")

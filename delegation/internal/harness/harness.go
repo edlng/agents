@@ -208,7 +208,7 @@ func (h *dispatcher) Dispatch(ctx context.Context, tool string, input json.RawMe
 			return badArgs(err), nil
 		}
 		res = h.runner.LaunchFinal(ctx, in.Dispositions, parent)
-	case "request_human_decision":
+	case "invoke_human_review":
 		var in struct {
 			Reason string `json:"reason"`
 		}
