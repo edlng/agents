@@ -254,7 +254,7 @@ func finalReviewCases() []Case {
 				res := e.Runner.LaunchFinal(ctx, seedAll(e, rework), "")
 				problems := errorText(res)
 				valid := res.OK || (res.Error != nil && res.Error.Code == "schema_violation")
-				t.Pass["adds-no-new-findings"] = valid && !strings.Contains(problems, "which no agent raised")
+				idsOK := valid && !strings.Contains(problems, "which no agent raised")
 				t.Pass["no-headings-in-prose"] = valid && !strings.Contains(problems, "heading")
 				var f schema.FinalReview
 				if res.OK && json.Unmarshal(res.Artifact, &f) == nil {
@@ -271,6 +271,12 @@ func finalReviewCases() []Case {
 					t.CostUSD += cost
 					t.Pass["tone-polite-direct"] = err == nil && grade.Polite && grade.Direct && grade.Encouraging
 					t.note("tone=%+v %v", grade, err)
+					novel, cost, err := judgeNovelty(ctx, e.Provider, raisedDefects(e), all)
+					t.CostUSD += cost
+					// No new findings: no unknown IDs (validator) and no
+					// defect in the prose that the inputs did not raise (judge).
+					t.Pass["adds-no-new-findings"] = idsOK && err == nil && len(novel.NewDefects) == 0
+					t.note("novel=%+v %v", novel, err)
 				}
 				t.note("%s", problems)
 			}}
@@ -279,6 +285,64 @@ func finalReviewCases() []Case {
 		fr("fr-blocked", "Blocked change with a minor unresolved challenge (C2).", false, []string{"F1", "C2"}),
 		fr("fr-rework", "Security review revised after critical challenge C1.", true, []string{"F1", "C1", "C2"}),
 	}
+}
+
+// raisedDefects lists every finding and challenge the writer was given.
+func raisedDefects(e *Env) []string {
+	var out []string
+	for _, id := range e.Runner.ArtifactIDs() {
+		a, _ := e.Runner.Artifact(id)
+		if r, ok := review(a); ok {
+			for _, f := range r.Findings {
+				out = append(out, fmt.Sprintf("%s %s in %s: %s (%s) Fix: %s", f.ID, f.Severity, id, f.Title, f.Evidence, f.Remediation))
+			}
+		}
+		if m, _, ok := criteria(a); ok {
+			for cid, status := range m {
+				if status == "FAIL" {
+					out = append(out, fmt.Sprintf("%s FAIL in %s", cid, id))
+				}
+			}
+		}
+		for _, rv := range e.Runner.History(id) {
+			for _, o := range rv.Challenges {
+				out = append(out, fmt.Sprintf("%s %s challenge on %s: %s (%s)", o.ID, o.Severity, id, o.Claim, o.CounterEvidence))
+			}
+		}
+	}
+	return out
+}
+
+type noveltyGrade struct {
+	NewDefects []string `json:"new_defects"`
+	Rationale  string   `json:"rationale"`
+}
+
+// judgeNovelty asks a small model whether the report prose asserts any defect,
+// risk, or required fix that is not among the raised items. Restating,
+// summarizing, or explaining a raised item is not new.
+func judgeNovelty(ctx context.Context, p provider.Provider, raised []string, prose string) (noveltyGrade, float64, error) {
+	var g noveltyGrade
+	resp, err := p.Complete(ctx, provider.Request{
+		Model:     "claude-haiku-4-5",
+		MaxTokens: 1500,
+		System: `You audit a code review report against the findings the reviewers actually raised.
+List every defect, risk, or required fix the report asserts that is NOT covered by the raised items.
+Restating, summarizing, combining, or explaining a raised item is covered. Suggested tests or fixes
+that follow directly from a raised item are covered. Praise and neutral description are not defects.
+Call submit_audit once; new_defects is empty when everything is covered.`,
+		Messages: []provider.Message{provider.UserText("Raised items:\n- " + strings.Join(raised, "\n- ") + "\n\nReport prose:\n" + prose)},
+		Tools: []provider.Tool{{Name: "submit_audit", Description: "Submit the audit.",
+			InputSchema: json.RawMessage(`{"type":"object","properties":{"new_defects":{"type":"array","items":{"type":"string"}},"rationale":{"type":"string"}},"required":["new_defects","rationale"]}`)}},
+	})
+	if err != nil {
+		return g, 0, err
+	}
+	calls := resp.ToolCalls()
+	if len(calls) != 1 {
+		return g, resp.Usage.CostUSD, fmt.Errorf("judge made %d calls", len(calls))
+	}
+	return g, resp.Usage.CostUSD, json.Unmarshal(calls[0].Input, &g)
 }
 
 type toneGrade struct {
