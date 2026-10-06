@@ -4,9 +4,9 @@
   "agent": "code-reviewer",
   "model": "claude-sonnet-5-5",
   "provider": "claude-cli (evals/ exemption)",
-  "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
-  "generated_at": "2026-10-06T16:55:27Z",
-  "trials_per_case": 1,
+  "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+  "generated_at": "2026-10-06T17:30:34Z",
+  "trials_per_case": 2,
   "criteria": {
     "approves-clean-change": {
       "passed": 6,
@@ -29,14 +29,40 @@
       "rate": 1
     },
     "matches-human-verdict": {
-      "passed": 7,
-      "total": 10,
-      "rate": 0.7
+      "passed": 23,
+      "total": 30,
+      "rate": 0.7666666666666667
     },
     "recalls-human-flagged-defects": {
-      "passed": 4,
-      "total": 12,
-      "rate": 0.3333333333333333
+      "passed": 24,
+      "total": 40,
+      "rate": 0.6
+    }
+  },
+  "splits": {
+    "heldout": {
+      "matches-human-verdict": {
+        "passed": 12,
+        "total": 14,
+        "rate": 0.8571428571428571
+      },
+      "recalls-human-flagged-defects": {
+        "passed": 13,
+        "total": 16,
+        "rate": 0.8125
+      }
+    },
+    "tune": {
+      "matches-human-verdict": {
+        "passed": 11,
+        "total": 16,
+        "rate": 0.6875
+      },
+      "recalls-human-flagged-defects": {
+        "passed": 11,
+        "total": 24,
+        "rate": 0.4583333333333333
+      }
     }
   },
   "cases": [
@@ -271,7 +297,8 @@
     },
     {
       "id": "etk-10-merged",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-10-merged",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/10 review round at 5fd9a6a4aba1; humans: APPROVE with 0 labeled defects.",
       "criteria": [
@@ -279,7 +306,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165038Z-3290b58e-etk-10-merged",
+          "correlation_id": "20261006T171718Z-7d51f86f-etk-10-merged",
           "pass": {
             "matches-human-verdict": true
           },
@@ -287,13 +314,25 @@
             "security: APPROVE with 0 findings",
             "correctness: APPROVE with 0 findings"
           ],
-          "cost_usd": 0.5180615
+          "cost_usd": 0.6418740000000001
+        },
+        {
+          "correlation_id": "20261006T171827Z-61cde46c-etk-10-merged",
+          "pass": {
+            "matches-human-verdict": true
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 1 findings"
+          ],
+          "cost_usd": 0.2939663
         }
       ]
     },
     {
       "id": "etk-10-r1",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-10-r1",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/10 review round at 1afb6268f914; humans: BLOCK with 1 labeled defects.",
       "criteria": [
@@ -302,37 +341,57 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165037Z-2ce3b729-etk-10-r1",
+          "correlation_id": "20261006T171718Z-d27ea312-etk-10-r1",
           "pass": {
-            "matches-human-verdict": false,
-            "recalls-human-flagged-defects": false
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
           },
           "counts": {
             "recalls-human-flagged-defects": [
-              0,
+              1,
               1
             ]
           },
           "notes": [
-            "security: APPROVE with 0 findings",
-            "correctness: APPROVE with 0 findings",
-            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenProvider.java:105 missed"
+            "security: BLOCK with 1 findings",
+            "correctness: APPROVE with 1 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenProvider.java:105 found (location)"
           ],
-          "cost_usd": 0.5051822000000001
+          "cost_usd": 0.6048887000000001
+        },
+        {
+          "correlation_id": "20261006T171839Z-b3b5fbf9-etk-10-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              1,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: APPROVE with 1 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenProvider.java:105 found (location)"
+          ],
+          "cost_usd": 0.3679351
         }
       ]
     },
     {
-      "id": "etk-13-merged",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
-      "fixture": "etk-13-merged",
-      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at c2d041c0eade; humans: APPROVE with 0 labeled defects.",
+      "id": "etk-12-merged",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-12-merged",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/12 review round at 8ae6eafe8a8d; humans: APPROVE with 0 labeled defects.",
       "criteria": [
         "matches-human-verdict"
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165131Z-517df071-etk-13-merged",
+          "correlation_id": "20261006T172134Z-6220dd17-etk-12-merged",
           "pass": {
             "matches-human-verdict": true
           },
@@ -340,22 +399,34 @@
             "security: APPROVE with 0 findings",
             "correctness: APPROVE with 0 findings"
           ],
-          "cost_usd": 0.18858359999999996
+          "cost_usd": 0.2252558
+        },
+        {
+          "correlation_id": "20261006T172222Z-866076e1-etk-12-merged",
+          "pass": {
+            "matches-human-verdict": true
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 0 findings"
+          ],
+          "cost_usd": 0.2206555
         }
       ]
     },
     {
-      "id": "etk-13-r1",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
-      "fixture": "etk-13-r1",
-      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at e6c14ef8c0d2; humans: BLOCK with 1 labeled defects.",
+      "id": "etk-12-r1",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-12-r1",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/12 review round at b827d7366f23; humans: BLOCK with 1 labeled defects.",
       "criteria": [
         "matches-human-verdict",
         "recalls-human-flagged-defects"
       ],
       "trials": [
         {
-          "correlation_id": "20261006T164953Z-c8449f64-etk-13-r1",
+          "correlation_id": "20261006T172200Z-1ba0b8d9-etk-12-r1",
           "pass": {
             "matches-human-verdict": true,
             "recalls-human-flagged-defects": true
@@ -368,16 +439,170 @@
           },
           "notes": [
             "security: BLOCK with 2 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect node/src/token-manager.ts:217 found (location)"
+          ],
+          "cost_usd": 0.213761
+        },
+        {
+          "correlation_id": "20261006T172259Z-c630088f-etk-12-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              1,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 2 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect node/src/token-manager.ts:217 found (location)"
+          ],
+          "cost_usd": 0.2241765
+        }
+      ]
+    },
+    {
+      "id": "etk-12-r2",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-12-r2",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/12 review round at dddba1731145; humans: BLOCK with 2 labeled defects.",
+      "criteria": [
+        "matches-human-verdict",
+        "recalls-human-flagged-defects"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261006T172107Z-0110617e-etk-12-r2",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              2,
+              2
+            ]
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: BLOCK with 1 findings",
+            "defect node/src/token-manager.ts:165 found (location)",
+            "defect node/src/token-manager.ts:241 found (semantic)"
+          ],
+          "cost_usd": 0.36002649999999997
+        },
+        {
+          "correlation_id": "20261006T172240Z-7832ab0f-etk-12-r2",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              2,
+              2
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: APPROVE with 0 findings",
+            "defect node/src/token-manager.ts:165 found (location)",
+            "defect node/src/token-manager.ts:241 found (semantic)"
+          ],
+          "cost_usd": 0.18680240000000004
+        }
+      ]
+    },
+    {
+      "id": "etk-13-merged",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
+      "fixture": "etk-13-merged",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at c2d041c0eade; humans: APPROVE with 0 labeled defects.",
+      "criteria": null,
+      "trials": [
+        {
+          "correlation_id": "20261006T172401Z-a7fe69d8-etk-13-merged",
+          "pass": {},
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 0 findings",
+            "verdict APPROVE not scored: 1 disputed finding(s)"
+          ],
+          "cost_usd": 0.2870757
+        },
+        {
+          "correlation_id": "20261006T172459Z-da1fb8e5-etk-13-merged",
+          "pass": {},
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 1 findings",
+            "verdict APPROVE not scored: 1 disputed finding(s)"
+          ],
+          "cost_usd": 0.39503869999999996
+        }
+      ]
+    },
+    {
+      "id": "etk-13-r1",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
+      "fixture": "etk-13-r1",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at e6c14ef8c0d2; humans: BLOCK with 1 labeled defects.",
+      "criteria": [
+        "matches-human-verdict",
+        "recalls-human-flagged-defects"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261006T172332Z-24e29f88-etk-13-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              1,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 3 findings",
             "correctness: BLOCK with 3 findings",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:229 found (location)"
           ],
-          "cost_usd": 0.3743356
+          "cost_usd": 0.3442235
+        },
+        {
+          "correlation_id": "20261006T172502Z-c3715690-etk-13-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              1,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 3 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:229 found (location)"
+          ],
+          "cost_usd": 0.3005796
         }
       ]
     },
     {
       "id": "etk-13-r2",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-13-r2",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at 233e23c34d46; humans: BLOCK with 5 labeled defects.",
       "criteria": [
@@ -386,7 +611,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165239Z-953b9df7-etk-13-r2",
+          "correlation_id": "20261006T172413Z-c4a5f09b-etk-13-r2",
           "pass": {
             "matches-human-verdict": true,
             "recalls-human-flagged-defects": false
@@ -398,21 +623,45 @@
             ]
           },
           "notes": [
-            "security: BLOCK with 2 findings",
-            "correctness: BLOCK with 2 findings",
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 3 findings",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:143 found (location)",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:227 found (location)",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:304 missed",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:315 missed",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:363 missed"
           ],
-          "cost_usd": 0.29765220000000003
+          "cost_usd": 0.49871
+        },
+        {
+          "correlation_id": "20261006T172728Z-7c7faf7a-etk-13-r2",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              4,
+              5
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:143 found (location)",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:227 found (location)",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:304 found (location)",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:315 found (semantic)",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:363 missed"
+          ],
+          "cost_usd": 0.3277305
         }
       ]
     },
     {
       "id": "etk-13-r3",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-13-r3",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/13 review round at db4f2d945c7b; humans: BLOCK with 1 labeled defects.",
       "criteria": [
@@ -421,7 +670,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165149Z-287621a9-etk-13-r3",
+          "correlation_id": "20261006T171718Z-0c7ccb06-etk-13-r3",
           "pass": {
             "matches-human-verdict": false,
             "recalls-human-flagged-defects": false
@@ -434,16 +683,36 @@
           },
           "notes": [
             "security: APPROVE with 0 findings",
-            "correctness: APPROVE with 0 findings",
+            "correctness: APPROVE with 1 findings",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:96 missed"
           ],
-          "cost_usd": 0.1870966
+          "cost_usd": 0.390331
+        },
+        {
+          "correlation_id": "20261006T171831Z-7d1b8409-etk-13-r3",
+          "pass": {
+            "matches-human-verdict": false,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              0,
+              1
+            ]
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 1 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:96 missed"
+          ],
+          "cost_usd": 0.3339289
         }
       ]
     },
     {
       "id": "etk-15-merged",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-15-merged",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/15 review round at e407df04b0de; humans: APPROVE with 0 labeled defects.",
       "criteria": [
@@ -451,7 +720,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T164953Z-98251ed5-etk-15-merged",
+          "correlation_id": "20261006T171938Z-930651a4-etk-15-merged",
           "pass": {
             "matches-human-verdict": true
           },
@@ -459,13 +728,25 @@
             "security: APPROVE with 0 findings",
             "correctness: APPROVE with 0 findings"
           ],
-          "cost_usd": 0.1998432
+          "cost_usd": 0.27830330000000003
+        },
+        {
+          "correlation_id": "20261006T172018Z-b737e08f-etk-15-merged",
+          "pass": {
+            "matches-human-verdict": true
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 0 findings"
+          ],
+          "cost_usd": 0.1593281
         }
       ]
     },
     {
       "id": "etk-15-r1",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-15-r1",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/15 review round at a5c6810696db; humans: BLOCK with 3 labeled defects.",
       "criteria": [
@@ -474,7 +755,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165152Z-1c597642-etk-15-r1",
+          "correlation_id": "20261006T171948Z-79cb9db7-etk-15-r1",
           "pass": {
             "matches-human-verdict": true,
             "recalls-human-flagged-defects": false
@@ -486,41 +767,158 @@
             ]
           },
           "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: APPROVE with 0 findings",
+            "defect python/src/developer_toolkit_elasticache/token_manager.py:276 found (location)",
+            "defect python/src/developer_toolkit_elasticache/token_manager.py:265 missed",
+            "defect python/src/developer_toolkit_elasticache/token_manager.py:294 missed"
+          ],
+          "cost_usd": 0.25935070000000005
+        },
+        {
+          "correlation_id": "20261006T172103Z-4536f409-etk-15-r1",
+          "pass": {
+            "matches-human-verdict": false,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              0,
+              3
+            ]
+          },
+          "notes": [
             "security: APPROVE with 0 findings",
-            "correctness: BLOCK with 1 findings",
+            "correctness: APPROVE with 0 findings",
             "defect python/src/developer_toolkit_elasticache/token_manager.py:276 missed",
             "defect python/src/developer_toolkit_elasticache/token_manager.py:265 missed",
-            "defect python/src/developer_toolkit_elasticache/token_manager.py:294 found (semantic)"
+            "defect python/src/developer_toolkit_elasticache/token_manager.py:294 missed"
           ],
-          "cost_usd": 0.2628181
+          "cost_usd": 0.14958090000000002
         }
       ]
     },
     {
-      "id": "etk-17-merged",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
-      "fixture": "etk-17-merged",
-      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/17 review round at caff77612f47; humans: APPROVE with 0 labeled defects.",
+      "id": "etk-16-merged",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-16-merged",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/16 review round at 32397e99e6a4; humans: APPROVE with 0 labeled defects.",
       "criteria": [
         "matches-human-verdict"
       ],
       "trials": [
         {
-          "correlation_id": "20261006T165230Z-63b4ff44-etk-17-merged",
+          "correlation_id": "20261006T172017Z-33500e0f-etk-16-merged",
           "pass": {
-            "matches-human-verdict": true
+            "matches-human-verdict": false
           },
           "notes": [
-            "security: APPROVE with 0 findings",
-            "correctness: APPROVE with 0 findings"
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 1 findings"
           ],
-          "cost_usd": 0.1429122
+          "cost_usd": 0.084908
+        },
+        {
+          "correlation_id": "20261006T172047Z-192618a0-etk-16-merged",
+          "pass": {
+            "matches-human-verdict": false
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 1 findings"
+          ],
+          "cost_usd": 0.0866479
+        }
+      ]
+    },
+    {
+      "id": "etk-16-r1",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-16-r1",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/16 review round at a005341c5c9c; humans: BLOCK with 2 labeled defects.",
+      "criteria": [
+        "matches-human-verdict",
+        "recalls-human-flagged-defects"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261006T171936Z-7152c8c3-etk-16-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              2,
+              2
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 2 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect .github/workflows/node-release.yml:146 found (location)",
+            "defect node/test/verify.test.ts:116 found (semantic)"
+          ],
+          "cost_usd": 0.14260309999999998
+        },
+        {
+          "correlation_id": "20261006T172051Z-ee2bc785-etk-16-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              2,
+              2
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 2 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect .github/workflows/node-release.yml:146 found (location)",
+            "defect node/test/verify.test.ts:116 found (semantic)"
+          ],
+          "cost_usd": 0.0775719
+        }
+      ]
+    },
+    {
+      "id": "etk-17-merged",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
+      "fixture": "etk-17-merged",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/17 review round at caff77612f47; humans: APPROVE with 0 labeled defects.",
+      "criteria": null,
+      "trials": [
+        {
+          "correlation_id": "20261006T172512Z-36384c02-etk-17-merged",
+          "pass": {},
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 0 findings",
+            "verdict APPROVE not scored: 1 disputed finding(s)"
+          ],
+          "cost_usd": 0.168651
+        },
+        {
+          "correlation_id": "20261006T172553Z-54a2546b-etk-17-merged",
+          "pass": {},
+          "notes": [
+            "security: APPROVE with 1 findings",
+            "correctness: APPROVE with 0 findings",
+            "verdict APPROVE not scored: 1 disputed finding(s)"
+          ],
+          "cost_usd": 0.1433599
         }
       ]
     },
     {
       "id": "etk-17-r1",
-      "prompt_sha256": "dd3824d107f384366a7adda4d564efdc3bfe9cc6b6c08b61f9841cbdf4cc5113",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "tune",
       "fixture": "etk-17-r1",
       "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/17 review round at fb58fe9d1418; humans: BLOCK with 1 labeled defects.",
       "criteria": [
@@ -529,7 +927,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261006T164953Z-1a4b0769-etk-17-r1",
+          "correlation_id": "20261006T172620Z-caca2ba3-etk-17-r1",
           "pass": {
             "matches-human-verdict": false,
             "recalls-human-flagged-defects": false
@@ -545,10 +943,133 @@
             "correctness: APPROVE with 0 findings",
             "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:175 missed"
           ],
-          "cost_usd": 0.1583966
+          "cost_usd": 0.159541
+        },
+        {
+          "correlation_id": "20261006T172701Z-5e9c02d4-etk-17-r1",
+          "pass": {
+            "matches-human-verdict": false,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              0,
+              1
+            ]
+          },
+          "notes": [
+            "security: APPROVE with 0 findings",
+            "correctness: APPROVE with 0 findings",
+            "defect java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java:175 missed"
+          ],
+          "cost_usd": 0.12319240000000001
+        }
+      ]
+    },
+    {
+      "id": "etk-18-r1",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-18-r1",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/18 review round at 4facd385e29c; humans: BLOCK with 1 labeled defects.",
+      "criteria": [
+        "matches-human-verdict",
+        "recalls-human-flagged-defects"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261006T172227Z-b9bcdac1-etk-18-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              0,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 1 findings",
+            "defect .github/workflows/java-release.yml:96 missed"
+          ],
+          "cost_usd": 0.22543000000000002
+        },
+        {
+          "correlation_id": "20261006T172353Z-dbf2c9e8-etk-18-r1",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              0,
+              1
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 2 findings",
+            "correctness: BLOCK with 1 findings",
+            "defect .github/workflows/java-release.yml:96 missed"
+          ],
+          "cost_usd": 0.20150620000000002
+        }
+      ]
+    },
+    {
+      "id": "etk-18-r2",
+      "prompt_sha256": "0a29d4cf3484a901b9df529f101d819ccdb546a9ace44c2d97771c0de521a744",
+      "split": "heldout",
+      "fixture": "etk-18-r2",
+      "purpose": "https://github.com/aws/developer-toolkit-elasticache/pull/18 review round at c5ad45188126; humans: BLOCK with 2 labeled defects.",
+      "criteria": [
+        "matches-human-verdict",
+        "recalls-human-flagged-defects"
+      ],
+      "trials": [
+        {
+          "correlation_id": "20261006T171718Z-db545272-etk-18-r2",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": true
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              2,
+              2
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect .github/workflows/java-release.yml:62 found (location)",
+            "defect .github/workflows/java-release.yml:84 found (location)"
+          ],
+          "cost_usd": 0.23152479999999998
+        },
+        {
+          "correlation_id": "20261006T171818Z-66e89eea-etk-18-r2",
+          "pass": {
+            "matches-human-verdict": true,
+            "recalls-human-flagged-defects": false
+          },
+          "counts": {
+            "recalls-human-flagged-defects": [
+              1,
+              2
+            ]
+          },
+          "notes": [
+            "security: BLOCK with 1 findings",
+            "correctness: BLOCK with 2 findings",
+            "defect .github/workflows/java-release.yml:62 found (location)",
+            "defect .github/workflows/java-release.yml:84 missed"
+          ],
+          "cost_usd": 0.2090167
         }
       ]
     }
   ],
-  "total_cost_usd": 3.0555994
+  "total_cost_usd": 9.1381932
 }
