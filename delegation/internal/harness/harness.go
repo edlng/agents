@@ -29,7 +29,10 @@ import (
 )
 
 type Config struct {
-	Provider       provider.Provider
+	Provider provider.Provider
+	// ProviderName is recorded in run.json and the audit trail, for example
+	// "anthropic-api" for the graded runtime or "replay".
+	ProviderName   string
 	TaskDir        string
 	WorkflowsDir   string // default delegation/workflows
 	CoordinatorDir string // default delegation/coordinator
@@ -99,7 +102,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 
 	outcome, runErr := coordinator.Run(ctx, cfg.Provider, log, man, h, brief(tk, cat, substance))
 	rec := gate.RunRecord{
-		CorrelationID: log.CorrelationID(), TaskID: tk.ID, Substance: substance,
+		CorrelationID: log.CorrelationID(), TaskID: tk.ID, Provider: cfg.ProviderName, Substance: substance,
 		Requests: h.requests, Coordinator: outcome, CostUSD: h.runner.Spent() + outcome.CostUSD,
 	}
 	switch {
@@ -130,7 +133,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	if err := os.WriteFile(filepath.Join(log.Dir(), "run.json"), append(recJSON, '\n'), 0o644); err != nil {
 		return res, err
 	}
-	detail := map[string]any{"status": rec.Status, "report_sha256": rec.ReportSHA256}
+	detail := map[string]any{"status": rec.Status, "report_sha256": rec.ReportSHA256, "provider": cfg.ProviderName}
 	if runErr != nil {
 		detail["error"] = runErr.Error()
 	}

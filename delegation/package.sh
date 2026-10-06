@@ -19,8 +19,19 @@ for w in delegation/evals/*/results.json; do
 done
 
 for id in "$@"; do
+	provider=$(sed -n 's/.*"provider": *"\([^"]*\)".*/\1/p' "delegation/runs/$id/run.json" | head -1)
+	if [ "$provider" != "anthropic-api" ] && [ "${ALLOW_NON_API:-}" != 1 ]; then
+		echo "$id was produced by '$provider', not anthropic-api; sample runs must come from delegate run" >&2
+		rm -r "$out"
+		exit 1
+	fi
 	go run ./delegation/cmd/delegate verify "$id" > /dev/null
 	cp -R "delegation/runs/$id" "$out/evidence/runs/$id"
+done
+for rec in delegation/runs/*.exchanges.jsonl; do
+	[ -e "$rec" ] || continue
+	mkdir -p "$out/evidence/recordings"
+	cp "$rec" "$out/evidence/recordings/"
 done
 
 git log --stat --date=iso -- delegation go.mod > "$out/evidence/git-log.txt"

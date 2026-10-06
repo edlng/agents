@@ -62,7 +62,7 @@ func main() {
 			p = rec
 		}
 		res, err := harness.Run(context.Background(), harness.Config{
-			Provider: p, TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
+			Provider: p, ProviderName: "anthropic-api", TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
 			CoordinatorModel: *coordModel, WorkerModel: *workerModel,
 		})
 		print(res)
@@ -78,7 +78,7 @@ func main() {
 			fail(err)
 		}
 		rp.Strict = false
-		res, err := harness.Run(context.Background(), harness.Config{Provider: rp, TaskDir: *taskDir, RunsRoot: *runs})
+		res, err := harness.Run(context.Background(), harness.Config{Provider: rp, ProviderName: "replay", TaskDir: *taskDir, RunsRoot: *runs})
 		print(map[string]any{"result": res, "request_hash_mismatches": rp.Mismatches})
 		if err != nil {
 			fail(err)
