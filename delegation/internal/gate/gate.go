@@ -89,6 +89,45 @@ type Decision struct {
 	FromStatus    string `json:"from_status"`
 	ToStatus      string `json:"to_status"`
 	ReportSHA256  string `json:"report_sha256"`
+	// Signer is the fingerprint of the key that signed this record, and
+	// Signature is a detached signature over the record with both fields
+	// empty.
+	Signer    string `json:"signer"`
+	Signature string `json:"signature"`
+}
+
+// Signer signs and verifies decision records, so a decision is attributable
+// to a key rather than to a typed name.
+type Signer interface {
+	Sign(data []byte) (signature, fingerprint string, err error)
+	Verify(data []byte, signature string) (fingerprint string, err error)
+}
+
+func signedBytes(d Decision) ([]byte, error) {
+	d.Signer, d.Signature = "", ""
+	return json.Marshal(d)
+}
+
+// VerifyDecisions checks every decision signature in a run directory.
+func VerifyDecisions(dir string, s Signer) ([]Decision, error) {
+	ds, err := Decisions(dir)
+	if err != nil {
+		return nil, err
+	}
+	for i, d := range ds {
+		data, err := signedBytes(d)
+		if err != nil {
+			return ds, err
+		}
+		fpr, err := s.Verify(data, d.Signature)
+		if err != nil {
+			return ds, fmt.Errorf("decision %d: %w", i+1, err)
+		}
+		if fpr != d.Signer {
+			return ds, fmt.Errorf("decision %d: signed by %s, record names %s", i+1, fpr, d.Signer)
+		}
+	}
+	return ds, nil
 }
 
 func ReadRun(dir string) (RunRecord, error) {
@@ -145,10 +184,13 @@ var transitions = map[string]map[string]string{
 // Record appends a human decision. It verifies the report on disk still
 // matches the hash in run.json, so a decision always binds the report the
 // system produced.
-func Record(runsRoot, correlationID, reviewer, decision, note string) (Decision, error) {
+func Record(runsRoot, correlationID, reviewer, decision, note string, signer Signer) (Decision, error) {
 	dir := filepath.Join(runsRoot, correlationID)
 	if reviewer == "" {
 		return Decision{}, fmt.Errorf("a reviewer identity is required")
+	}
+	if signer == nil {
+		return Decision{}, fmt.Errorf("decisions must be signed")
 	}
 	run, err := ReadRun(dir)
 	if err != nil {
@@ -174,6 +216,13 @@ func Record(runsRoot, correlationID, reviewer, decision, note string) (Decision,
 		Time: time.Now().UTC().Format(time.RFC3339), CorrelationID: correlationID,
 		Reviewer: reviewer, RecordedBy: os.Getenv("USER"), Decision: decision, Note: note,
 		FromStatus: from, ToStatus: to, ReportSHA256: run.ReportSHA256,
+	}
+	unsigned, err := signedBytes(d)
+	if err != nil {
+		return d, err
+	}
+	if d.Signature, d.Signer, err = signer.Sign(unsigned); err != nil {
+		return d, fmt.Errorf("sign decision: %w", err)
 	}
 	line, err := json.Marshal(d)
 	if err != nil {

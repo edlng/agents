@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -126,23 +127,36 @@ func TestReworkLoopEndsPendingHuman(t *testing.T) {
 	}
 
 	// Only a recorded human decision moves the run.
-	if _, err := gate.Record(root, res.CorrelationID, "", "approve", ""); err == nil {
+	if _, err := gate.Record(root, res.CorrelationID, "", "approve", "", signer); err == nil {
 		t.Fatal("decision without a reviewer accepted")
 	}
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "continue", ""); err == nil {
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "continue", "", signer); err == nil {
 		t.Fatal("continue accepted on a non-elevated run")
 	}
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "ok"); err != nil {
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "ok", signer); err != nil {
 		t.Fatal(err)
 	}
 	if st, _ := gate.Status(res.Dir); st != gate.Complete {
 		t.Fatalf("status after approve = %s", st)
 	}
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "reject", ""); err == nil {
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "reject", "", signer); err == nil {
 		t.Fatal("second decision accepted after COMPLETE")
 	}
 	if _, err := audit.Verify(filepath.Join(res.Dir, "audit.jsonl")); err != nil {
 		t.Fatalf("trail after decision: %v", err)
+	}
+	if _, err := gate.VerifyDecisions(res.Dir, signer); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "", nil); err == nil || !strings.Contains(err.Error(), "must be signed") {
+		t.Fatal("unsigned decision accepted")
+	}
+	// Editing a recorded decision breaks its signature.
+	path := filepath.Join(res.Dir, "decisions.jsonl")
+	data, _ := os.ReadFile(path)
+	os.WriteFile(path, []byte(strings.Replace(string(data), `"reviewer":"edlng"`, `"reviewer":"mallory"`, 1)), 0o644)
+	if _, err := gate.VerifyDecisions(res.Dir, signer); err == nil {
+		t.Fatal("edited decision verified")
 	}
 }
 
@@ -159,7 +173,7 @@ func TestDecisionBindsReport(t *testing.T) {
 	}
 	res, root := run(t, f, "../../workflows")
 	os.WriteFile(filepath.Join(res.Dir, "report.md"), []byte("# All good, ship it\n"), 0o644)
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", ""); err == nil || !strings.Contains(err.Error(), "does not match") {
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "", signer); err == nil || !strings.Contains(err.Error(), "does not match") {
 		t.Fatalf("approve of tampered report: %v", err)
 	}
 }
@@ -189,14 +203,30 @@ func TestSubstanceGateElevates(t *testing.T) {
 	if !strings.Contains(string(md), "documentation is scored toy") {
 		t.Errorf("report does not explain the elevation:\n%s", md)
 	}
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", ""); err == nil {
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "", signer); err == nil {
 		t.Fatal("approve accepted while elevated")
 	}
-	gate.Record(root, res.CorrelationID, "edlng", "continue", "substance accepted")
-	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", ""); err != nil {
+	gate.Record(root, res.CorrelationID, "edlng", "continue", "substance accepted", signer)
+	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "", signer); err != nil {
 		t.Fatal(err)
 	}
 }
+
+// fakeSigner stands in for gpg: the signature is a hash of the record.
+type fakeSigner struct{}
+
+func (fakeSigner) Sign(data []byte) (string, string, error) {
+	return fmt.Sprintf("sig:%x", sha256.Sum256(data)), "FAKEFPR", nil
+}
+
+func (fakeSigner) Verify(data []byte, sig string) (string, error) {
+	if sig != fmt.Sprintf("sig:%x", sha256.Sum256(data)) {
+		return "", fmt.Errorf("bad signature")
+	}
+	return "FAKEFPR", nil
+}
+
+var signer = fakeSigner{}
 
 func copyDir(t *testing.T, src, dst string) {
 	t.Helper()

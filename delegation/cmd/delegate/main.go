@@ -30,7 +30,7 @@ const usage = `usage:
   delegate run --task DIR [--budget USD] [--runs DIR] [--coordinator-model M] [--worker-model M]
   delegate replay --task DIR --exchanges FILE [--runs DIR]
   delegate status ID [--runs DIR]
-  delegate decide ID --decision approve|reject|continue --reviewer NAME [--note TEXT] [--runs DIR]
+  delegate decide ID --decision approve|reject|continue --reviewer NAME [--note TEXT] [--key GPGKEY] [--runs DIR]
   delegate verify ID [--runs DIR]
   delegate smoke [--model M] [--runs DIR]`
 
@@ -95,8 +95,9 @@ func main() {
 		decision := fs.String("decision", "", "approve, reject, or continue")
 		reviewer := fs.String("reviewer", "", "reviewer identity")
 		note := fs.String("note", "", "optional note")
+		key := fs.String("key", "", "gpg signing key (default: git user.signingkey, then user.email)")
 		id := positional(fs, args)
-		d, err := gate.Record(*runs, id, *reviewer, *decision, *note)
+		d, err := gate.Record(*runs, id, *reviewer, *decision, *note, gate.GPG{Key: *key})
 		if err != nil {
 			fail(err)
 		}
@@ -107,7 +108,15 @@ func main() {
 		if err != nil {
 			fail(err)
 		}
-		print(s)
+		ds, err := gate.VerifyDecisions(filepath.Join(*runs, id), gate.GPG{})
+		if err != nil {
+			fail(err)
+		}
+		status, err := gate.Status(filepath.Join(*runs, id))
+		if err != nil {
+			fail(err)
+		}
+		print(map[string]any{"audit": s, "status": status, "signed_decisions": len(ds)})
 	case "smoke":
 		model := fs.String("model", "claude-opus-5-5", "model ID")
 		fs.Parse(args)
