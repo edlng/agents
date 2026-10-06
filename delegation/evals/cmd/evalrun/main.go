@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/edlng/agents/litmus-eval/delegation/evals/cliprovider"
+	"github.com/edlng/agents/litmus-eval/delegation/evals/corpus"
 	"github.com/edlng/agents/litmus-eval/delegation/internal/audit"
 	"github.com/edlng/agents/litmus-eval/delegation/internal/catalog"
 	"github.com/edlng/agents/litmus-eval/delegation/internal/coordinator"
@@ -178,6 +179,7 @@ func main() {
 		}(i, c)
 	}
 	wg.Wait()
+	os.Remove(corpus.CacheRoot()) // empty once every case has cleaned up
 
 	byWorkflow := map[string][]CaseResult{}
 	for i, c := range cases {
