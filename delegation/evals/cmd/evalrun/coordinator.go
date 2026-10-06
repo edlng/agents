@@ -197,8 +197,9 @@ func coordinatorCases() []Case {
 				scripts := baseScripts(line)
 				tweak(scripts, line)
 				res, err := harness.Run(ctx, harness.Config{
-					Provider: &hybrid{coordinator: e.Provider, scripts: scripts, launches: map[string]int{}},
-					TaskDir:  filepath.Join(fixturesDir, "endpoint-allowlist"), RunsRoot: filepath.Join(runsRoot, "coordinator"),
+					Provider:     &hybrid{coordinator: e.Provider, scripts: scripts, launches: map[string]int{}},
+					ProviderName: "eval: live coordinator, scripted sub-agents",
+					TaskDir:      filepath.Join(fixturesDir, "endpoint-allowlist"), RunsRoot: filepath.Join(runsRoot, "coordinator"),
 				})
 				t.CorrelationID, t.CostUSD = res.CorrelationID, res.CostUSD
 				if err != nil {

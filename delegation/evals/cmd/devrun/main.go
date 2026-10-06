@@ -36,7 +36,7 @@ func main() {
 		p = rec
 	}
 	res, err := harness.Run(context.Background(), harness.Config{
-		Provider: p, TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
+		Provider: p, ProviderName: "claude-cli (development, evals/)", TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
 		CoordinatorModel: *coordModel, WorkerModel: *workerModel,
 	})
 	b, _ := json.MarshalIndent(res, "", "  ")

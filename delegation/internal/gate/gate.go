@@ -71,6 +71,7 @@ func Assess(c *catalog.Catalog) Substance {
 type RunRecord struct {
 	CorrelationID string    `json:"correlation_id"`
 	TaskID        string    `json:"task_id"`
+	Provider      string    `json:"provider"`
 	Status        string    `json:"status"` // PENDING_HUMAN | ELEVATED | FAILED_AUTOMATED
 	Substance     Substance `json:"substance"`
 	ReportSHA256  string    `json:"report_sha256,omitempty"`
