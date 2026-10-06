@@ -37,7 +37,7 @@ type Input struct {
 	Tokens        int64
 	Substance     [][2]string // workflow, substance, from the gate assessment
 	Elevation     []string    // substance gate reasons; empty when not elevated
-	Requests      []string    // request_human_decision reasons from the coordinator
+	Requests      []string    // invoke_human_review reasons from the coordinator
 }
 
 // Heading is the label printed for an artifact. An open critical challenge

@@ -302,7 +302,7 @@ func coordinatorCases() []Case {
 				flagged, reviewed, premature := false, false, false
 				for _, c := range calls {
 					switch c.Tool {
-					case "request_human_decision":
+					case "invoke_human_review":
 						flagged = true
 					case "launch_adversarial_reviewer":
 						reviewed = true

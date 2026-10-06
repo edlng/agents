@@ -42,9 +42,12 @@ type Substance struct {
 // workflows, elevates the review for a human.
 func Assess(c *catalog.Catalog) Substance {
 	var s Substance
+	// Every workflow is assessed, including the reviewer and the writer.
 	ws := c.Client()
-	if fr := c.Workflows["final-review"]; fr != nil {
-		ws = append(ws, fr)
+	for _, id := range []string{"adversarial-review", "final-review"} {
+		if w := c.Workflows[id]; w != nil {
+			ws = append(ws, w)
+		}
 	}
 	peripheral := 0
 	for _, w := range ws {

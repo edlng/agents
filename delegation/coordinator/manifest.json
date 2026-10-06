@@ -28,7 +28,7 @@
       "workflow": "final-review"
     },
     {
-      "name": "request_human_decision",
+      "name": "invoke_human_review",
       "workflow": "human"
     }
   ],
