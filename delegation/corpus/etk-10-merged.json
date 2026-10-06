@@ -1,0 +1,30 @@
+{
+  "id": "etk-10-merged",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/10",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "b79179f96cd0721a8f06fc682c39b192ff5f152a",
+  "head_sha": "5fd9a6a4aba1d37211f64192960e53bf9ac419c7",
+  "diff_sha256": "4ab48ae3d54db507bc299fa6974256d6ee7b2e7538e62f27af511c952a2568ba",
+  "title": "Port IAM authentication to Java",
+  "description": "Adds the Java IAM authentication token generator for ElastiCache, with tests, docs, and a TLS example, at parity with the Python package.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Generates valid SigV4-signed IAM auth tokens for serverless caches and replication groups."
+    },
+    {
+      "id": "AC2",
+      "text": "Validates inputs and reports errors without exposing credential material."
+    },
+    {
+      "id": "AC3",
+      "text": "Behavior matches the Python implementation."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision."
+}

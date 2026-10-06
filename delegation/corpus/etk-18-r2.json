@@ -1,0 +1,41 @@
+{
+  "id": "etk-18-r2",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/18",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "7d7f2466c8da838d91f92ee85bfe2dbd454b4626",
+  "head_sha": "c5ad45188126199b306d633423cf23d4ae2ace85",
+  "diff_sha256": "7bb1ce35c9a5222c2a3ea86b7b9501bfb504bcd4de793e3b2ee3f25f9d35cdef",
+  "title": "ci(java): add the Maven Central release workflow",
+  "description": "Adds a GitHub Actions workflow that builds, signs, verifies, and publishes the Java package to Maven Central from a release tag.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Artifacts are signed with the configured GPG key and passphrase."
+    },
+    {
+      "id": "AC2",
+      "text": "Release validation runs every check the CI build runs, before any human approval is requested."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": ".github/workflows/java-release.yml",
+        "line": 62,
+        "severity": "major",
+        "summary": "The release matrix skips the documentation examples build that CI runs, although verify now requires examples/pom.xml to carry the release version.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/18#discussion_r4125084523"
+      },
+      {
+        "file": ".github/workflows/java-release.yml",
+        "line": 84,
+        "severity": "major",
+        "summary": "Tag and version validation runs only inside publish, after a reviewer approves the maven environment, so a mistyped tag still runs the full matrix and requests approval.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/18#discussion_r4125084515"
+      }
+    ]
+  },
+  "label_notes": "Held out."
+}

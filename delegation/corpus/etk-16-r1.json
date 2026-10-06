@@ -1,0 +1,41 @@
+{
+  "id": "etk-16-r1",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/16",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "c5462a64f85fb4d67a89f79919386a657479f800",
+  "head_sha": "a005341c5c9c5cf2419a1af0684b9971fa40a138",
+  "diff_sha256": "f8d9594b909336da8f4dea3151797960fbee027526b3c0785d1afa6d4643516d",
+  "title": "ci(node): add the npm release workflow",
+  "description": "Adds a GitHub Actions workflow and a verification script that publish the Node package to npm from a release tag.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "The workflow publishes every release tag it accepts, including prereleases, or rejects them before publishing."
+    },
+    {
+      "id": "AC2",
+      "text": "The verify script rejects malformed arguments instead of skipping checks."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": ".github/workflows/node-release.yml",
+        "line": 146,
+        "severity": "major",
+        "summary": "release: published includes prereleases, but npm rejects publishing a prerelease without --tag, so a tag like node-v1.2.3-beta.1 fails at publish.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/16#discussion_r4098702474"
+      },
+      {
+        "file": "node/test/verify.test.ts",
+        "line": 116,
+        "severity": "major",
+        "summary": "When --require-npm has no value, the verify script reads undefined and silently skips the npm version check (comment anchored on the test file).",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/16#discussion_r4098607135"
+      }
+    ]
+  },
+  "label_notes": "Held out. Unlabeled: an out-of-bounds question and a test refactor nit."
+}

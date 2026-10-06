@@ -28,6 +28,7 @@ type Step struct {
 type Evaluation struct {
 	Criteria []string `json:"criteria"`
 	Results  string   `json:"results"`
+	Corpus   string   `json:"corpus,omitempty"` // manifests of real review rounds, fetched on demand
 }
 
 type Workflow struct {

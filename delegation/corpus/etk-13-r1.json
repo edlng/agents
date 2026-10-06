@@ -1,0 +1,42 @@
+{
+  "id": "etk-13-r1",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/13",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "5fd9a6a4aba1d37211f64192960e53bf9ac419c7",
+  "head_sha": "e6c14ef8c0d2bcc7130f484be1671b3cccba11ed",
+  "diff_sha256": "287452360f4048213e191b18d1af78166d57ec26d81c7ffc3c4296c2b2e940df",
+  "title": "feat(java): Add Auto Refresh",
+  "description": "Adds ElastiCacheIamAuthTokenManager: lazy token caching, background refresh, a single shared mint across concurrent callers, retry with jittered backoff while serving a valid token, token-change callbacks, and close semantics.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Concurrent callers share one in-flight token mint."
+    },
+    {
+      "id": "AC2",
+      "text": "A cached token is served only while it is valid for use, and refresh failures retry with backoff."
+    },
+    {
+      "id": "AC3",
+      "text": "Every failure, including Errors, completes shared refresh state so later requests can recover."
+    },
+    {
+      "id": "AC4",
+      "text": "close() stops refresh and no token is published after close."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 229,
+        "severity": "major",
+        "summary": "Only RuntimeException is caught; an Error from provider.getToken() leaves the in-flight future incomplete, so every later caller hangs.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4044700996"
+      }
+    ]
+  },
+  "label_notes": "Unlabeled: an unclear CLOSED_MESSAGE and two import suggestions."
+}

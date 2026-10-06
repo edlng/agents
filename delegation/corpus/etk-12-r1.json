@@ -1,0 +1,38 @@
+{
+  "id": "etk-12-r1",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/12",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "b79179f96cd0721a8f06fc682c39b192ff5f152a",
+  "head_sha": "b827d7366f2328758382a38921f9a7e7db9e3834",
+  "diff_sha256": "2781075d1e821bd97baeb479ee4b13ad9a218687076ec5a0f262d596f2fcf01a",
+  "title": "feat(node): add auto-refresh",
+  "description": "Adds a Node token manager that caches the IAM token, refreshes it in the background, shares one refresh across callers, and supports close().",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "getToken() returns a cached token that is valid for use and shares one refresh across callers."
+    },
+    {
+      "id": "AC2",
+      "text": "Failed refreshes back off instead of retrying back-to-back."
+    },
+    {
+      "id": "AC3",
+      "text": "No token is cached or published after close()."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "node/src/token-manager.ts",
+        "line": 217,
+        "severity": "major",
+        "summary": "If close() runs while credential resolution is pending, the token is still cached, onTokenChanged fires, and the pending getToken() resolves.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/12#discussion_r4029464387"
+      }
+    ]
+  },
+  "label_notes": "Held out: labeled before any results were seen; not used to tune prompts."
+}

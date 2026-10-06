@@ -1,0 +1,70 @@
+{
+  "id": "etk-13-r2",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/13",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "5fd9a6a4aba1d37211f64192960e53bf9ac419c7",
+  "head_sha": "233e23c34d46fe596abc947f3cde69c518bea966",
+  "diff_sha256": "fecd33aa79bf8ea29bf13035e2351fafb719fac71806eeabaaf1a1f8fe1373d4",
+  "title": "feat(java): Add Auto Refresh",
+  "description": "Adds ElastiCacheIamAuthTokenManager: lazy token caching, background refresh, a single shared mint across concurrent callers, retry with jittered backoff while serving a valid token, token-change callbacks, and close semantics.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Concurrent callers share one in-flight token mint."
+    },
+    {
+      "id": "AC2",
+      "text": "A cached token is served only while it is valid for use, and refresh failures retry with backoff."
+    },
+    {
+      "id": "AC3",
+      "text": "Every failure, including Errors, completes shared refresh state so later requests can recover."
+    },
+    {
+      "id": "AC4",
+      "text": "close() stops refresh and no token is published after close."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 143,
+        "severity": "major",
+        "summary": "A zero-delay refresh replaces the failure cooldown, so reconnect traffic can trigger back-to-back mint attempts.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4049449414"
+      },
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 227,
+        "severity": "major",
+        "summary": "close() can run after the closed check, and the token is still installed and published after close.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4049449252"
+      },
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 304,
+        "severity": "major",
+        "summary": "Tokens are served through the raw 900-second expiry instead of the effective lifetime, so a reconnect can get a token that expires in transit.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4049449323"
+      },
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 315,
+        "severity": "major",
+        "summary": "onTokenChanged runs before refresh completes, so a blocking callback delays the first getToken() caller and occupies the only scheduler thread.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4049449483"
+      },
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 363,
+        "severity": "major",
+        "summary": "Error causes are not unwrapped for waiters: the minting caller gets the original Error while callers on the same future get CompletionException.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4049449547"
+      }
+    ]
+  },
+  "label_notes": "Unlabeled: two test-reliability comments (single-flight proof, Thread.yield loop)."
+}

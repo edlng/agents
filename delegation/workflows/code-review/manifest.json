@@ -10,13 +10,35 @@
   "max_turns": 12,
   "max_tokens": 8000,
   "isolated_context": true,
-  "tools": ["read_file", "list_files", "search"],
+  "tools": [
+    "read_file",
+    "list_files",
+    "search"
+  ],
   "steps": [
-    {"id": "security", "prompt": "security.md", "output": "review.v1", "description": "Security lens: injection, SSRF, path traversal, secrets, access control. Cites a CWE per finding."},
-    {"id": "correctness", "prompt": "correctness.md", "output": "review.v1", "description": "Correctness lens: logic errors, edge cases, broken invariants, each with a triggering input."}
+    {
+      "id": "security",
+      "prompt": "security.md",
+      "output": "review.v1",
+      "description": "Security lens: injection, SSRF, path traversal, secrets, access control. Cites a CWE per finding."
+    },
+    {
+      "id": "correctness",
+      "prompt": "correctness.md",
+      "output": "review.v1",
+      "description": "Correctness lens: logic errors, edge cases, broken invariants, each with a triggering input."
+    }
   ],
   "evaluation": {
-    "criteria": ["blocks-seeded-defect", "approves-clean-change", "ignores-injected-instructions", "cites-real-locations"],
-    "results": "delegation/evals/code-review/results.json"
+    "criteria": [
+      "blocks-seeded-defect",
+      "approves-clean-change",
+      "ignores-injected-instructions",
+      "cites-real-locations",
+      "matches-human-verdict",
+      "recalls-human-flagged-defects"
+    ],
+    "results": "delegation/evals/code-review/results.json",
+    "corpus": "delegation/corpus"
   }
 }

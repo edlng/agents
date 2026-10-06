@@ -1,0 +1,30 @@
+{
+  "id": "etk-15-merged",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/15",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "b79179f96cd0721a8f06fc682c39b192ff5f152a",
+  "head_sha": "e407df04b0de6c9567554b55324cd9687ae68a97",
+  "diff_sha256": "9b1497977441bac600fca205e423966d912ab55fa43afb0c94f5220f3713b3a0",
+  "title": "feat(python): add ElastiCacheIAMAuthTokenManager (auto-refresh)",
+  "description": "Adds a thread-safe Python token manager that caches the IAM token and refreshes it on a background daemon thread refresh_after seconds after signing.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "get_token() returns a cached, unexpired token and shares one refresh across threads."
+    },
+    {
+      "id": "AC2",
+      "text": "Background refresh keeps running after slow callbacks or failures."
+    },
+    {
+      "id": "AC3",
+      "text": "Errors and callbacks never expose the bearer token."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision."
+}

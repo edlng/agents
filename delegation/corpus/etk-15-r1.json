@@ -1,0 +1,52 @@
+{
+  "id": "etk-15-r1",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/15",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "b79179f96cd0721a8f06fc682c39b192ff5f152a",
+  "head_sha": "a5c6810696db43db4c80b0311401521228a64ba7",
+  "diff_sha256": "2533f5e3bf539a8577c5e6f25a92c375bf9242c6f334b8f974aed3e630ba2fd7",
+  "title": "feat(python): add ElastiCacheIAMAuthTokenManager (auto-refresh)",
+  "description": "Adds a thread-safe Python token manager that caches the IAM token and refreshes it on a background daemon thread refresh_after seconds after signing.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "get_token() returns a cached, unexpired token and shares one refresh across threads."
+    },
+    {
+      "id": "AC2",
+      "text": "Background refresh keeps running after slow callbacks or failures."
+    },
+    {
+      "id": "AC3",
+      "text": "Errors and callbacks never expose the bearer token."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "python/src/developer_toolkit_elasticache/token_manager.py",
+        "line": 276,
+        "severity": "major",
+        "summary": "The callback receives the bearer token, and its exception message or chained exception can carry the token into logs.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/15#discussion_r4065122265"
+      },
+      {
+        "file": "python/src/developer_toolkit_elasticache/token_manager.py",
+        "line": 265,
+        "severity": "major",
+        "summary": "The fallback is not revalidated before resolving the shared future; the clock can pass expires_at, and a caller then receives an expired token.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/15#discussion_r4066662120"
+      },
+      {
+        "file": "python/src/developer_toolkit_elasticache/token_manager.py",
+        "line": 294,
+        "severity": "major",
+        "summary": "The refresh timer starts before the issuance future is cleared; with a short refresh_after and a slow callback it joins the same flight and exits without scheduling a replacement.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/15#discussion_r4066662183"
+      }
+    ]
+  },
+  "label_notes": "Unlabeled: missing refresh_token() parity (a feature gap) and five test-reliability comments."
+}

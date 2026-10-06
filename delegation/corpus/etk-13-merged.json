@@ -1,0 +1,34 @@
+{
+  "id": "etk-13-merged",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/13",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "5fd9a6a4aba1d37211f64192960e53bf9ac419c7",
+  "head_sha": "c2d041c0eade0ba13f1a55a14aee7f5113242353",
+  "diff_sha256": "4ad08f1534b820f0463760afd610d5444e8b761ca13f77e5c82e57e384051129",
+  "title": "feat(java): Add Auto Refresh",
+  "description": "Adds ElastiCacheIamAuthTokenManager: lazy token caching, background refresh, a single shared mint across concurrent callers, retry with jittered backoff while serving a valid token, token-change callbacks, and close semantics.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Concurrent callers share one in-flight token mint."
+    },
+    {
+      "id": "AC2",
+      "text": "A cached token is served only while it is valid for use, and refresh failures retry with backoff."
+    },
+    {
+      "id": "AC3",
+      "text": "Every failure, including Errors, completes shared refresh state so later requests can recover."
+    },
+    {
+      "id": "AC4",
+      "text": "close() stops refresh and no token is published after close."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision."
+}

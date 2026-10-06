@@ -1,0 +1,30 @@
+{
+  "id": "etk-12-merged",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/12",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "3e4274294fa97c308fb59a10bc9fd7436900ce5d",
+  "head_sha": "8ae6eafe8a8db7cde31b20ce484de9f02848de5b",
+  "diff_sha256": "7db049ecd5b89099745d260a9e77a963953d99450c394e6420487499d2764520",
+  "title": "feat(node): add auto-refresh",
+  "description": "Adds a Node token manager that caches the IAM token, refreshes it in the background, shares one refresh across callers, and supports close().",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "getToken() returns a cached token that is valid for use and shares one refresh across callers."
+    },
+    {
+      "id": "AC2",
+      "text": "Failed refreshes back off instead of retrying back-to-back."
+    },
+    {
+      "id": "AC3",
+      "text": "No token is cached or published after close()."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Held out. Merged head approved by human reviewers; approval is not proof of no defects."
+}
