@@ -127,7 +127,7 @@ const UNIVERSAL_SOURCE_SNAPSHOT = [
   'review-addressed-comments/SKILL.md 25283cb89fd71a42553277c6617f14d6b2e382af157450f617414592616b8806 0644',
   'review-addressed-comments/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'review-code/SKILL.md 97463cdb6e0885fd9c94b3c34773ca8ffb3e3de6daa5ca8c1139b8d540dd9a09 0644',
-  'review-pr/SKILL.md 08fedc9d42ba28320cff38759cf5c9fdfbc76a586c622f5be67c9d0c529ee3b9 0644',
+  'review-pr/SKILL.md 0a969bf464faa443ddc8689b3bb7fd716deb07b784571f89cd844caf5ebd0a87 0644',
   'review-pr/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'tdd/SKILL.md c80ccd382d26288085623e307aeafa91e0a23dc36b3f64030e72793ff070037d 0644',
   'update-skill/SKILL.md 4a51ac9f243a296b654c1a13aab98cbd96c9bae140a47fc3849ac6f603d269d9 0644',

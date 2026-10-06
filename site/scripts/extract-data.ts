@@ -693,7 +693,7 @@ function getWorkflows(): Workflow[] {
       orchestrator: 'review-code',
       nodes: [
         { id: 'start', type: 'start', label: 'Start' },
-        { id: 'diff', type: 'process', label: 'Gather Context', description: 'Snapshot the diff, find the Jira requirements if any, and build codebase context' },
+        { id: 'diff', type: 'process', label: 'Gather Context', description: 'Snapshot the diff, read requirements from the PR description, and build codebase context' },
         { id: 'review', type: 'process', label: 'Self-Review', agent: 'code-reviewer', description: 'One pass over codebase alignment, correctness and security, requirements, testability, and unfinished work' },
         { id: 'skeptic', type: 'process', label: 'Skeptic Pass', agent: 'validator', description: 'Challenge each finding and confirm whether it is auto-fixable. Single pass, no loop.' },
         { id: 'd1', type: 'decision', label: 'Auto-fixable?', description: 'Are there important findings that are small, local, and unambiguous?' },
@@ -715,7 +715,7 @@ function getWorkflows(): Workflow[] {
     {
       id: 'workflow:review-pr',
       name: 'PR Review',
-      description: 'Review someone else\'s PR against its Jira ticket and the codebase. Large diffs fan out to four lens reviewers. Output stays local and nothing is posted to GitHub.',
+      description: 'Review someone else\'s PR against its description and the codebase. Large diffs fan out to four lens reviewers. Output stays local and nothing is posted to GitHub.',
       orchestrator: 'review-pr',
       nodes: [
         { id: 'start', type: 'start', label: 'Start' },

@@ -628,7 +628,7 @@
       "id": "skill:review-pr",
       "type": "skill",
       "name": "review-pr",
-      "description": "Reviews a pull request against the linked Jira ticket and the existing codebase. Parallel reviewers per discipline, findings merged and checked by a skeptic validator pass. Output is local only: printed in chat, rendered as a temporary self-contained HTML report, and saved as a findings JSON file. Nothing is posted to GitHub. Use when asked to review someone else's PR by URL or owner/repo#number.",
+      "description": "Reviews a pull request against its description and the existing codebase. Parallel reviewers per discipline, findings merged and checked by a skeptic validator pass. Output is local only: printed in chat, rendered as a temporary self-contained HTML report, and saved as a findings JSON file. Nothing is posted to GitHub. Use when asked to review someone else's PR by URL or owner/repo#number.",
       "category": "Code Review",
       "platforms": [
         "claude",
@@ -639,7 +639,7 @@
         "universal": "skills/universal/review-pr/SKILL.md"
       },
       "sourcePath": "skills/universal/review-pr/SKILL.md",
-      "excerpt": "Review PR (senior-dev grade) Review a pull request against the linked Jira ticket and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare. `$ARGUMENTS` is a PR URL or `owner/repo#number`. If em"
+      "excerpt": "Review PR (senior-dev grade) Review a pull request against its description and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare. `$ARGUMENTS` is a PR URL or `owner/repo#number`. If empty, ru"
     },
     {
       "id": "skill:tdd",
@@ -1158,7 +1158,7 @@
           "id": "diff",
           "type": "process",
           "label": "Gather Context",
-          "description": "Snapshot the diff, find the Jira requirements if any, and build codebase context"
+          "description": "Snapshot the diff, read requirements from the PR description, and build codebase context"
         },
         {
           "id": "review",
@@ -1238,7 +1238,7 @@
     {
       "id": "workflow:review-pr",
       "name": "PR Review",
-      "description": "Review someone else's PR against its Jira ticket and the codebase. Large diffs fan out to four lens reviewers. Output stays local and nothing is posted to GitHub.",
+      "description": "Review someone else's PR against its description and the codebase. Large diffs fan out to four lens reviewers. Output stays local and nothing is posted to GitHub.",
       "orchestrator": "review-pr",
       "nodes": [
         {

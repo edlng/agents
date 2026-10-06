@@ -1,11 +1,11 @@
 ---
 name: review-pr
-description: "Reviews a pull request against the linked Jira ticket and the existing codebase. Parallel reviewers per discipline, findings merged and checked by a skeptic validator pass. Output is local only: printed in chat, rendered as a temporary self-contained HTML report, and saved as a findings JSON file. Nothing is posted to GitHub. Use when asked to review someone else's PR by URL or owner/repo#number."
+description: "Reviews a pull request against its description and the existing codebase. Parallel reviewers per discipline, findings merged and checked by a skeptic validator pass. Output is local only: printed in chat, rendered as a temporary self-contained HTML report, and saved as a findings JSON file. Nothing is posted to GitHub. Use when asked to review someone else's PR by URL or owner/repo#number."
 ---
 
 # Review PR (senior-dev grade)
 
-Review a pull request against the linked Jira ticket and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare.
+Review a pull request against its description and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare.
 
 `$ARGUMENTS` is a PR URL or `owner/repo#number`. If empty, run `gh pr list --search "review-requested:@me" --json number,title,headRepository` (or `gh search prs`) and ask the user which PR to review.
 
@@ -19,7 +19,7 @@ All phases share files in `/tmp/agent-runs/<RUNID>/`, where `RUNID` is `<owner>-
 
 - `diff.patch`: full unified diff
 - `metadata.json`: PR title, body, branches, author, file list, additions and deletions
-- `requirements.md`: Requirements Document (Jira plus PR description)
+- `requirements.md`: Requirements Document (from the PR description)
 - `codebase_context.md`: patterns and conventions of the touched files
 - `photon_client_consistency.json`: evidence-backed comparisons with other clients, written only for `awslabs/photon`
 - `findings_v<n>.json`: findings, versioned per validator pass
@@ -35,19 +35,16 @@ Run: `gh pr view <number> --repo <owner/repo> --json title,body,headRefName,head
 
 Capture title, body, head ref, head SHA, base ref, author, additions, deletions, changed files. If `additions + deletions > 1500`, warn the user that the review will be lossy and ask whether to proceed or scope it down. Write to `metadata.json`.
 
-### 1b. Identify the Jira issue
-Extract the Jira issue key from the PR title, body, or branch name. If none is found, search with the Jira MCP `searchJiraIssuesUsingJql` tool for likely tickets (keywords from branch name and title). If no confident match, list the top 3 candidates and ask. If the user says "no ticket", proceed with the PR description as the only requirements source.
-
-### 1c. Snapshot the diff
+### 1b. Snapshot the diff
 Run `gh pr diff <number> --repo <owner/repo>` and write the result to `diff.patch`.
 
-### 1d. Build Requirements Document
-Use the Jira MCP `getJiraIssue` tool for the linked issue (if any). Combine with the PR body. Extract: (1) what must be built, (2) explicit acceptance criteria (infer if absent), (3) edge cases and constraints, (4) implicit constraints (security, performance, compatibility). Write to `requirements.md`.
+### 1c. Build Requirements Document
+Jira lookup is disabled for now. Do not search for or fetch a Jira ticket. Use the PR title and body as the only requirements source. Extract: (1) what must be built, (2) explicit acceptance criteria (infer if absent), (3) edge cases and constraints, (4) implicit constraints (security, performance, compatibility). Write to `requirements.md`.
 
-### 1e. Build Codebase Context
+### 1d. Build Codebase Context
 Follow `../_shared/codebase-context-checklist.md`. For each touched file, fetch its current state from the PR's head ref with `gh api repos/<owner>/<repo>/contents/<path>?ref=<head_ref> --jq .content | base64 -d`. For bulk reads, use `gh pr checkout <number> --detach` in a temp worktree. Do not modify the user's working tree. Write to `codebase_context.md`.
 
-### 1f. Build Photon Cross-Client Context (only `awslabs/photon`)
+### 1e. Build Photon Cross-Client Context (only `awslabs/photon`)
 Normalize `<owner/repo>` to lowercase. Run this phase only when it equals `awslabs/photon`. Skip it for every downstream repository.
 
 Identify the changed client and each externally observable behavior affected by the diff. For every behavior:
@@ -120,7 +117,7 @@ Print the review directly in chat, with findings first and ordered by severity:
 # PR Review: <PR title>
 
 **Action:** <Approve | Request changes>
-**Author:** <author> | **Files:** <count> | **+<additions> / -<deletions>** | **Jira:** <key or none>
+**Author:** <author> | **Files:** <count> | **+<additions> / -<deletions>**
 
 ## Important (<N>)
 For each important finding:
@@ -182,7 +179,7 @@ Use a restrained, high-contrast technical-report design:
 The file must be portable and safe:
 - Put all CSS and any optional enhancement JavaScript inline. Use no remote fonts, scripts, stylesheets, images, or other runtime assets.
 - The complete report stays readable with JavaScript disabled and when opened directly from disk.
-- HTML-escape `&`, `<`, `>`, `"`, and `'` in every value from GitHub, Jira, source code, run-directory records, or findings before interpolation.
+- HTML-escape `&`, `<`, `>`, `"`, and `'` in every value from GitHub, source code, run-directory records, or findings before interpolation.
 - Allow only `https://` source-link destinations. Attribute-escape URLs and add `rel="noreferrer noopener"` to links opened in a new tab.
 - Do not interpolate untrusted values into `<style>`, `<script>`, event-handler attributes, or raw HTML.
 
