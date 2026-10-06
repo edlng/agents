@@ -29,6 +29,18 @@ type Defect struct {
 	Source   string `json:"source"` // link to the review comment
 }
 
+// Dispute records a defect the system reported on human-approved code that
+// the human reviewer could not confirm or reject. A case with disputes is
+// left out of verdict scoring.
+type Dispute struct {
+	File    string `json:"file"`
+	Line    int    `json:"line"`
+	Summary string `json:"summary"`
+	Ruling  string `json:"ruling"` // unsure
+	RuledBy string `json:"ruled_by"`
+	Date    string `json:"date"`
+}
+
 type Criterion struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
@@ -49,8 +61,9 @@ type Case struct {
 	AcceptanceCriteria []Criterion `json:"acceptance_criteria"`
 	TestCommand        []string    `json:"test_command,omitempty"`
 	Expected           struct {
-		Verdict string   `json:"verdict"` // BLOCK | APPROVE
-		Defects []Defect `json:"defects"`
+		Verdict  string    `json:"verdict"` // BLOCK | APPROVE
+		Defects  []Defect  `json:"defects"`
+		Disputed []Dispute `json:"disputed,omitempty"`
 	} `json:"expected"`
 	LabelNotes string `json:"label_notes,omitempty"`
 }
@@ -88,6 +101,12 @@ func Load(dir string) ([]Case, error) {
 		cases = append(cases, c)
 	}
 	return cases, nil
+}
+
+// CacheRoot is this process's own cache directory, so concurrent runs never
+// share or delete each other's checkouts.
+func CacheRoot() string {
+	return filepath.Join("delegation", "runs", "corpus-cache", fmt.Sprintf("pid-%d", os.Getpid()))
 }
 
 // Materialize fetches the two pinned commits into root/<id>, checks the diff

@@ -28,7 +28,17 @@
   ],
   "expected": {
     "verdict": "APPROVE",
-    "defects": []
+    "defects": [],
+    "disputed": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 157,
+        "summary": "getToken() decides the cache is stale under the lock, releases it, then calls refresh(), which only checks inFlight and never re-checks cached, so two callers that both saw a stale cache can mint twice.",
+        "ruling": "unsure",
+        "ruled_by": "Edward Liang",
+        "date": "2026-10-06"
+      }
+    ]
   },
-  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision."
+  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision. The system reported a race on this head (first seen with the tuned prompts); the reviewer could not confirm or reject it, so the verdict is not scored."
 }

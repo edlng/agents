@@ -18,7 +18,7 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
-	cache := filepath.Join("delegation/runs", "corpus-cache")
+	cache := corpus.CacheRoot()
 	for _, c := range cases {
 		dir, cleanup, err := corpus.Materialize(withoutHash(c), cache)
 		if err != nil {
