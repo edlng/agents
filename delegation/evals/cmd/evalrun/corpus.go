@@ -23,7 +23,10 @@ func corpusCases() []Case {
 	var out []Case
 	for _, cc := range cases {
 		cc := cc
-		crit := []string{"matches-human-verdict"}
+		var crit []string
+		if len(cc.Expected.Disputed) == 0 {
+			crit = append(crit, "matches-human-verdict")
+		}
 		if cc.Expected.Verdict == "BLOCK" {
 			crit = append(crit, "recalls-human-flagged-defects")
 		}
@@ -31,7 +34,7 @@ func corpusCases() []Case {
 			ID: cc.ID, Workflow: "code-review", Fixture: cc.ID, Criteria: crit, Split: cc.Split,
 			Purpose: fmt.Sprintf("%s review round at %s; humans: %s with %d labeled defects.", cc.PR, cc.HeadSHA[:12], cc.Expected.Verdict, len(cc.Expected.Defects)),
 			Prepare: func() (string, func(), error) {
-				dir, cleanup, err := corpus.Materialize(cc, filepath.Join("delegation/runs", "corpus-cache"))
+				dir, cleanup, err := corpus.Materialize(cc, corpus.CacheRoot())
 				if err != nil {
 					return "", cleanup, err
 				}
@@ -52,7 +55,11 @@ func corpusCases() []Case {
 					findings = append(findings, r.Findings...)
 					t.note("%s: %s with %d findings", step, r.Verdict, len(r.Findings))
 				}
-				t.Pass["matches-human-verdict"] = blocked == (cc.Expected.Verdict == "BLOCK")
+				if len(cc.Expected.Disputed) == 0 {
+					t.Pass["matches-human-verdict"] = blocked == (cc.Expected.Verdict == "BLOCK")
+				} else {
+					t.note("verdict %s not scored: %d disputed finding(s)", map[bool]string{true: "BLOCK", false: "APPROVE"}[blocked], len(cc.Expected.Disputed))
+				}
 				if cc.Expected.Verdict != "BLOCK" {
 					return
 				}

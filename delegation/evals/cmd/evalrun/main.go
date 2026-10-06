@@ -113,6 +113,7 @@ func main() {
 	trials := flag.Int("trials", 1, "trials per case")
 	only := flag.String("only", "", "comma-separated workflows to run (default all)")
 	prefix := flag.String("cases", "", "run only cases whose ID starts with this prefix")
+	split := flag.String("split", "", "run only corpus cases in this split (tune or heldout)")
 	jobs := flag.Int("jobs", 3, "cases run in parallel")
 	useAPI := flag.Bool("api", false, "use the Anthropic API instead of the Claude CLI")
 	budget := flag.Float64("budget", 1.0, "budget per trial in USD")
@@ -134,7 +135,7 @@ func main() {
 	}
 	var cases []Case
 	for _, c := range allCases() {
-		if (len(selected) == 0 || selected[c.Workflow]) && strings.HasPrefix(c.ID, *prefix) {
+		if (len(selected) == 0 || selected[c.Workflow]) && strings.HasPrefix(c.ID, *prefix) && (*split == "" || c.Split == *split) {
 			cases = append(cases, c)
 		}
 	}
