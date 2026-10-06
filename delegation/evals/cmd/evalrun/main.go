@@ -41,9 +41,12 @@ const (
 type Trial struct {
 	CorrelationID string          `json:"correlation_id"`
 	Pass          map[string]bool `json:"pass"`
-	Notes         []string        `json:"notes,omitempty"`
-	CostUSD       float64         `json:"cost_usd"`
-	Error         string          `json:"error,omitempty"`
+	// Counts replaces the 1/0 tally for criteria measured per item, such as
+	// recall over labeled defects: [passed, total].
+	Counts  map[string][2]int `json:"counts,omitempty"`
+	Notes   []string          `json:"notes,omitempty"`
+	CostUSD float64           `json:"cost_usd"`
+	Error   string            `json:"error,omitempty"`
 }
 
 func (t *Trial) note(format string, args ...any) {
@@ -56,7 +59,11 @@ type Case struct {
 	Fixture  string
 	Criteria []string
 	Purpose  string
+	Split    string
 	Run      func(ctx context.Context, e *Env, t *Trial)
+	// Prepare, when set, materializes the task directory once per case and
+	// returns a cleanup that runs after the last trial.
+	Prepare func() (dir string, cleanup func(), err error)
 }
 
 // Env is one trial's isolated harness state.
@@ -69,11 +76,13 @@ type Env struct {
 }
 
 type CaseResult struct {
-	ID       string   `json:"id"`
-	Fixture  string   `json:"fixture"`
-	Purpose  string   `json:"purpose"`
-	Criteria []string `json:"criteria"`
-	Trials   []Trial  `json:"trials"`
+	ID           string   `json:"id"`
+	PromptSHA256 string   `json:"prompt_sha256"`
+	Split        string   `json:"split,omitempty"` // corpus cases: tune or heldout
+	Fixture      string   `json:"fixture"`
+	Purpose      string   `json:"purpose"`
+	Criteria     []string `json:"criteria"`
+	Trials       []Trial  `json:"trials"`
 }
 
 type Tally struct {
@@ -83,7 +92,9 @@ type Tally struct {
 }
 
 type Results struct {
-	SchemaVersion string           `json:"schema_version"`
+	SchemaVersion string `json:"schema_version"`
+	// TrialsPerCase and PromptSHA256 describe the latest run; each case
+	// records its own prompt hash and trials.
 	Workflow      string           `json:"workflow"`
 	Agent         string           `json:"agent"`
 	Model         string           `json:"model"`
@@ -92,13 +103,16 @@ type Results struct {
 	GeneratedAt   string           `json:"generated_at"`
 	TrialsPerCase int              `json:"trials_per_case"`
 	Criteria      map[string]Tally `json:"criteria"`
-	Cases         []CaseResult     `json:"cases"`
-	TotalCostUSD  float64          `json:"total_cost_usd"`
+	// Splits tallies corpus criteria separately for tuning and held-out cases.
+	Splits       map[string]map[string]Tally `json:"splits,omitempty"`
+	Cases        []CaseResult                `json:"cases"`
+	TotalCostUSD float64                     `json:"total_cost_usd"`
 }
 
 func main() {
 	trials := flag.Int("trials", 1, "trials per case")
 	only := flag.String("only", "", "comma-separated workflows to run (default all)")
+	prefix := flag.String("cases", "", "run only cases whose ID starts with this prefix")
 	jobs := flag.Int("jobs", 3, "cases run in parallel")
 	useAPI := flag.Bool("api", false, "use the Anthropic API instead of the Claude CLI")
 	budget := flag.Float64("budget", 1.0, "budget per trial in USD")
@@ -120,7 +134,7 @@ func main() {
 	}
 	var cases []Case
 	for _, c := range allCases() {
-		if len(selected) == 0 || selected[c.Workflow] {
+		if (len(selected) == 0 || selected[c.Workflow]) && strings.HasPrefix(c.ID, *prefix) {
 			cases = append(cases, c)
 		}
 	}
@@ -134,7 +148,18 @@ func main() {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			cr := CaseResult{ID: c.ID, Fixture: c.Fixture, Purpose: c.Purpose, Criteria: c.Criteria}
+			cr := CaseResult{ID: c.ID, Fixture: c.Fixture, Purpose: c.Purpose, Criteria: c.Criteria, Split: c.Split, PromptSHA256: promptHash(c.Workflow, cat)}
+			if c.Prepare != nil {
+				dir, cleanup, err := c.Prepare()
+				defer cleanup()
+				if err != nil {
+					cr.Trials = append(cr.Trials, Trial{Error: err.Error(), Pass: map[string]bool{}})
+					fmt.Printf("%-34s prepare failed: %v\n", c.ID, err)
+					results[i] = cr
+					return
+				}
+				c.Fixture = dir
+			}
 			for n := 0; n < *trials; n++ {
 				cr.Trials = append(cr.Trials, runTrial(c, p, cat, *budget))
 				t := cr.Trials[len(cr.Trials)-1]
@@ -169,9 +194,15 @@ func main() {
 			t := r.Criteria[crit]
 			fmt.Printf("  %-36s %d/%d\n", crit, t.Passed, t.Total)
 		}
+		for split, tallies := range r.Splits {
+			for _, crit := range sortedKeys(tallies) {
+				fmt.Printf("  [%s] %-30s %d/%d\n", split, crit, tallies[crit].Passed, tallies[crit].Total)
+			}
+		}
 		if *write {
-			b, _ := json.MarshalIndent(r, "", "  ")
 			path := filepath.Join("delegation/evals", w, "results.json")
+			r = summarize(w, mergeCases(path, byWorkflow[w]), cat, providerName, *trials)
+			b, _ := json.MarshalIndent(r, "", "  ")
 			must(os.MkdirAll(filepath.Dir(path), 0o755))
 			must(os.WriteFile(path, append(b, '\n'), 0o644))
 		}
@@ -193,12 +224,17 @@ func runTrial(c Case, p provider.Provider, cat *catalog.Catalog, budget float64)
 		c.Run(ctx, &Env{Provider: p, Catalog: cat}, &t)
 		return t
 	}
-	tk, err := task.Load(filepath.Join(fixturesDir, c.Fixture))
+	taskDir := c.Fixture
+	if !filepath.IsAbs(taskDir) {
+		taskDir = filepath.Join(fixturesDir, c.Fixture)
+	}
+	tk, err := task.Load(taskDir)
 	if err != nil {
 		t.Error = err.Error()
 		return t
 	}
 	log, err := audit.Create(filepath.Join(runsRoot, c.Workflow), audit.NewID()+"-"+c.ID)
+	c.Fixture = filepath.Base(c.Fixture)
 	if err != nil {
 		t.Error = err.Error()
 		return t
@@ -213,6 +249,45 @@ func runTrial(c Case, p provider.Provider, cat *catalog.Catalog, budget float64)
 		t.Error = err.Error()
 	}
 	return t
+}
+
+// mergeCases keeps cases from an existing results file that this run did not
+// rerun, so a partial run never drops earlier measurements.
+func mergeCases(path string, fresh []CaseResult) []CaseResult {
+	var old Results
+	if data, err := os.ReadFile(path); err == nil {
+		json.Unmarshal(data, &old)
+	}
+	rerun := map[string]bool{}
+	for _, c := range fresh {
+		rerun[c.ID] = true
+	}
+	var merged []CaseResult
+	for _, c := range old.Cases {
+		if !rerun[c.ID] {
+			merged = append(merged, c)
+		}
+	}
+	merged = append(merged, fresh...)
+	sort.Slice(merged, func(i, j int) bool { return merged[i].ID < merged[j].ID })
+	return merged
+}
+
+func promptHash(workflow string, cat *catalog.Catalog) string {
+	h := sha256.New()
+	if workflow == "coordinator" {
+		m, err := coordinator.LoadManifest(coordinatorDir)
+		must(err)
+		h.Write([]byte(m.System))
+	} else {
+		w := cat.Workflows[workflow]
+		for _, s := range w.Steps {
+			spec, err := w.Spec(s.ID)
+			must(err)
+			h.Write([]byte(spec.System))
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func summarize(workflow string, cases []CaseResult, cat *catalog.Catalog, providerName string, trials int) Results {
@@ -249,9 +324,27 @@ func summarize(workflow string, cases []CaseResult, cat *catalog.Catalog, provid
 				if !ok {
 					panic(fmt.Sprintf("case %s measures undeclared criterion %s of %s", c.ID, crit, workflow))
 				}
-				tl.Total++
+				passed, total := 0, 1
 				if t.Pass[crit] {
-					tl.Passed++
+					passed = 1
+				}
+				if n, ok := t.Counts[crit]; ok {
+					passed, total = n[0], n[1]
+				}
+				tl.Passed += passed
+				tl.Total += total
+				if c.Split != "" {
+					if r.Splits == nil {
+						r.Splits = map[string]map[string]Tally{}
+					}
+					if r.Splits[c.Split] == nil {
+						r.Splits[c.Split] = map[string]Tally{}
+					}
+					st := r.Splits[c.Split][crit]
+					st.Passed += passed
+					st.Total += total
+					st.Rate = float64(st.Passed) / float64(st.Total)
+					r.Splits[c.Split][crit] = st
 				}
 				r.Criteria[crit] = tl
 			}

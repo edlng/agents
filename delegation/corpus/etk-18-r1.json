@@ -1,0 +1,34 @@
+{
+  "id": "etk-18-r1",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/18",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "7d7f2466c8da838d91f92ee85bfe2dbd454b4626",
+  "head_sha": "4facd385e29cbda1e363cf92a7f56d5e1846f158",
+  "diff_sha256": "1f9a6f97c8b70da97022fc60a227dd0d0ccb7f060a0f101c453fa2577eef8649",
+  "title": "ci(java): add the Maven Central release workflow",
+  "description": "Adds a GitHub Actions workflow that builds, signs, verifies, and publishes the Java package to Maven Central from a release tag.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Artifacts are signed with the configured GPG key and passphrase."
+    },
+    {
+      "id": "AC2",
+      "text": "Release validation runs every check the CI build runs, before any human approval is requested."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": ".github/workflows/java-release.yml",
+        "line": 96,
+        "severity": "major",
+        "summary": "setup-java writes GPG_PASSPHRASE into Maven settings, but the publish step defines only MAVEN_GPG_PASSPHRASE, so signing a passphrase-protected key fails.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/18#discussion_r4124100706"
+      }
+    ]
+  },
+  "label_notes": "Held out. Unlabeled: a suggestion to also require .asc files for sources and javadoc jars."
+}

@@ -1,0 +1,30 @@
+{
+  "id": "etk-17-merged",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/17",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "7d7f2466c8da838d91f92ee85bfe2dbd454b4626",
+  "head_sha": "caff77612f47f8d735539ac804a82bdcaf612934",
+  "diff_sha256": "ca3c724c0db2bdc827036b78f22fabd5bd6fcd5dcdf13e9803ef5da93ab18e6a",
+  "title": "Add forced IAM token refresh API to the Java toolkit",
+  "description": "Adds ElastiCacheIamAuthTokenManager.refreshToken(), aligned with Node's API: invalidates a rejected cached token, resolves fresh credentials, and shares forced, foreground, and background refresh operations.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "refreshToken() invalidates the cached token and returns a freshly minted one."
+    },
+    {
+      "id": "AC2",
+      "text": "Forced, foreground, and background refreshes share one operation without races."
+    },
+    {
+      "id": "AC3",
+      "text": "Scheduling resets after a replacement token is installed."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Merged head approved by human reviewers. Approval is not proof of no defects; this case measures agreement with the human decision."
+}

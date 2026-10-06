@@ -20,6 +20,7 @@ const (
 func allCases() []Case {
 	var cs []Case
 	cs = append(cs, codeReviewCases()...)
+	cs = append(cs, corpusCases()...)
 	cs = append(cs, specValidationCases()...)
 	cs = append(cs, documentationCases()...)
 	cs = append(cs, reviewerCases()...)

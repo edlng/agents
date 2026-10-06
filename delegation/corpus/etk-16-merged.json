@@ -1,0 +1,26 @@
+{
+  "id": "etk-16-merged",
+  "split": "heldout",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/16",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "c5462a64f85fb4d67a89f79919386a657479f800",
+  "head_sha": "32397e99e6a448ee375fd2b59a7b7ddfd5eaf731",
+  "diff_sha256": "36ea84fd8d3db4684ecb14bd18ac63b03e64599c32e0a6ec595c28086b80a5da",
+  "title": "ci(node): add the npm release workflow",
+  "description": "Adds a GitHub Actions workflow and a verification script that publish the Node package to npm from a release tag.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "The workflow publishes every release tag it accepts, including prereleases, or rejects them before publishing."
+    },
+    {
+      "id": "AC2",
+      "text": "The verify script rejects malformed arguments instead of skipping checks."
+    }
+  ],
+  "expected": {
+    "verdict": "APPROVE",
+    "defects": []
+  },
+  "label_notes": "Held out. Merged head approved by human reviewers; approval is not proof of no defects."
+}

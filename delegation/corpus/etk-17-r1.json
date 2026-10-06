@@ -1,0 +1,38 @@
+{
+  "id": "etk-17-r1",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/17",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "7d7f2466c8da838d91f92ee85bfe2dbd454b4626",
+  "head_sha": "fb58fe9d1418cf392b49cd3dda1f712ce746da2f",
+  "diff_sha256": "70823ae15f7a652727c69888494af57e294d3d1021b64ee797267845ce81a1fe",
+  "title": "Add forced IAM token refresh API to the Java toolkit",
+  "description": "Adds ElastiCacheIamAuthTokenManager.refreshToken(), aligned with Node's API: invalidates a rejected cached token, resolves fresh credentials, and shares forced, foreground, and background refresh operations.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "refreshToken() invalidates the cached token and returns a freshly minted one."
+    },
+    {
+      "id": "AC2",
+      "text": "Forced, foreground, and background refreshes share one operation without races."
+    },
+    {
+      "id": "AC3",
+      "text": "Scheduling resets after a replacement token is installed."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 175,
+        "severity": "major",
+        "summary": "finishFailedRefresh reads the cached token under the lock but completes the future after releasing it, so a concurrent refreshToken() can clear the cache and join a flight that completes with the stale token.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/17#discussion_r4099827437"
+      }
+    ]
+  },
+  "label_notes": "Unlabeled: doc wording for 'immediate' refresh and two test-assertion suggestions."
+}

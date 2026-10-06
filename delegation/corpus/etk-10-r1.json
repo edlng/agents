@@ -1,0 +1,38 @@
+{
+  "id": "etk-10-r1",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/10",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "c8e5580109af9824d91a29940ee016d15f119080",
+  "head_sha": "1afb6268f914151110c6143347f1307de0133f73",
+  "diff_sha256": "3982783ee4286847623f1240740d679c1d60903d9c3670a616d278dbde94462c",
+  "title": "Port IAM authentication to Java",
+  "description": "Adds the Java IAM authentication token generator for ElastiCache, with tests, docs, and a TLS example, at parity with the Python package.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Generates valid SigV4-signed IAM auth tokens for serverless caches and replication groups."
+    },
+    {
+      "id": "AC2",
+      "text": "Validates inputs and reports errors without exposing credential material."
+    },
+    {
+      "id": "AC3",
+      "text": "Behavior matches the Python implementation."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenProvider.java",
+        "line": 105,
+        "severity": "major",
+        "summary": "Sanitized error messages keep the provider exception as the cause, so logging the throwable exposes the raw credential detail.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/10#discussion_r3984141424"
+      }
+    ]
+  },
+  "label_notes": "Unlabeled: unused exception classes, changelog layout, a missing session-token test assertion, and a CodeQL note on workflow permissions."
+}

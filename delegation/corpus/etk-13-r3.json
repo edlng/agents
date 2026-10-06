@@ -1,0 +1,41 @@
+{
+  "id": "etk-13-r3",
+  "split": "tune",
+  "pr": "https://github.com/aws/developer-toolkit-elasticache/pull/13",
+  "repo": "aws/developer-toolkit-elasticache",
+  "base_sha": "5fd9a6a4aba1d37211f64192960e53bf9ac419c7",
+  "head_sha": "db4f2d945c7bfb751dd3a5e146c43d75dddaaef5",
+  "diff_sha256": "80236dca996be46f6debe6dfda6b4f3f2f4d9ae997213416375a180ee63404ab",
+  "title": "feat(java): Add Auto Refresh",
+  "description": "Adds ElastiCacheIamAuthTokenManager: lazy token caching, background refresh, a single shared mint across concurrent callers, retry with jittered backoff while serving a valid token, token-change callbacks, and close semantics.",
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "text": "Concurrent callers share one in-flight token mint."
+    },
+    {
+      "id": "AC2",
+      "text": "A cached token is served only while it is valid for use, and refresh failures retry with backoff."
+    },
+    {
+      "id": "AC3",
+      "text": "Every failure, including Errors, completes shared refresh state so later requests can recover."
+    },
+    {
+      "id": "AC4",
+      "text": "close() stops refresh and no token is published after close."
+    }
+  ],
+  "expected": {
+    "verdict": "BLOCK",
+    "defects": [
+      {
+        "file": "java/src/main/java/software/amazon/elasticache/auth/ElastiCacheIamAuthTokenManager.java",
+        "line": 96,
+        "severity": "major",
+        "summary": "Callbacks run on the shared commonPool and the executor is not configurable, so a slow onTokenChanged can starve the application's common pool.",
+        "source": "https://github.com/aws/developer-toolkit-elasticache/pull/13#discussion_r4071919670"
+      }
+    ]
+  }
+}

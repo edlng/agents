@@ -20,9 +20,9 @@ type Task struct {
 	Title              string      `json:"title"`
 	Description        string      `json:"description"`
 	AcceptanceCriteria []Criterion `json:"acceptance_criteria"`
-	TestCommand        []string    `json:"test_command"`
-	Repo               string      `json:"repo"`  // relative to the task file
-	Patch              string      `json:"patch"` // relative to the task file
+	TestCommand        []string    `json:"test_command"` // optional; run_tests is unavailable without it
+	Repo               string      `json:"repo"`         // relative to the task file
+	Patch              string      `json:"patch"`        // relative to the task file
 
 	RepoDir   string `json:"-"`
 	PatchText string `json:"-"`
@@ -43,8 +43,6 @@ func Load(dir string) (*Task, error) {
 		return nil, fmt.Errorf("task.json: id, title, and description are required")
 	case len(t.AcceptanceCriteria) == 0:
 		return nil, fmt.Errorf("task.json: no acceptance criteria")
-	case len(t.TestCommand) == 0:
-		return nil, fmt.Errorf("task.json: no test command")
 	}
 	ids := map[string]bool{}
 	for _, c := range t.AcceptanceCriteria {
@@ -82,6 +80,11 @@ func (t *Task) Brief() string {
 	for _, c := range t.AcceptanceCriteria {
 		fmt.Fprintf(&b, "- %s: %s\n", c.ID, c.Text)
 	}
-	fmt.Fprintf(&b, "\n## Test command\n%s\n\n## Patch\n```diff\n%s```\n", strings.Join(t.TestCommand, " "), t.PatchText)
+	if len(t.TestCommand) > 0 {
+		fmt.Fprintf(&b, "\n## Test command\n%s\n", strings.Join(t.TestCommand, " "))
+	} else {
+		b.WriteString("\n## Test command\nNone. This task has no runnable tests.\n")
+	}
+	fmt.Fprintf(&b, "\n## Patch\n```diff\n%s```\n", t.PatchText)
 	return b.String()
 }
