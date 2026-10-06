@@ -38,7 +38,7 @@ func (a *Client) Complete(ctx context.Context, req provider.Request) (provider.R
 	if err != nil {
 		return provider.Response{}, fmt.Errorf("anthropic: %w", err)
 	}
-	return fromMessage(msg, time.Since(start).Milliseconds())
+	return fromMessage(msg, req.Model, time.Since(start).Milliseconds())
 }
 
 func toParams(req provider.Request) (anthropic.MessageNewParams, error) {
@@ -107,7 +107,10 @@ func toMessageParam(m provider.Message) (anthropic.MessageParam, error) {
 	return anthropic.NewUserMessage(blocks...), nil
 }
 
-func fromMessage(msg *anthropic.Message, durationMS int64) (provider.Response, error) {
+// fromMessage converts an SDK message. requested is the model ID sent; when
+// the response reports an ID without a price (a dated snapshot), the call is
+// priced as the requested model, which was checked before the call.
+func fromMessage(msg *anthropic.Message, requested string, durationMS int64) (provider.Response, error) {
 	native, err := json.Marshal(msg.ToParam())
 	if err != nil {
 		return provider.Response{}, fmt.Errorf("encode native turn: %w", err)
@@ -135,8 +138,12 @@ func fromMessage(msg *anthropic.Message, durationMS int64) (provider.Response, e
 			})
 		}
 	}
-	if out.Usage.CostUSD, err = provider.Cost(out.Model, out.Usage); err != nil {
-		return out, err
+	cost, err := provider.Cost(out.Model, out.Usage)
+	if err != nil {
+		if cost, err = provider.Cost(requested, out.Usage); err != nil {
+			return out, err
+		}
 	}
+	out.Usage.CostUSD = cost
 	return out, nil
 }

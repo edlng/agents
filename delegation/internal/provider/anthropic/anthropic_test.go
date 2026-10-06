@@ -98,3 +98,17 @@ func TestAnthropicRejectsUnpricedModelBeforeCalling(t *testing.T) {
 		t.Fatalf("err = %v, called = %v", err, called)
 	}
 }
+
+func TestDatedResponseModelIsPricedAsRequested(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"id":"m","type":"message","role":"assistant","model":"claude-sonnet-5-5-20261001","stop_reason":"end_turn",
+			"content":[{"type":"text","text":"ok"}],"usage":{"input_tokens":1000000,"output_tokens":0,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}`)
+	}))
+	defer server.Close()
+	p := New(option.WithBaseURL(server.URL), option.WithAPIKey("test"), option.WithMaxRetries(0))
+	resp, err := p.Complete(context.Background(), provider.Request{Model: "claude-sonnet-5-5", MaxTokens: 10, Messages: []provider.Message{provider.UserText("hi")}})
+	if err != nil || resp.Usage.CostUSD != 2.0 || resp.Model != "claude-sonnet-5-5-20261001" {
+		t.Fatalf("resp = %+v, %v", resp, err)
+	}
+}
