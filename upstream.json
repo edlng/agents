@@ -15,6 +15,7 @@
         "principle-separate-before-serializing-shared-state": "pstack/skills/principle-separate-before-serializing-shared-state",
         "principle-test-behavior-not-implementation": "pstack/skills/principle-test-behavior-not-implementation",
         "tdd": "pstack/skills/tdd",
+        "unslop": "pstack/skills/unslop",
         "why": "pstack/skills/why"
       }
     }

@@ -7,10 +7,9 @@ and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
 - 8 agent roles with Claude, Codex, and Kiro definitions.
-- 21 universal skills shared by Claude, Codex, and Kiro. `unslop` lives outside
-  the catalog at `~/.claude/skills/unslop/SKILL.md`; `CLAUDE.md` imports it and
-  the Codex and Kiro skill folders link to it. Platform-specific skill
-  variants are supported but none are needed today.
+- 22 universal skills shared by Claude, Codex, and Kiro. The installer writes
+  `unslop` to `~/.claude/skills/unslop/SKILL.md`, which `CLAUDE.md` imports.
+  Platform-specific skill variants are supported but none are needed today.
 - A validated installer, site catalog, and Litmus checks.
 
 Claude agent files use the unpinned Claude Code family aliases `haiku`,

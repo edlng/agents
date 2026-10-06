@@ -659,6 +659,23 @@
       "excerpt": "TDD Bug Fix When fixing a bug with a clear, cheap test path, make the broken behavior executable before changing production code. The goal is a focused regression test that fails before the fix and passes after it. Do not force a test when it would be impractical. If the available test would require"
     },
     {
+      "id": "skill:unslop",
+      "type": "skill",
+      "name": "unslop",
+      "description": "Cut AI tells from any writing. Must always apply.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/unslop/SKILL.md"
+      },
+      "sourcePath": "skills/universal/unslop/SKILL.md",
+      "excerpt": "Unslop Edit text to remove AI patterns. Process 1. Scan for the patterns below. 2. Rewrite. Preserve meaning, match intended tone. Patterns to detect and fix Rule numbers are stable ids that other skills cite. A removed rule leaves a gap. Content 3. **Superficial -ing phrases.** \"highlighting...\", \""
+    },
+    {
       "id": "skill:update-skill",
       "type": "skill",
       "name": "update-skill",
@@ -1551,7 +1568,7 @@
   "stats": {
     "counts": {
       "agents": 8,
-      "skills": 21,
+      "skills": 22,
       "sharedRefs": 5,
       "mcpServers": 3,
       "workflows": 6
@@ -1584,7 +1601,7 @@
       "orchestration": 1
     },
     "skillCategories": {
-      "Other": 12,
+      "Other": 13,
       "Code Review": 4,
       "Development Workflows": 1,
       "Writing & Documentation": 3,

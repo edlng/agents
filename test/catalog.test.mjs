@@ -82,6 +82,7 @@ const UNIVERSAL_SKILL_NAMES = [
   'review-code',
   'review-pr',
   'tdd',
+  'unslop',
   'update-skill',
   'update-sysprompts',
   'why',
@@ -130,6 +131,8 @@ const UNIVERSAL_SOURCE_SNAPSHOT = [
   'review-pr/SKILL.md 0a969bf464faa443ddc8689b3bb7fd716deb07b784571f89cd844caf5ebd0a87 0644',
   'review-pr/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'tdd/SKILL.md c80ccd382d26288085623e307aeafa91e0a23dc36b3f64030e72793ff070037d 0644',
+  'unslop/SKILL.md 14238c311775822a2b88aaa8f5ed2edcc6045c2bcd344dff03cb46d372cf396a 0644',
+  'unslop/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'update-skill/SKILL.md 4a51ac9f243a296b654c1a13aab98cbd96c9bae140a47fc3849ac6f603d269d9 0644',
   'update-skill/agents/openai.yaml a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94 0644',
   'update-sysprompts/SKILL.md 158a32405176f772b929a3e390761e540b53f4522972cec0a60cec4af9113b73 0644',
@@ -306,7 +309,7 @@ developer_instructions = "Test the fixture."
 `);
   }
 
-  for (let index = 1; index <= 20; index += 1) {
+  for (let index = 1; index <= 21; index += 1) {
     const name = `universal-${String(index).padStart(2, '0')}`;
     await writeFixtureFile(root, `skills/universal/${name}/SKILL.md`, `---
 name: ${name}
@@ -499,7 +502,7 @@ test('production universal skills preserve the complete source snapshot for both
   );
   assert.equal(
     universal.reduce((count, variant) => count + variant.files.length, 0),
-    39,
+    41,
   );
 
   const expectedFiles = UNIVERSAL_SOURCE_SNAPSHOT.map((source) => ({
@@ -556,7 +559,7 @@ test('production universal skills preserve the complete source snapshot for both
       };
     })
     .sort((left, right) => left.source.localeCompare(right.source));
-  assert.equal(claudeFiles.length, 39);
+  assert.equal(claudeFiles.length, 41);
   assert.deepEqual(claudeFiles, expectedInstallFiles);
   assert.deepEqual(claudeFiles, codexFiles);
 
@@ -953,7 +956,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 8 agents, 21 skills (21 universal, 0 Claude, 0 Codex)\n',
+    'Catalog valid: 8 agents, 22 skills (22 universal, 0 Claude, 0 Codex)\n',
   );
 });
 

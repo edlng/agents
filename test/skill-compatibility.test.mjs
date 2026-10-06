@@ -39,12 +39,12 @@ async function variantText(variant) {
 test('catalog contains one native Claude and Codex variant for every platform-specific skill', async () => {
   const catalog = await loadCatalog(root);
 
-  assert.equal(catalog.skillVariants.universal.length, 21);
+  assert.equal(catalog.skillVariants.universal.length, 22);
   assert.equal(catalog.skillVariants.claude.length, 0);
   assert.equal(catalog.skillVariants.codex.length, 0);
-  assert.equal(catalog.skills.length, 21);
-  assert.equal(buildInstallSet(catalog, 'claude').skills.length, 21);
-  assert.equal(buildInstallSet(catalog, 'codex').skills.length, 21);
+  assert.equal(catalog.skills.length, 22);
+  assert.equal(buildInstallSet(catalog, 'claude').skills.length, 22);
+  assert.equal(buildInstallSet(catalog, 'codex').skills.length, 22);
 
   const universalNames = new Set(
     catalog.skillVariants.universal.map((skill) => skill.name),
