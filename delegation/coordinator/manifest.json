@@ -1,7 +1,7 @@
 {
   "agent": "coordinator",
   "purpose": "Govern a change review: decide which workflow steps to launch, read their validated artifacts, send challenged artifacts back for rework, and hand the results to the final review writer.",
-  "model": "claude-opus-5-5",
+  "model": "claude-sonnet-5-5",
   "effort": "medium",
   "max_turns": 30,
   "max_tokens": 8000,

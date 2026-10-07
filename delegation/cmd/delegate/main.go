@@ -118,7 +118,7 @@ func main() {
 		}
 		print(map[string]any{"audit": s, "status": status, "signed_decisions": len(ds)})
 	case "smoke":
-		model := fs.String("model", "claude-opus-5-5", "model ID")
+		model := fs.String("model", "claude-sonnet-5-5", "model ID")
 		fs.Parse(args)
 		requireKey()
 		s, err := smoke.Run(context.Background(), anthropic.New(), *model, *runs)
