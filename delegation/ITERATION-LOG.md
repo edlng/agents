@@ -19,6 +19,9 @@ Costs are model spend through the Claude CLI on the evaluation path.
 | 10-06 | Final-review "no new findings" was enforced only by ID. | Added a judge that compares the prose against every raised finding, challenge, and remediation. | First judge run flagged a remediation it had not been given; after including remediations, 6/6. |
 | 10-06 | Package dry run: nothing recorded which provider produced a run. | `run.json` records the provider; `package.sh` refuses sample runs not produced by the API runtime. | Old CLI run refused. |
 | 10-07 | First API run: the gateway refused `claude-opus-5-5` (organization policy allows Sonnet and Haiku). | The coordinator runs on `claude-sonnet-5-5`. | Live API run ended `PENDING_HUMAN`, 17 calls, $0.18; coordinator evals through the API passed every criterion (12 trials, $0.50). |
+| 10-07 | API evals: on the "clean" allowlist fixture, one correctness trial reported that `strings.ToLower` folds the Kelvin sign (U+212A) to `k`, so `https://\u212Aapi.example.com` matched `kapi.example.com`. A test confirmed the bypass. | The fixture rejects non-ASCII hosts before lowercasing, with a regression test. | approves-clean-change 6/6. The fixture label was wrong; the system was right. |
+| 10-07 | API evals: reviewers sometimes submitted challenge IDs `""` or `"x"`, which failed validation. | The harness numbers findings (F1...) and challenges (C1...); the model no longer supplies IDs. | adversarial-review 6/6 on every criterion (was 5/6). |
+| 10-07 | Tried strict tool use on submit tools to stop malformed submissions. | Reverted. Under strict mode the models filled required fields with placeholders (one empty criterion, `file: "x"`, blank evidence): 21 validation failures, spec-validation fails-unmet-criterion 0/9, held-out verdict 9/14. | Without strict: 9/9 and 12/14. |
 
 ## Code review on real pull requests
 
