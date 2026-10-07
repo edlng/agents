@@ -154,6 +154,11 @@ func submit(log *audit.Log, parent string, l Launch, kind schema.Kind, set *tool
 	vctx.TestRuns = set.TestRuns()
 	vctx.DocsWritten = set.Written()
 	vctx.DocsOut = l.Env.DocsOut
+	raw, err := kind.Normalize(raw)
+	if err != nil {
+		res.Error = &Error{Code: "provider_error", Message: "normalize submission: " + err.Error()}
+		return res
+	}
 	problems := kind.Validate(raw, vctx)
 
 	name := l.ArtifactID + ".json"
