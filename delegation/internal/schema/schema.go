@@ -35,10 +35,48 @@ type Context struct {
 }
 
 type Kind struct {
-	Name     string
-	Tool     provider.Tool
-	validate func(raw json.RawMessage, ctx Context) []string
-	verdict  func(raw json.RawMessage) string
+	Name      string
+	Tool      provider.Tool
+	normalize func(raw json.RawMessage) (json.RawMessage, error)
+	validate  func(raw json.RawMessage, ctx Context) []string
+	verdict   func(raw json.RawMessage) string
+}
+
+// Normalize applies harness-owned fields, such as finding and challenge IDs,
+// before validation. Kinds without harness-owned fields return raw unchanged.
+func (k Kind) Normalize(raw json.RawMessage) (json.RawMessage, error) {
+	if k.normalize == nil {
+		return raw, nil
+	}
+	return k.normalize(raw)
+}
+
+// numberItems sets "id" on each object under path to prefix + its 1-based
+// position, numbering across nested lists in order.
+func numberItems(raw json.RawMessage, prefix string, path ...string) (json.RawMessage, error) {
+	var v map[string]any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		return raw, nil // the validator reports the decode error
+	}
+	n := 0
+	var walk func(node any, rest []string)
+	walk = func(node any, rest []string) {
+		obj, ok := node.(map[string]any)
+		if !ok {
+			return
+		}
+		list, _ := obj[rest[0]].([]any)
+		for _, item := range list {
+			if len(rest) > 1 {
+				walk(item, rest[1:])
+			} else if m, ok := item.(map[string]any); ok {
+				n++
+				m["id"] = fmt.Sprintf("%s%d", prefix, n)
+			}
+		}
+	}
+	walk(v, path)
+	return json.Marshal(v)
 }
 
 // Validate returns every violation. An empty result means the artifact passed.
@@ -161,14 +199,14 @@ func init() {
 			InputSchema: schemaJSON(`{"type":"object","properties":{
 				"verdict":{"type":"string","enum":["APPROVE","BLOCK"]},
 				"summary":{"type":"string"},
-				"findings":{"type":"array","items":{"type":"object","properties":{
-					"id":{"type":"string","description":"F1, F2, ..."},
+				"findings":{"type":"array","description":"The harness numbers findings F1, F2, ... in this order.","items":{"type":"object","properties":{
 					"severity":` + severityEnum + `,
 					"file":{"type":"string"},"line":{"type":"integer"},
 					"title":{"type":"string"},"evidence":{"type":"string"},"remediation":{"type":"string"}},
-					"required":["id","severity","file","line","title","evidence","remediation"]}}},
+					"required":["severity","file","line","title","evidence","remediation"]}}},
 				"required":["verdict","summary","findings"]}`),
 		},
+		normalize: func(raw json.RawMessage) (json.RawMessage, error) { return numberItems(raw, "F", "findings") },
 		validate: func(raw json.RawMessage, ctx Context) []string {
 			var r Review
 			if p := decode(raw, &r); p != nil {
@@ -428,15 +466,17 @@ func init() {
 				"reviews":{"type":"array","items":{"type":"object","properties":{
 					"artifact_id":{"type":"string"},
 					"verdict":{"type":"string","enum":["UPHELD","CHALLENGED"]},
-					"challenges":{"type":"array","items":{"type":"object","properties":{
-						"id":{"type":"string","description":"C1, C2, ... unique across the submission"},
+					"challenges":{"type":"array","description":"The harness numbers challenges C1, C2, ... across the submission.","items":{"type":"object","properties":{
 						"severity":` + severityEnum + `,
 						"claim":{"type":"string","description":"the artifact's claim you dispute, quoted or paraphrased"},
 						"counter_evidence":{"type":"string"},
 						"file":{"type":"string"},"line":{"type":"integer"}},
-						"required":["id","severity","claim","counter_evidence","file","line"]}}},
+						"required":["severity","claim","counter_evidence","file","line"]}}},
 					"required":["artifact_id","verdict","challenges"]}}},
 				"required":["reviews"]}`),
+		},
+		normalize: func(raw json.RawMessage) (json.RawMessage, error) {
+			return numberItems(raw, "C", "reviews", "challenges")
 		},
 		validate: func(raw json.RawMessage, ctx Context) []string {
 			var c Challenge
