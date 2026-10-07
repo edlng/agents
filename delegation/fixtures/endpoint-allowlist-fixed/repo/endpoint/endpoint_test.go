@@ -22,8 +22,9 @@ func TestValidateRejectsUnsafeShapes(t *testing.T) {
 		"https://api.example.com.evil.test/v1",
 		"https://evilapi.example.com/v1",
 		"https://sub.api.example.com/v1",
+		"https://\u212Aapi.example.com/v1",
 	} {
-		if _, err := Validate(raw, []string{"api.example.com"}); err == nil {
+		if _, err := Validate(raw, []string{"api.example.com", "kapi.example.com"}); err == nil {
 			t.Errorf("Validate(%q) unexpectedly succeeded", raw)
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"unicode"
 )
 
 // Validate parses an outbound webhook URL and checks it against the host
@@ -26,6 +27,14 @@ func Validate(raw string, allowedHosts []string) (*url.URL, error) {
 	host := strings.ToLower(u.Hostname())
 	if host == "" {
 		return nil, errors.New("endpoint: missing host")
+	}
+	for _, r := range u.Hostname() {
+		// Non-ASCII hosts must arrive in punycode. Check before lowercasing:
+		// Unicode case folding maps look-alikes such as the Kelvin sign
+		// (U+212A) to ASCII, so they would match an ASCII allowlist entry.
+		if r > unicode.MaxASCII {
+			return nil, errors.New("endpoint: non-ASCII host")
+		}
 	}
 	if net.ParseIP(host) != nil {
 		return nil, errors.New("endpoint: IP literal hosts are not allowed")
