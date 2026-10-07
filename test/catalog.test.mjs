@@ -170,7 +170,7 @@ const KIRO_PROMPT_SHA256 = {
   'research-validator': 'c0b17309751b84a549e5587cd5cfdbc2be897ac74d8259948ad12ecd36024dfe',
   researcher: '0adcd287058b3e998032463dd41c43aaadfd5eddef413030cd5f5ef636a1a263',
   tester: '0f2e6019409d2d404afc08bdcc5420a126b57bbe3f73765d6cb748796cbd0a45',
-  validator: '18e629fb194c2f266abc01c5d6d6c3111fc4c7a7be1eda5d89e702ed88163b23',
+  validator: '81752099f31e9c2fd3ea59697878a6daf5bbaac0ce9e1d100d112cd0489f9050',
 };
 
 const KIRO_JSON_SHA256 = {
