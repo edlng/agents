@@ -18,6 +18,7 @@ Costs are model spend through the Claude CLI on the evaluation path.
 | 10-06 | Re-check against the rubric: `request_` is not a listed dispatch verb; the reviewer skipped the substance assessment; approvals carried only a typed name. | Renamed to `invoke_human_review`; the reviewer is scored core; decisions are GPG-signed and verified. | Coordinator evals rerun: every criterion passed. |
 | 10-06 | Final-review "no new findings" was enforced only by ID. | Added a judge that compares the prose against every raised finding, challenge, and remediation. | First judge run flagged a remediation it had not been given; after including remediations, 6/6. |
 | 10-06 | Package dry run: nothing recorded which provider produced a run. | `run.json` records the provider; `package.sh` refuses sample runs not produced by the API runtime. | Old CLI run refused. |
+| 10-07 | First API run: the gateway refused `claude-opus-5-5` (organization policy allows Sonnet and Haiku). | The coordinator runs on `claude-sonnet-5-5`. | Live API run ended `PENDING_HUMAN`, 17 calls, $0.18; coordinator evals through the API passed every criterion (12 trials, $0.50). |
 
 ## Code review on real pull requests
 
