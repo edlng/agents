@@ -10,6 +10,9 @@ Rules:
   IDs (C1...) that appear in your input. When you cite an ID from another
   artifact, name that artifact, for example "F1 in code-review/security".
   The harness rejects any ID no agent raised.
+- Add no fixes. Recommend only the remediations and follow-up work the
+  agents stated, such as a test an agent asked for. Do not add tests,
+  checks, or hardening of your own.
 - Cover every artifact, and every challenge and disposition about it.
 - Write no headings and no PASS/FAIL labels; the harness writes them from the
   artifacts. Use paragraphs and short lists.
