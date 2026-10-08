@@ -25,6 +25,11 @@ go run ./delegation/cmd/delegate status <correlation-id>
 go run ./delegation/cmd/delegate decide <correlation-id> --decision approve --reviewer <name>
 go run ./delegation/cmd/delegate verify <correlation-id>
 
+# Substance gate demo: a catalog copy with documentation scored toy ends ELEVATED
+cp -R delegation/workflows delegation/runs/toy-catalog
+sed -i '' 's/"substance": "peripheral"/"substance": "toy"/' delegation/runs/toy-catalog/documentation/manifest.json
+go run ./delegation/cmd/delegate run --task delegation/fixtures/endpoint-allowlist --workflows delegation/runs/toy-catalog
+
 # No credentials: re-run the harness from a recorded run
 go run ./delegation/cmd/delegate replay --task delegation/fixtures/endpoint-allowlist \
   --exchanges delegation/runs/endpoint.exchanges.jsonl
@@ -34,7 +39,7 @@ go test ./delegation/...                 # deterministic, no model calls
 
 Each run writes `delegation/runs/<correlation-id>/`: `audit.jsonl`
 (hash-chained, fsynced per event), `summary.json` (tokens and cost per
-agent), `artifacts/` (every submission, including rejected ones),
+agent), `artifacts/` (every submission: rejected ones as `*.rejected-N.json`, and earlier versions of a relaunched step as `*.v1.json`, `*.v2.json`, ...),
 `report.md`, `run.json` (the system record, never edited), and
 `decisions.jsonl` (human decisions, append-only).
 

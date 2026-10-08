@@ -89,7 +89,7 @@ Tools (the manifest declares exactly these):
 | `launch_documenter` | `step`, `prior_challenges?` |
 | `launch_adversarial_reviewer` | `artifact_ids[]` |
 | `launch_final_review_writer` | `disposition` (per artifact: `accepted`, `revised`, `unresolved`, plus a reason) |
-| `request_human_decision` | `reason` |
+| `invoke_human_review` | `reason` |
 
 The coordinator sees the task spec, the workflow catalog (names, purposes,
 steps), and tool results. It never sees file contents unless a sub-agent quotes
@@ -101,7 +101,7 @@ that rule. The coordinator's reasoning does.
 Harness limits. Each one returns a structured error the coordinator can
 reason over:
 
-- at most 3 launches per artifact and 12 launches per run
+- at most 3 launches per artifact and 14 launches per run
 - a per-run budget in USD (`--budget`) checked before each launch
 - `launch_final_review_writer` refused until every produced artifact has an
   adversarial review
@@ -111,7 +111,7 @@ Dispatch-only proof:
 
 - `coordinator/manifest.json` lists the tools above and nothing else.
 - A Go test fails if any coordinator tool name lacks a `launch_` or
-  `request_` prefix.
+  `invoke_` prefix.
 - A Go test runs `go list -deps ./delegation/internal/coordinator` and fails
   if the package imports `os/exec`, `net/http`, or `internal/tools`. The
   coordinator reaches the provider only through an interface injected by
@@ -173,7 +173,7 @@ artifacts. That check enforces "no new findings".
   `continue|reject`. The real catalog has 0 toy and 1 peripheral, so it does
   not elevate. A fixture catalog that marks documentation `toy` proves the
   gate fires.
-- The coordinator has no tool that writes a decision. `request_human_decision`
+- The coordinator has no tool that writes a decision. `invoke_human_review`
   only records a request.
 
 ## Audit trail
@@ -228,7 +228,9 @@ Each milestone ends with `go test ./delegation/...` green and a commit.
    Full live CLI run 20261005T164931Z-c2cf6f0e ended PENDING_HUMAN for $0.43.)
 8. Package `certification/stage5/`: README mapping each rubric card to a
    file, a sample run directory with the full audit, `git log` export, and a
-   replay e2e that needs no credentials.
+   replay e2e that needs no credentials. (Done: `delegation/package.sh`
+   builds the zip; `certification/stage5/README.md` maps each card to a path
+   in it. Sample runs cover a clean pass, a rework loop, and an elevated run.)
 
 ## Rubric coverage
 
@@ -241,7 +243,9 @@ Each milestone ends with `go test ./delegation/...` green and a commit.
 | Stage 4 continuity | API harness, `PENDING_HUMAN` default, substance gate, `audit.jsonl` per correlation ID |
 | The counterfeit | the import test proves the coordinator cannot reach tools |
 
-## Open items
+## Decisions
 
-- Pick the provider (Improving key or Bedrock) before milestone 1.
-- Pick the coordinator and sub-agent models and set a total eval budget.
+- Provider: the Messages API with the Improving key (option 1). Bedrock was
+  not used.
+- Models: every agent runs on `claude-sonnet-5-5`. The gateway refused
+  `claude-opus-5-5` for the coordinator (organization policy).
