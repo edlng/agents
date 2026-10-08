@@ -4,14 +4,14 @@
   "agent": "final-review-writer",
   "model": "claude-sonnet-5-5",
   "provider": "anthropic-api",
-  "prompt_sha256": "00ffc4214cf43378789970670b26cabdb27cba57ad7c6bfafa0a0089485a4fca",
-  "generated_at": "2026-10-07T17:23:19Z",
+  "prompt_sha256": "3d4d2f0b8c2d217c7bd3cd3dbb3ceb59f889d8a70de5e3bc3f1dcde757b78bdf",
+  "generated_at": "2026-10-07T19:37:33Z",
   "trials_per_case": 3,
   "criteria": {
     "adds-no-new-findings": {
-      "passed": 5,
+      "passed": 6,
       "total": 6,
-      "rate": 0.8333333333333334
+      "rate": 1
     },
     "covers-every-artifact-and-challenge": {
       "passed": 6,
@@ -32,7 +32,7 @@
   "cases": [
     {
       "id": "fr-blocked",
-      "prompt_sha256": "00ffc4214cf43378789970670b26cabdb27cba57ad7c6bfafa0a0089485a4fca",
+      "prompt_sha256": "3d4d2f0b8c2d217c7bd3cd3dbb3ceb59f889d8a70de5e3bc3f1dcde757b78bdf",
       "fixture": "endpoint-allowlist",
       "purpose": "Blocked change with a minor unresolved challenge (C2).",
       "criteria": [
@@ -43,7 +43,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T171916Z-a6d83dd1-fr-blocked",
+          "correlation_id": "20261007T193646Z-d05221ef-fr-blocked",
           "pass": {
             "adds-no-new-findings": true,
             "covers-every-artifact-and-challenge": true,
@@ -51,29 +51,14 @@
             "tone-polite-direct": true
           },
           "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:This review clearly identifies a critical security flaw while acknowledging what works well. The tone is professional and constructive:\n\nStrengths in tone:\n- Acknowledges what passes: \"The HTTPS enforcement and the other acceptance criteria look good\" and lists four criteria that pass (AC1, AC3, AC4, AC5)\n- States the blocker plainly without blame: explains the suffix-match vulnerability as a fact, not a failure\n- Frames the fix constructively: \"Please switch to exact hostname comparison\" with specific guidance (exact equality check, skip empty entries, add test for look-alike)\n- Provides technical clarity: explains the vulnerability (SSRF-style bypass, CWE-918), cites the exact location (line 35), and names the offending function (strings.HasSuffix)\n\nMinor areas:\n- The review is necessarily detailed due to the security nature, but avoids condescension\n- C2 (documentation nit) is noted as minor and unresolved without pressure, showing proportional critique\n\nThe review is direct (cannot merge until the critical issue is fixed), polite (no blame or sarcasm), and encouraging (credits the passing criteria and frames the fix as concrete next steps).} \u003cnil\u003e",
-            "novel={NewDefects:[] Rationale:All defects and required fixes asserted in the report are covered by the raised items: (1) The critical suffix-match vulnerability and hostname comparison fix are covered by F1; (2) The AC2 failure is explained as caused by the same F1 defect; (3) The suggested test for look-alike hosts follows directly from F1; (4) The C2 minor challenge about missing line citation and the suggestion to add line 20 citation are covered by C2 itself. Praise regarding HTTPS enforcement and passing criteria are neutral descriptions, not defect assertions.} \u003cnil\u003e",
+            "tone={Polite:true Encouraging:true Direct:true Rationale:This review clearly states the blocking issue (CWE-918 suffix-match vulnerability at endpoint/endpoint.go line 35) and the required fix (exact hostname comparison). It acknowledges what works well (https enforcement, rejection logic, test coverage, unchanged behavior) and provides constructive next steps. The tone avoids blame while being straightforward about why the change cannot merge. A minor suggestion about adding a line citation for completeness is framed as tidying rather than criticism. The review is appropriately thorough for a security-sensitive change without being pedantic.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes asserted in the report are covered by the raised items. The critical CWE-918 suffix-match vulnerability (F1) is explicitly raised. The AC2 failure is explained as a consequence of F1, which is covered. All passing criteria (AC1, AC3, AC4, AC5) correspond to raised PASS items. Challenge C2 about missing line citation is explicitly raised. The suggested fix (exact hostname comparison, skip empty entries) follows directly from F1.} \u003cnil\u003e",
             ""
           ],
-          "cost_usd": 0.010644
+          "cost_usd": 0.008517
         },
         {
-          "correlation_id": "20261007T171937Z-f48e3986-fr-blocked",
-          "pass": {
-            "adds-no-new-findings": false,
-            "covers-every-artifact-and-challenge": true,
-            "no-headings-in-prose": true,
-            "tone-polite-direct": true
-          },
-          "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:This review clearly identifies a critical security vulnerability (CWE-918 suffix-match bypass) that blocks the change, while acknowledging what works well (HTTPS enforcement, internal host rejection, and passing tests). The tone is balanced: it explains the risk plainly without blame, credits the progress on AC1/AC3-AC5, and provides specific, actionable fixes (exact hostname equality, empty-entry handling, regression test). The minor documentation gap (C2) is flagged constructively as something that would close with the line citation, showing it doesn't undermine the main verdict. The guidance is direct about the blocker and what must be fixed before merge, making next steps clear for the developer.} \u003cnil\u003e",
-            "novel={NewDefects:[Regression test required: Add test for lookalike-host case (e.g., evilapi.example.com when api.example.com is allowlisted)] Rationale:The report explicitly requires 'a regression test for the lookalike-host case' as part of the fix, but this requirement is not mentioned in the raised items. The raised item F1 specifies only the fix logic (compare hostnames for exact equality, skip empty entries) without mentioning the regression test requirement.} \u003cnil\u003e",
-            ""
-          ],
-          "cost_usd": 0.0083644
-        },
-        {
-          "correlation_id": "20261007T171950Z-d6ead918-fr-blocked",
+          "correlation_id": "20261007T193659Z-98be0bf0-fr-blocked",
           "pass": {
             "adds-no-new-findings": true,
             "covers-every-artifact-and-challenge": true,
@@ -81,17 +66,32 @@
             "tone-polite-direct": true
           },
           "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:This review is polite, encouraging, and direct. It avoids blame or sarcasm while clearly identifying the critical flaw: the suffix match vulnerability at line 35 that allows evilapi.example.com to bypass restrictions meant for api.example.com. The tone credits what works well (HTTPS enforcement and URL rejection) and frames the required fix constructively with specific guidance (exact equality comparison and handling empty entries). The review plainly states the change cannot merge until the host comparison is corrected, without hedging. It acknowledges that fixing this single issue will also resolve the secondary citation issue (C2) and is direct about what success looks like.} \u003cnil\u003e",
-            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes asserted in the report are covered by the raised items: F1 covers the critical CWE-918 suffix-match vulnerability and the required fix; AC2 failure is attributed to the same root cause as F1; C2 (minor challenge regarding AC1 line citation) is explicitly raised. No assertions about defects or required fixes exist outside the scope of these raised items.} \u003cnil\u003e",
+            "tone={Polite:true Encouraging:true Direct:true Rationale:Polite: The review contains no blame, sarcasm, or condescension. It uses neutral technical language and acknowledges what passed (\"the rest of the change looks sound,\" \"AC1, AC3, AC4 and AC5 pass\"). Encouraging: The review credits specific successes (https enforcement, bad URL rejection, unchanged behavior, passing tests) and frames the required fix constructively as a straightforward change (\"Switching to exact hostname equality should resolve it\"). Direct: The review clearly states the change is FAIL, identifies the exact blocking issue (suffix match at line 35 is a CWE-918 SSRF risk), specifies the required fix (exact equality comparison and skip empty entries), and explains that once AC2 is fixed, the criteria should pass. There is no hedging—the action items are plainly stated without filler.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All defects and findings in the report are covered by raised items. F1 (CWE-918 suffix-match vulnerability) is explicitly raised as critical. AC2's failure is covered by the raised AC2 FAIL item, and the root cause (suffix-match) is addressed by F1. The passing criteria (AC1, AC3, AC4, AC5) are covered by their corresponding PASS items. C2 (minor documentation gap) is covered by the raised C2 challenge item. No additional defects beyond those raised are asserted in the report.} \u003cnil\u003e",
             ""
           ],
-          "cost_usd": 0.0083544
+          "cost_usd": 0.008917
+        },
+        {
+          "correlation_id": "20261007T193714Z-c26927c4-fr-blocked",
+          "pass": {
+            "adds-no-new-findings": true,
+            "covers-every-artifact-and-challenge": true,
+            "no-headings-in-prose": true,
+            "tone-polite-direct": true
+          },
+          "notes": [
+            "tone={Polite:true Encouraging:true Direct:true Rationale:The review clearly states the change is blocked by a critical SSRF vulnerability (CWE-918) caused by suffix-match logic at endpoint.go line 35, with a concrete attack example (evilapi.example.com). It specifies the fix (exact equality, skip empty entries) and acknowledges what works (HTTPS enforcement, 4 of 5 acceptance criteria). The tone avoids blame, credits the working elements, and distinguishes blocking issues from minor cleanup (line citation for AC1), making priorities clear for the developer.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All assertions in the report are covered by the raised items. The critical F1 CWE-918 suffix-match allowlist vulnerability is explicitly raised. The AC2 failure is the same defect restated in spec-validation context. The remediation guidance (exact equality comparison, skip empty entries) follows directly from F1. The C2 minor challenge about missing line citation for AC1 evidence is explicitly raised. The consequences and explanations provided (tenant attack surface, defeat of purpose) are explanations of the raised defect, not separate defects.} \u003cnil\u003e",
+            ""
+          ],
+          "cost_usd": 0.008787
         }
       ]
     },
     {
       "id": "fr-rework",
-      "prompt_sha256": "00ffc4214cf43378789970670b26cabdb27cba57ad7c6bfafa0a0089485a4fca",
+      "prompt_sha256": "3d4d2f0b8c2d217c7bd3cd3dbb3ceb59f889d8a70de5e3bc3f1dcde757b78bdf",
       "fixture": "endpoint-allowlist",
       "purpose": "Security review revised after critical challenge C1.",
       "criteria": [
@@ -102,7 +102,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172043Z-e5b96e00-fr-rework",
+          "correlation_id": "20261007T193646Z-74f6c981-fr-rework",
           "pass": {
             "adds-no-new-findings": true,
             "covers-every-artifact-and-challenge": true,
@@ -110,14 +110,14 @@
             "tone-polite-direct": true
           },
           "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:This review report is polite—it identifies the critical security issue (SSRF bypass via suffix matching) without blame or condescension, and credits the work already in good shape (HTTPS enforcement, rejection behavior, passing tests). It is encouraging—it frames the fix constructively (\"Switch to exact hostname comparison and the change should be ready for another look\") and acknowledges what passed (AC1, AC3, AC4, AC5). It is direct—it plainly states the change is blocked, names the exact root cause (strings.HasSuffix at line 35), specifies the required fix (exact equality comparison and skip empty entries), and notes the disposition. The secondary minor note about C2 (adding a line citation) is presented factually without hedging.} \u003cnil\u003e",
-            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes asserted in the report are covered by the raised items. F1 covers the CWE-918 vulnerability and the required fix (exact hostname comparison and skip empty entries). AC2 is listed as a raised FAIL item. C1 and C2 challenges are accounted for. The report's description of test results, HTTPS enforcement, and review history are consistent with or explanatory of the raised items, not new assertions.} \u003cnil\u003e",
+            "tone={Polite:true Encouraging:true Direct:true Rationale:The review identifies a critical security vulnerability (CWE-918: suffix match bypass in host allowlist) that blocks the change, provides specific remediation (exact hostname comparison), cites the vulnerable code location (endpoint/endpoint.go line 35) with a concrete attack example (evilapi.example.com bypassing api.example.com allowlist), and credits passing checks. The verdict and blocking reason are stated plainly without hedging.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All defects and required fixes asserted in the report are covered by raised items: F1/AC2 (suffix-match vulnerability requiring exact hostname comparison) is the blocking issue; C1 (critical challenge about HasSuffix admitting look-alikes) restates F1; AC1-AC5 validation criteria are covered; C2 (minor, line citation missing from AC1 evidence) is addressed with the proposed line 20 citation. No uncovered defects found.} \u003cnil\u003e",
             ""
           ],
-          "cost_usd": 0.0093884
+          "cost_usd": 0.009851
         },
         {
-          "correlation_id": "20261007T172057Z-ef08848b-fr-rework",
+          "correlation_id": "20261007T193704Z-2c7331af-fr-rework",
           "pass": {
             "adds-no-new-findings": true,
             "covers-every-artifact-and-challenge": true,
@@ -125,14 +125,14 @@
             "tone-polite-direct": true
           },
           "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:This review demonstrates strong technical rigor and clear communication. The reviewer identifies a legitimate server-side request forgery vulnerability (F1) with precise location and concrete example (evilapi.example.com bypassing validation for api.example.com). The security concern is well-founded and directly impacts acceptance criterion AC2. Strengths include: crediting the HTTPS enforcement, rejection behavior, and test suite as working correctly; tracing the root cause across multiple review rounds; and providing a specific, actionable fix (exact hostname comparison instead of suffix matching). The tone avoids blame while being unambiguous: the change is blocked, the reason is clear, and the path forward is explicit. The minor challenge C2 about line citation is noted appropriately as non-blocking but addressable. Overall, this is a professional security review that balances directness with constructiveness, protecting the client from a real vulnerability while acknowledging what the team did right.} \u003cnil\u003e",
-            "novel={NewDefects:[] Rationale:All substantive defects and required fixes in the report are covered by the raised items: F1 (CWE-918 suffix-match vulnerability requiring exact hostname comparison) is explicitly raised; AC2 failure due to the same root cause is explicitly raised; the challenges C1 and C2 are explicitly raised. The report's praise for passing criteria (HTTPS enforcement, rejection behavior, tests) and procedural details about revision/re-run are either neutral descriptions or follow directly from the raised findings. No uncovered defects, risks, or required fixes are asserted.} \u003cnil\u003e",
+            "tone={Polite:true Encouraging:true Direct:true Rationale:This review is direct and professional. It clearly states the verdict (blocked), identifies the critical security issue by reference (F1, CWE-918), explains the risk plainly (suffix matching allows look-alike hosts like evilapi.example.com), and provides concrete remediation (exact hostname equality check). The reviewer acknowledges what works well (HTTPS enforcement, rejection behavior, passing tests) before addressing the blocker, which is appropriately encouraging. The tone avoids blame—this is a security defect that needs fixing, presented matter-of-factly. The reference to the challenge process and additional details (AC1–AC5, line citations) provides full context without hedging. The recommendation is specific and actionable.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes asserted in the report are covered by raised items: F1 covers the suffix-match SSRF vulnerability (CWE-918), the specific look-alike host risk, and recommended fix; C1 covers the HasSuffix issue; AC1-AC5 status findings are directly raised; C2 covers the missing line citation in AC1 evidence. The report's causal explanations (e.g., AC2 failing due to the F1 defect) restate/explain existing raised data rather than asserting new defects.} \u003cnil\u003e",
             ""
           ],
-          "cost_usd": 0.0093484
+          "cost_usd": 0.009151
         },
         {
-          "correlation_id": "20261007T172114Z-598c613d-fr-rework",
+          "correlation_id": "20261007T193719Z-fb7de67e-fr-rework",
           "pass": {
             "adds-no-new-findings": true,
             "covers-every-artifact-and-challenge": true,
@@ -140,14 +140,14 @@
             "tone-polite-direct": true
           },
           "notes": [
-            "tone={Polite:true Encouraging:true Direct:true Rationale:The review maintains a professional tone without blame or sarcasm. It acknowledges progress on https enforcement and other passing criteria while clearly stating the blocking issue. The fix is specified plainly (exact hostname comparison instead of suffix match) with exact line numbers and security implications (CWE-918 SSRF risk). The review is constructive about next steps, including adding regression tests and closing documentation gaps, making it accessible feedback for the developer.} \u003cnil\u003e",
-            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes in the report are covered by the raised items: F1 addresses the CWE-918 suffix-match vulnerability and required fix; C1 covers the adversarial challenge; AC2 identifies the spec validation failure with the same root cause; C2 addresses the documentation gap for AC1 evidence. The suggested test for look-alike hosts follows directly from the F1 vulnerability fix.} \u003cnil\u003e",
+            "tone={Polite:true Encouraging:true Direct:true Rationale:This review demonstrates strong technical rigor and professionalism. The tone is direct and factual—it clearly blocks the change, identifies the exact problem (suffix match at line 35 admits look-alike hosts like evilapi.example.com), cites the relevant CWE-918 security issue, and specifies the required fix (exact hostname comparison). The review acknowledges what works well: HTTPS enforcement, rejection logic, and test coverage all pass. The encouragement is implicit but real—four of five acceptance criteria pass, and the remediation path is clear and achievable. The review avoids blame or condescension; it frames the suffix-match vulnerability plainly as a design oversight that must be corrected before merge. The inclusion of review history, challenge resolution, and the minor C2 citation issue (line 20 for AC1 evidence) shows thoroughness without letting secondary concerns distract from the critical blocker. For a consulting engagement, this strikes the right balance: professional accountability, actionable guidance, and respect for the work done so far.} \u003cnil\u003e",
+            "novel={NewDefects:[] Rationale:All defects, risks, and required fixes asserted in the report are covered by the raised items: F1 covers the CWE-918 suffix-match vulnerability and required fix; C1 covers the critical challenge about look-alike hosts; AC1-AC5 cover the spec validation results; C2 covers the minor challenge about missing line citation. The report's prose restates, explains, and summarizes these raised items without introducing new uncovered defects.} \u003cnil\u003e",
             ""
           ],
-          "cost_usd": 0.0094584
+          "cost_usd": 0.009561
         }
       ]
     }
   ],
-  "total_cost_usd": 0.055557999999999996
+  "total_cost_usd": 0.054784
 }

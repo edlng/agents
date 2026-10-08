@@ -288,7 +288,8 @@ func finalReviewCases() []Case {
 	}
 }
 
-// raisedDefects lists every finding and challenge the writer was given.
+// raisedDefects lists every finding, criterion status, and challenge the
+// writer was given.
 func raisedDefects(e *Env) []string {
 	var out []string
 	for _, id := range e.Runner.ArtifactIDs() {
@@ -299,10 +300,10 @@ func raisedDefects(e *Env) []string {
 			}
 		}
 		if m, _, ok := criteria(a); ok {
+			// Every status, not only FAIL: a report that repeats a PASS
+			// is restating its input, not adding a finding.
 			for cid, status := range m {
-				if status == "FAIL" {
-					out = append(out, fmt.Sprintf("%s FAIL in %s", cid, id))
-				}
+				out = append(out, fmt.Sprintf("%s %s in %s", cid, status, id))
 			}
 		}
 		for _, rv := range e.Runner.History(id) {
@@ -324,7 +325,7 @@ type noveltyGrade struct {
 // summarizing, or explaining a raised item is not new.
 func judgeNovelty(ctx context.Context, p provider.Provider, raised []string, prose string) (noveltyGrade, float64, error) {
 	var g noveltyGrade
-	resp, err := p.Complete(ctx, provider.Request{
+	input, cost, err := judge(ctx, p, provider.Request{
 		Model:     "claude-haiku-4-5",
 		MaxTokens: 1500,
 		System: `You audit a code review report against the findings the reviewers actually raised.
@@ -337,13 +338,27 @@ Call submit_audit once; new_defects is empty when everything is covered.`,
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"new_defects":{"type":"array","items":{"type":"string"}},"rationale":{"type":"string"}},"required":["new_defects","rationale"]}`)}},
 	})
 	if err != nil {
-		return g, 0, err
+		return g, cost, err
 	}
-	calls := resp.ToolCalls()
-	if len(calls) != 1 {
-		return g, resp.Usage.CostUSD, fmt.Errorf("judge made %d calls", len(calls))
+	return g, cost, json.Unmarshal(input, &g)
+}
+
+// judge asks once more when the judge model ends without exactly one tool
+// call, so a judge slip is not scored as a failure of the graded agent.
+func judge(ctx context.Context, p provider.Provider, req provider.Request) (json.RawMessage, float64, error) {
+	var cost float64
+	for attempt := 1; ; attempt++ {
+		resp, err := p.Complete(ctx, req)
+		if err != nil {
+			return nil, cost, err
+		}
+		cost += resp.Usage.CostUSD
+		if calls := resp.ToolCalls(); len(calls) == 1 {
+			return calls[0].Input, cost, nil
+		} else if attempt == 2 {
+			return nil, cost, fmt.Errorf("judge made %d calls in %d attempts", len(calls), attempt)
+		}
 	}
-	return g, resp.Usage.CostUSD, json.Unmarshal(calls[0].Input, &g)
 }
 
 type toneGrade struct {
@@ -357,7 +372,7 @@ type toneGrade struct {
 // in evaluations.
 func judgeTone(ctx context.Context, p provider.Provider, prose string) (toneGrade, float64, error) {
 	var g toneGrade
-	resp, err := p.Complete(ctx, provider.Request{
+	input, cost, err := judge(ctx, p, provider.Request{
 		Model:     "claude-haiku-4-5",
 		MaxTokens: 1000,
 		System: `You grade the tone of a code review report written for a consulting client.
@@ -370,11 +385,7 @@ Call submit_grade once.`,
 			InputSchema: json.RawMessage(`{"type":"object","properties":{"polite":{"type":"boolean"},"encouraging":{"type":"boolean"},"direct":{"type":"boolean"},"rationale":{"type":"string"}},"required":["polite","encouraging","direct","rationale"]}`)}},
 	})
 	if err != nil {
-		return g, 0, err
+		return g, cost, err
 	}
-	calls := resp.ToolCalls()
-	if len(calls) != 1 {
-		return g, resp.Usage.CostUSD, fmt.Errorf("judge made %d calls", len(calls))
-	}
-	return g, resp.Usage.CostUSD, json.Unmarshal(calls[0].Input, &g)
+	return g, cost, json.Unmarshal(input, &g)
 }
