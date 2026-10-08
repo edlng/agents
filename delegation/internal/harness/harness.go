@@ -184,11 +184,32 @@ type dispatcher struct {
 	requests []string
 }
 
+// Dispatch logs the call and the harness's answer, so refusals (limits,
+// budget, unreviewed artifacts, bad arguments) are in the audit trail and not
+// only in the coordinator's reasoning.
 func (h *dispatcher) Dispatch(ctx context.Context, tool string, input json.RawMessage, parent string) (json.RawMessage, error) {
 	if _, err := h.log.Append(audit.Event{Kind: audit.KindToolCall, ParentSpanID: parent, Agent: "coordinator",
 		Detail: mustJSON(map[string]any{"tool": tool, "input": input})}); err != nil {
 		return nil, err
 	}
+	out, err := h.route(ctx, tool, input, parent)
+	if err != nil {
+		return nil, err
+	}
+	var summary struct {
+		OK         bool            `json:"ok"`
+		ArtifactID string          `json:"artifact_id,omitempty"`
+		Error      json.RawMessage `json:"error,omitempty"`
+	}
+	json.Unmarshal(out, &summary)
+	if _, err := h.log.Append(audit.Event{Kind: audit.KindToolResult, ParentSpanID: parent, Agent: "harness",
+		Detail: mustJSON(map[string]any{"tool": tool, "ok": summary.OK, "artifact_id": summary.ArtifactID, "error": summary.Error})}); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (h *dispatcher) route(ctx context.Context, tool string, input json.RawMessage, parent string) (json.RawMessage, error) {
 	var res subagent.Result
 	switch tool {
 	case "launch_code_reviewer", "launch_spec_validator", "launch_documenter":
