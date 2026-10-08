@@ -97,7 +97,13 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 		return Result{}, err
 	}
 	res := Result{CorrelationID: log.CorrelationID(), Dir: log.Dir()}
+	scratch, err := os.MkdirTemp("", "delegate-run-"+log.CorrelationID()+"-")
+	if err != nil {
+		return res, err
+	}
+	defer os.RemoveAll(scratch)
 	h := &dispatcher{runner: dispatch.New(cfg.Provider, log, cat, tk, cfg.Limits), log: log, man: man}
+	h.runner.Scratch = scratch
 	substance := gate.Assess(cat)
 
 	outcome, runErr := coordinator.Run(ctx, cfg.Provider, log, man, h, brief(tk, cat, substance))

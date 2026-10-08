@@ -86,6 +86,30 @@ func TestRunTestsUsesFixedCommandOnACopy(t *testing.T) {
 	}
 }
 
+// With a run scratch directory, each call shares its cache and removes its
+// repository copy, so only the cache stays until the run ends.
+func TestRunTestsSharesRunScratch(t *testing.T) {
+	scratch := t.TempDir()
+	cmd := []string{"sh", "-c", `mkdir -p "$GOCACHE"; touch "$GOCACHE/$$"`}
+	s, _ := Build([]string{"run_tests"}, Env{Repo: repo(t), TestCommand: cmd, Scratch: scratch})
+	for i := 0; i < 2; i++ {
+		if got, err := call(t, s, "run_tests", `{}`); err != nil || !strings.Contains(got, "exit_code: 0") {
+			t.Fatalf("run %d = %q, %v", i, got, err)
+		}
+	}
+	entries, _ := os.ReadDir(scratch)
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, ",") != "gocache" {
+		t.Fatalf("scratch holds %v, want only gocache", names)
+	}
+	if cached, _ := os.ReadDir(filepath.Join(scratch, "gocache")); len(cached) != 2 {
+		t.Fatalf("gocache holds %d entries, want 2 (one per run)", len(cached))
+	}
+}
+
 func TestWriteDocOnlyUnderDocs(t *testing.T) {
 	out := t.TempDir()
 	s, _ := Build([]string{"write_doc"}, Env{Repo: repo(t), DocsOut: out})
