@@ -38,6 +38,10 @@ type Env struct {
 	Repo        string   // client repository, read-only
 	TestCommand []string // the only command run_tests may execute
 	DocsOut     string   // where write_doc puts files (inside the run directory)
+	// Scratch is the run's one temporary directory. run_tests shares its Go
+	// cache and module path across calls; the owner removes it. When empty,
+	// each call makes and removes its own.
+	Scratch string
 }
 
 // TestRun is the harness's own record of a run_tests call. Validators compare
@@ -318,12 +322,20 @@ var runTestsDef = provider.Tool{
 }
 
 func (s *Set) runTests(ctx context.Context, _ json.RawMessage) (string, error) {
-	scratch, err := os.MkdirTemp("", "delegate-tests-")
+	scratch := s.env.Scratch
+	if scratch == "" {
+		dir, err := os.MkdirTemp("", "delegate-tests-")
+		if err != nil {
+			return "", err
+		}
+		defer os.RemoveAll(dir)
+		scratch = dir
+	}
+	work, err := os.MkdirTemp(scratch, "repo-")
 	if err != nil {
 		return "", err
 	}
-	defer os.RemoveAll(scratch)
-	work := filepath.Join(scratch, "repo")
+	defer os.RemoveAll(work)
 	if err := copyTree(s.env.Repo, work); err != nil {
 		return "", fmt.Errorf("copy repository: %w", err)
 	}

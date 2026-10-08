@@ -41,6 +41,7 @@ type Runner struct {
 	Catalog  *catalog.Catalog
 	Task     *task.Task
 	Limits   Limits
+	Scratch  string // passed to every launch's tools; see tools.Env.Scratch
 
 	mu         sync.Mutex
 	artifacts  map[string]subagent.Result         // latest valid artifact per artifact ID
@@ -145,6 +146,7 @@ func (r *Runner) LaunchStep(ctx context.Context, workflowID, stepID string, cont
 		Env: tools.Env{
 			Repo: r.Task.RepoDir, TestCommand: r.Task.TestCommand,
 			DocsOut: filepath.Join(r.Log.Dir(), "artifacts", workflowID, stepID+"-out"),
+			Scratch: r.Scratch,
 		},
 		Validation: schema.Context{CriteriaIDs: r.Task.CriteriaIDs()},
 	})
