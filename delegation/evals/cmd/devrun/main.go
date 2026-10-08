@@ -18,6 +18,7 @@ import (
 func main() {
 	taskDir := flag.String("task", "delegation/fixtures/endpoint-allowlist", "task directory")
 	runs := flag.String("runs", "delegation/runs", "run directory root")
+	workflows := flag.String("workflows", "delegation/workflows", "workflow catalog directory")
 	budget := flag.Float64("budget", 2.00, "run budget in USD")
 	coordModel := flag.String("coordinator-model", "", "override the coordinator model")
 	workerModel := flag.String("worker-model", "", "override every sub-agent model")
@@ -36,7 +37,7 @@ func main() {
 		p = rec
 	}
 	res, err := harness.Run(context.Background(), harness.Config{
-		Provider: p, ProviderName: "claude-cli (development, evals/)", TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
+		Provider: p, ProviderName: "claude-cli (development, evals/)", TaskDir: *taskDir, WorkflowsDir: *workflows, RunsRoot: *runs, Limits: limits,
 		CoordinatorModel: *coordModel, WorkerModel: *workerModel,
 	})
 	b, _ := json.MarshalIndent(res, "", "  ")

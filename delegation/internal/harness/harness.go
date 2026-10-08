@@ -102,7 +102,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 
 	outcome, runErr := coordinator.Run(ctx, cfg.Provider, log, man, h, brief(tk, cat, substance))
 	rec := gate.RunRecord{
-		CorrelationID: log.CorrelationID(), TaskID: tk.ID, Provider: cfg.ProviderName, Substance: substance,
+		CorrelationID: log.CorrelationID(), TaskID: tk.ID, Provider: cfg.ProviderName, Workflows: cfg.WorkflowsDir, Substance: substance,
 		Requests: h.requests, Coordinator: outcome, CostUSD: h.runner.Spent() + outcome.CostUSD,
 	}
 	switch {
