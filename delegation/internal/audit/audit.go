@@ -21,6 +21,7 @@ import (
 const (
 	KindLLMCall    = "llm_call"
 	KindToolCall   = "tool_call"
+	KindToolResult = "tool_result"
 	KindDispatch   = "dispatch"
 	KindValidation = "validation"
 	KindGate       = "gate"

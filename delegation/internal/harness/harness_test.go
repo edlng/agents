@@ -116,7 +116,8 @@ func TestReworkLoopEndsPendingHuman(t *testing.T) {
 	// The audit trail verifies from disk and records the early final-review
 	// refusal, both reviews, and the terminal state.
 	trail, _ := os.ReadFile(filepath.Join(res.Dir, "audit.jsonl"))
-	for _, want := range []string{`"isolated_context":true`, `"kind":"terminal"`, `"status":"PENDING_HUMAN"`} {
+	for _, want := range []string{`"isolated_context":true`, `"kind":"terminal"`, `"status":"PENDING_HUMAN"`,
+		`"kind":"tool_result"`, `"code":"review_pending"`} {
 		if !strings.Contains(string(trail), want) {
 			t.Errorf("audit missing %s", want)
 		}
