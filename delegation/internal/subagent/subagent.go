@@ -161,16 +161,24 @@ func submit(log *audit.Log, parent string, l Launch, kind schema.Kind, set *tool
 	}
 	problems := kind.Validate(raw, vctx)
 
+	// Nothing is overwritten: a relaunch moves the previous valid artifact to
+	// <id>.v<n>.json, and repeated rejections get distinct names.
+	dir := filepath.Join(log.Dir(), "artifacts")
 	name := l.ArtifactID + ".json"
 	if len(problems) > 0 {
-		name = fmt.Sprintf("%s.rejected-%d.json", l.ArtifactID, res.Turns)
+		name = unused(dir, fmt.Sprintf("%s.rejected-%d", l.ArtifactID, res.Turns), ".json")
 	}
-	path := filepath.Join(log.Dir(), "artifacts", filepath.FromSlash(name))
+	path := filepath.Join(dir, filepath.FromSlash(name))
+	detail := map[string]any{"artifact_id": l.ArtifactID, "kind": kind.Name, "valid": len(problems) == 0, "problems": problems, "file": "artifacts/" + name}
 	writeErr := os.MkdirAll(filepath.Dir(path), 0o755)
+	if _, err := os.Stat(path); writeErr == nil && err == nil {
+		old := unusedVersion(dir, l.ArtifactID)
+		writeErr = os.Rename(path, filepath.Join(dir, filepath.FromSlash(old)))
+		detail["superseded"] = "artifacts/" + old
+	}
 	if writeErr == nil {
 		writeErr = os.WriteFile(path, raw, 0o644)
 	}
-	detail := map[string]any{"artifact_id": l.ArtifactID, "kind": kind.Name, "valid": len(problems) == 0, "problems": problems, "file": "artifacts/" + name}
 	if _, err := log.Append(audit.Event{
 		Kind: audit.KindValidation, ParentSpanID: parent,
 		Agent: l.Spec.Agent, Workflow: l.Spec.Workflow, Step: l.Spec.Step, Detail: mustJSON(detail),
@@ -223,4 +231,28 @@ func truncate(s string, n int) string {
 		return s[:n] + "..."
 	}
 	return s
+}
+
+// unused returns base+ext, or base-2+ext, base-3+ext, ... for the first name
+// not yet in dir.
+func unused(dir, base, ext string) string {
+	name := base + ext
+	for n := 2; exists(filepath.Join(dir, filepath.FromSlash(name))); n++ {
+		name = fmt.Sprintf("%s-%d%s", base, n, ext)
+	}
+	return name
+}
+
+// unusedVersion returns the first free <id>.v<n>.json name, starting at v1.
+func unusedVersion(dir, id string) string {
+	for n := 1; ; n++ {
+		if name := fmt.Sprintf("%s.v%d.json", id, n); !exists(filepath.Join(dir, filepath.FromSlash(name))) {
+			return name
+		}
+	}
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
