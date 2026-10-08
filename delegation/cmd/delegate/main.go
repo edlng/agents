@@ -1,7 +1,7 @@
 // Command delegate is the Stage 5 runtime. It reaches models only through the
 // Anthropic API provider.
 //
-//	delegate run --task delegation/fixtures/endpoint-allowlist [--budget 3]
+//	delegate run --task delegation/fixtures/endpoint-allowlist [--budget 3] [--workflows DIR]
 //	delegate replay --task DIR --exchanges FILE   (no credentials needed)
 //	delegate status <correlation-id>
 //	delegate decide <correlation-id> --decision approve|reject|continue --reviewer NAME [--note TEXT]
@@ -27,8 +27,8 @@ import (
 )
 
 const usage = `usage:
-  delegate run --task DIR [--budget USD] [--runs DIR] [--coordinator-model M] [--worker-model M]
-  delegate replay --task DIR --exchanges FILE [--runs DIR]
+  delegate run --task DIR [--budget USD] [--workflows DIR] [--runs DIR] [--coordinator-model M] [--worker-model M]
+  delegate replay --task DIR --exchanges FILE [--workflows DIR] [--runs DIR]
   delegate status ID [--runs DIR]
   delegate decide ID --decision approve|reject|continue --reviewer NAME [--note TEXT] [--key GPGKEY] [--runs DIR]
   delegate verify ID [--runs DIR]
@@ -45,6 +45,7 @@ func main() {
 	case "run":
 		taskDir := fs.String("task", "", "task directory")
 		budget := fs.Float64("budget", dispatch.DefaultLimits.BudgetUSD, "run budget in USD")
+		workflows := fs.String("workflows", "delegation/workflows", "workflow catalog directory")
 		coordModel := fs.String("coordinator-model", "", "override the coordinator model")
 		workerModel := fs.String("worker-model", "", "override every sub-agent model")
 		record := fs.String("record", "", "append every model exchange to this JSONL file")
@@ -62,7 +63,7 @@ func main() {
 			p = rec
 		}
 		res, err := harness.Run(context.Background(), harness.Config{
-			Provider: p, ProviderName: "anthropic-api", TaskDir: *taskDir, RunsRoot: *runs, Limits: limits,
+			Provider: p, ProviderName: "anthropic-api", TaskDir: *taskDir, WorkflowsDir: *workflows, RunsRoot: *runs, Limits: limits,
 			CoordinatorModel: *coordModel, WorkerModel: *workerModel,
 		})
 		print(res)
@@ -72,13 +73,14 @@ func main() {
 	case "replay":
 		taskDir := fs.String("task", "", "task directory")
 		exchanges := fs.String("exchanges", "", "recorded exchanges JSONL")
+		workflows := fs.String("workflows", "delegation/workflows", "workflow catalog directory")
 		fs.Parse(args)
 		rp, err := provider.LoadReplay(*exchanges)
 		if err != nil {
 			fail(err)
 		}
 		rp.Strict = false
-		res, err := harness.Run(context.Background(), harness.Config{Provider: rp, ProviderName: "replay", TaskDir: *taskDir, RunsRoot: *runs})
+		res, err := harness.Run(context.Background(), harness.Config{Provider: rp, ProviderName: "replay", TaskDir: *taskDir, WorkflowsDir: *workflows, RunsRoot: *runs})
 		print(map[string]any{"result": res, "request_hash_mismatches": rp.Mismatches})
 		if err != nil {
 			fail(err)

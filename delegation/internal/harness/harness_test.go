@@ -203,6 +203,9 @@ func TestSubstanceGateElevates(t *testing.T) {
 	if !strings.Contains(string(md), "documentation is scored toy") {
 		t.Errorf("report does not explain the elevation:\n%s", md)
 	}
+	if rec, err := gate.ReadRun(res.Dir); err != nil || rec.Workflows != dir {
+		t.Errorf("run.json workflows = %q, %v; want %q", rec.Workflows, err, dir)
+	}
 	if _, err := gate.Record(root, res.CorrelationID, "edlng", "approve", "", signer); err == nil {
 		t.Fatal("approve accepted while elevated")
 	}
