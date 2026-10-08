@@ -116,3 +116,25 @@ func TestStopsWithoutSubmission(t *testing.T) {
 		t.Fatalf("result = %+v", res)
 	}
 }
+
+// A relaunch keeps the earlier valid artifact, and a repeated rejection gets
+// its own file.
+func TestRelaunchKeepsEarlierSubmissions(t *testing.T) {
+	l, log := setup(t)
+	approve := `{"verdict":"APPROVE","summary":"first","findings":[]}`
+	bad := strings.Replace(blockReview, `"line":4`, `"line":40`, 1)
+	for _, payload := range []string{approve, blockReview, bad, bad} {
+		Run(context.Background(), &scripted{responses: []provider.Response{toolUse("t1", "submit_review", payload)}}, log, l)
+	}
+	dir := filepath.Join(log.Dir(), "artifacts", "code-review")
+	for name, want := range map[string]string{
+		"security.v1.json": `"APPROVE"`, "security.json": `"BLOCK"`,
+		"security.rejected-1.json": `"line":40`, "security.rejected-1-2.json": `"line":40`,
+	} {
+		data, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil || !strings.Contains(string(data), want) {
+			t.Errorf("%s = %q, %v; want it to contain %s", name, data, err, want)
+		}
+	}
+	log.Close()
+}
