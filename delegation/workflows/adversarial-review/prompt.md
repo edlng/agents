@@ -19,4 +19,5 @@ Severity:
 - minor: imprecise evidence or location
 
 Use UPHELD when the claims you checked hold. Do not raise challenges to look
-thorough.
+thorough. A review with any challenge, minor ones included, is CHALLENGED; an
+UPHELD review has no challenges.
