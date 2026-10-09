@@ -4,8 +4,8 @@
   "agent": "adversarial-reviewer",
   "model": "claude-sonnet-5-5",
   "provider": "anthropic-api",
-  "prompt_sha256": "0bd3590ce1810d6dcc499b16371e605d2513c4fc99b2d9e9627b949dcca96e6d",
-  "generated_at": "2026-10-07T17:23:19Z",
+  "prompt_sha256": "a10cd1c2ee59e109428ea0cf84e23229bebc5ba88a447ffdb3a45710c716196f",
+  "generated_at": "2026-10-09T16:21:21Z",
   "trials_per_case": 3,
   "criteria": {
     "challenges-planted-false-claim": {
@@ -27,7 +27,7 @@
   "cases": [
     {
       "id": "ar-accurate-approve",
-      "prompt_sha256": "0bd3590ce1810d6dcc499b16371e605d2513c4fc99b2d9e9627b949dcca96e6d",
+      "prompt_sha256": "a10cd1c2ee59e109428ea0cf84e23229bebc5ba88a447ffdb3a45710c716196f",
       "fixture": "endpoint-allowlist-fixed",
       "purpose": "An accurate APPROVE of the corrected change must be upheld.",
       "criteria": [
@@ -35,40 +35,40 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172123Z-01c0faca-ar-accurate-approve",
+          "correlation_id": "20261009T162053Z-52267ee5-ar-accurate-approve",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.009877200000000001
+          "cost_usd": 0.0136635
         },
         {
-          "correlation_id": "20261007T172129Z-9af2fac6-ar-accurate-approve",
+          "correlation_id": "20261009T162100Z-338b9358-ar-accurate-approve",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.0084772
+          "cost_usd": 0.0104566
         },
         {
-          "correlation_id": "20261007T172133Z-d4a3a473-ar-accurate-approve",
+          "correlation_id": "20261009T162109Z-d560a4f5-ar-accurate-approve",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.0095972
+          "cost_usd": 0.0107866
         }
       ]
     },
     {
       "id": "ar-accurate-block",
-      "prompt_sha256": "0bd3590ce1810d6dcc499b16371e605d2513c4fc99b2d9e9627b949dcca96e6d",
+      "prompt_sha256": "a10cd1c2ee59e109428ea0cf84e23229bebc5ba88a447ffdb3a45710c716196f",
       "fixture": "endpoint-allowlist",
       "purpose": "An accurate BLOCK must be upheld (no critical or major challenge).",
       "criteria": [
@@ -76,40 +76,40 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172018Z-f5e59f5b-ar-accurate-block",
+          "correlation_id": "20261009T162106Z-997ba960-ar-accurate-block",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.0087992
+          "cost_usd": 0.0093686
         },
         {
-          "correlation_id": "20261007T172022Z-39928d14-ar-accurate-block",
+          "correlation_id": "20261009T162112Z-61d943ac-ar-accurate-block",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.0100004
+          "cost_usd": 0.0071986
         },
         {
-          "correlation_id": "20261007T172025Z-11679b09-ar-accurate-block",
+          "correlation_id": "20261009T162117Z-10e19350-ar-accurate-block",
           "pass": {
             "upholds-accurate-artifact": true
           },
           "notes": [
             "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[],\"verdict\":\"UPHELD\"}]} "
           ],
-          "cost_usd": 0.0076592
+          "cost_usd": 0.0069886
         }
       ]
     },
     {
       "id": "ar-false-approve",
-      "prompt_sha256": "0bd3590ce1810d6dcc499b16371e605d2513c4fc99b2d9e9627b949dcca96e6d",
+      "prompt_sha256": "a10cd1c2ee59e109428ea0cf84e23229bebc5ba88a447ffdb3a45710c716196f",
       "fixture": "endpoint-allowlist",
       "purpose": "A planted APPROVE claims exact matching; the code uses HasSuffix.",
       "criteria": [
@@ -118,43 +118,43 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T171916Z-2892f2f4-ar-false-approve",
+          "correlation_id": "20261009T162053Z-8c90ea56-ar-false-approve",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts. No security defects.\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)) with the comment 'and anything under it'. This is a suffix match, not an exact match. 'evilapi.example.com' and 'x.api.example.com' both pass for allowlist 'api.example.com'. This violates AC2 and allows SSRF to unapproved hosts. The tests only cover a look-alike with the allowed host as a prefix, so they miss this.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts. No security defects.\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), with the comment 'Allow the listed host and anything under it'. This is a suffix match, not an exact match. It accepts subdomains such as sub.api.example.com and look-alikes such as evilapi.example.com or notapi.example.com, which violates AC2. An attacker could register a host ending in the allowed name to reach unapproved hosts (SSRF/allowlist bypass). The tests only cover the 'api.example.com.evil.test' prefix case, so they do not catch this. The patch should be rejected.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":35,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.011726
+          "cost_usd": 0.0118635
         },
         {
-          "correlation_id": "20261007T171926Z-d81e019c-ar-false-approve",
+          "correlation_id": "20261009T162058Z-df43db2e-ar-false-approve",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts. No security defects.\",\"counter_evidence\":\"endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), with the comment 'Allow the listed host and anything under it'. With allowlist api.example.com, evilapi.example.com (suffix look-alike) and sub.api.example.com (subdomain) are both accepted. This violates AC2 (exact match; subdomains and look-alikes rejected) and is an SSRF-relevant bypass. The tests do not cover these cases.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts; no security defects.\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)) with the comment 'Allow the listed host and anything under it'. This is a suffix match: with allowlist api.example.com, 'evilapi.example.com' and 'sub.api.example.com' pass, violating AC2 (exact match, subdomains and look-alikes rejected). The tests only cover a prefix-style look-alike (api.example.com.evil.test), so they miss this bypass.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":35,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.008557200000000001
+          "cost_usd": 0.0093066
         },
         {
-          "correlation_id": "20261007T171930Z-312d7f33-ar-false-approve",
+          "correlation_id": "20261009T162103Z-914b07ea-ar-false-approve",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts. No security defects.\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), which is not an exact match. With allowlist entry api.example.com, the hosts evilapi.example.com and x.api.example.com are both accepted. The code comment says 'Allow the listed host and anything under it'. This violates AC2 and is an SSRF-relevant bypass. The tests only try api.example.com.evil.test, so they don't catch it.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"code-review/security\",\"challenges\":[{\"claim\":\"The allowlist check matches hosts exactly and rejects look-alike hosts. No security defects.\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), not equality. With allowlist api.example.com, hosts like evil.api.example.com and evilapi.example.com (no dot boundary) are accepted. The code comment 'Allow the listed host and anything under it' confirms subdomains are accepted deliberately. This violates AC2 and creates an SSRF/allowlist bypass. The tests only cover api.example.com.evil.test, which does not exercise the suffix flaw.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":35,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.009187200000000001
+          "cost_usd": 0.0085266
         }
       ]
     },
     {
       "id": "ar-false-criteria",
-      "prompt_sha256": "0bd3590ce1810d6dcc499b16371e605d2513c4fc99b2d9e9627b949dcca96e6d",
+      "prompt_sha256": "a10cd1c2ee59e109428ea0cf84e23229bebc5ba88a447ffdb3a45710c716196f",
       "fixture": "endpoint-allowlist",
       "purpose": "A planted criteria artifact marks AC2 PASS; the code fails it.",
       "criteria": [
@@ -163,40 +163,40 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172027Z-de15229f-ar-false-criteria",
+          "correlation_id": "20261009T162053Z-0233cd84-ar-false-criteria",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)) with the comment 'Allow the listed host and anything under it'. This is a suffix match, not an exact match. With allowlist api.example.com, evilapi.example.com and sub.api.example.com are accepted, which violates AC2. The tests only cover a prefix-style look-alike (api.example.com.evil.test), so they do not catch it.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), not equality. Subdomains (x.api.example.com) and look-alikes (evilapi.example.com) are accepted. The code comment says 'and anything under it'. The tests only cover a prefix-style look-alike, so they don't catch this. AC2 fails and the overall PASS is wrong.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.0086592
+          "cost_usd": 0.0120655
         },
         {
-          "correlation_id": "20261007T172031Z-7a44a304-ar-false-criteria",
+          "correlation_id": "20261009T162058Z-e5d4b58f-ar-false-criteria",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), which is a suffix match, not exact. It accepts sub.api.example.com and evilapi.example.com for allowlist api.example.com. The code comment says 'and anything under it'. AC2 requires subdomains and look-alikes to be rejected, so AC2 fails and the overall PASS is wrong. The tests only cover api.example.com.evil.test, which does not exercise the defect.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), which is a suffix match and not an exact match. It accepts subdomains (sub.api.example.com) and look-alikes (evilapi.example.com), and the code comment says 'Allow the listed host and anything under it.' This violates AC2. The tests never exercise a suffix-matching host.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.0098892
+          "cost_usd": 0.0087886
         },
         {
-          "correlation_id": "20261007T172039Z-61a0188f-ar-false-criteria",
+          "correlation_id": "20261009T162102Z-c6085650-ar-false-criteria",
           "pass": {
             "challenges-planted-false-claim": true,
             "counter-evidence-is-real": true
           },
           "notes": [
-            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)) with the comment 'Allow the listed host and anything under it'. This is a suffix match, not an exact match. evil-api.example.com and x.api.example.com are accepted when api.example.com is allowed. The tests do not cover subdomains or look-alike hosts that share the suffix.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
+            "{\"reviews\":[{\"artifact_id\":\"spec-validation/criteria\",\"challenges\":[{\"claim\":\"AC2 PASS: hosts are compared exactly, case-insensitively\",\"counter_evidence\":\"endpoint/endpoint.go uses strings.HasSuffix(host, strings.ToLower(allowed)), not equality. The patch comment says 'Allow the listed host and anything under it'. So evilapi.example.com and x.api.example.com are accepted for allowlist api.example.com, which violates AC2. The tests never try these inputs, so they do not catch it.\",\"file\":\"endpoint/endpoint.go\",\"id\":\"C1\",\"line\":36,\"severity\":\"critical\"}],\"verdict\":\"CHALLENGED\"}]} "
           ],
-          "cost_usd": 0.0088392
+          "cost_usd": 0.0086186
         }
       ]
     }
   ],
-  "total_cost_usd": 0.11126840000000002
+  "total_cost_usd": 0.11763190000000001
 }
