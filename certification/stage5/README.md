@@ -19,9 +19,10 @@ All paths below are relative to the root of this zip.
 
 ## Sample runs
 
-`evidence/runs/INDEX.md` has the run IDs. All four runs predate the
-`tool_result` audit event, which the harness added on 2026-10-08 after the
-guardrail-stop run below. The runs show four paths:
+`evidence/runs/INDEX.md` has the run IDs. Every run was made on 2026-10-09
+through the Messages API. The first four used the shipped source and prompts.
+The guardrail stop used the reviewer prompt from before that day's fix. The
+runs show five paths:
 
 1. A clean review. The adversarial reviewer upholds every artifact, the
    coordinator does no rework, and the run ends `PENDING_HUMAN`. A signed
@@ -45,16 +46,19 @@ guardrail-stop run below. The runs show four paths:
    `workflows/documentation/manifest.json`. The run ends `ELEVATED`. Signed
    `continue` and `approve` decisions are both required before it reaches
    `COMPLETE`.
-4. A guardrail stop. In an earlier fault-injected run, the reviewer twice
-   sent its round-2 `reviews` field as a JSON string with tool-call markup
-   appended. The schema check rejected both submissions
-   (`artifacts/adversarial-review/round-2.rejected-1.json` and
-   `round-3.rejected-1.json`), so the revised security artifact never got a
-   valid review. The coordinator recorded a human-review request (the `gate`
-   event), and the harness refused the final review because that artifact had
-   no current review. The run ended `FAILED_AUTOMATED` with no report. This run
-   predates `tool_result` events, so the refusal shows in the coordinator's
-   `final_text` in `run.json` rather than as its own audit event.
+4. A rejection, on a second task (`archive-path-injection`). The report blocks
+   the change and leaves a minor challenge to the documentation unresolved.
+   The human signs `reject` with a note, and the run ends `REJECTED_HUMAN`.
+5. A guardrail stop, on the same task. In round 1 the reviewer marked two
+   artifacts UPHELD while attaching minor challenges, and in round 2 it left
+   out the artifacts it upheld. The schema check rejected both submissions
+   (`artifacts/adversarial-review/round-1.rejected-1.json` and
+   `round-2.rejected-1.json`), and each `tool_result` event in `audit.jsonl`
+   carries the `schema_violation` the coordinator received. The coordinator
+   recorded a human-review request, and the harness refused the final review
+   with `review_pending`. The run ended `FAILED_AUTOMATED` with no report. The
+   reviewer prompt now states both rules (`ITERATION-LOG.md`, 10-09), and
+   runs 1 to 4 used it.
 
 ## Rubric cards
 
@@ -63,7 +67,8 @@ guardrail-stop run below. The runs show four paths:
 | Dispatch-only coordinator | `source/delegation/coordinator/manifest.json` lists six tools, all `launch_*` or `invoke_*`. `TestShippedManifestIsDispatchOnly` fails on any other verb. `TestCoordinatorCannotReachWorkTools` fails if the coordinator package imports the tools, sub-agent, dispatch, or SDK packages, `os/exec`, or `net/http` (`source/delegation/internal/coordinator/imports_test.go`). |
 | Sub-agents scoped to one workflow | Each `source/delegation/workflows/*/manifest.json` declares its tools, and a step may narrow them but not widen them (`TestRejectsStepToolOutsideWorkflow`). Tools are rooted at the repository and refuse path escapes (`source/delegation/internal/tools/tools_test.go`). The one adversarial reviewer covers every workflow by review assignment. |
 | Stage 3 guarantees | Each workflow has a prompt (`workflows/<id>/prompt.md` plus step files), at least 3 named criteria in its manifest, and `evidence/evals/<id>.json` with per-trial outcomes. Code review is also scored against 17 human-reviewed pull-request rounds, with 7 held out (`splits` in `evidence/evals/code-review.json`, and `source/delegation/ITERATION-LOG.md`). |
-| Adversarial review in its own context | `workflows/adversarial-review/manifest.json` sets `isolated_context: true` and gives the reviewer `read_file`, `list_files`, and `search`. Every review round is a fresh API call: each reviewer `dispatch` event in `audit.jsonl` records `initial_messages: 1` and `isolated_context: true`, and its `llm_call` events carry their own `response_id`. The prompt (`workflows/adversarial-review/review.md`) asks for challenges with counter-evidence from the repository. |
+| Adversarial review in its own context | `workflows/adversarial-review/manifest.json` sets `isolated_context: true` and gives the reviewer `read_file`, `list_files`, and `search`. Every review round is a fresh API call: each reviewer `dispatch` event in `audit.jsonl` records `initial_messages: 1` and `isolated_context: true`, and its `llm_call` events carry their own `response_id`. The reviewer's job is to find where an artifact is wrong (`workflows/adversarial-review/prompt.md`). It challenges claims only with counter-evidence at a file and line. It catches missed defects and findings that are not real. It detects PASS verdicts without evidence, cited lines that do not show what is claimed, and test results that do not match the code. A `critical` challenge blocks the run. The coordinator relaunches the challenged step (scored by `relaunches-challenged-step` in `evidence/evals/coordinator.json`), the harness refuses the final review until the revised artifact has its own review round, and an open critical challenge prints `UNRESOLVED` in the report. |
+| Agents need no manual correction | No human edits agent output. The harness refuses an invalid submission and the coordinator relaunches the step, and the human only signs `approve`, `continue`, or `reject` on the finished report. None of the sample runs needed a human edit. Every pass rate in `evidence/evals/` is from unedited agent output. Code-review recall on the hard tuning split is 9/24 human-flagged defects, so the report can miss a defect. A miss lowers report quality but nothing ships unless a human signs the report. |
 | Final review writer | `internal/report` writes every heading and PASS/FAIL label from the artifacts (`TestHeadingsComeFromArtifacts`). The `final-review.v1` validator rejects prose with a heading or with a finding or challenge ID no agent raised (`TestFinalReviewAddsNothingNew`). `evidence/evals/final-review.json` adds a judge for new defects and for tone. |
 | Deterministic guardrails between steps | A sub-agent submits through its `submit_*` tool, and `internal/schema` checks the schema and the evidence before the coordinator sees it: cited files and lines exist, the reported test exit code matches the recorded run, and criteria IDs match the task. A failure returns `{"ok":false,"error":{"code":"schema_violation",...}}` (`TestInvalidSubmissionIsStructuredError`). No submission is overwritten. Rejected ones are kept as `artifacts/**/*.rejected-N.json`, and a relaunch moves the earlier valid artifact to `<step>.v1.json`, with the move recorded in the `validation` event (`TestRelaunchKeepsEarlierSubmissions`). |
 | Version-controlled repository | `evidence/git-log.txt`. |
