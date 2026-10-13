@@ -33,7 +33,7 @@ func runner(t *testing.T, p provider.Provider, limits Limits) *Runner {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tk, err := task.Load("../../fixtures/endpoint-allowlist")
+	tk, err := task.Load("../../fixtures/task-2")
 	if err != nil {
 		t.Fatal(err)
 	}

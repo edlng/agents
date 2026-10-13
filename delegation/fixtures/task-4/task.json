@@ -1,5 +1,5 @@
 {
-  "id": "retry-delay-failing",
+  "id": "task-4",
   "title": "Exponential backoff for API client retries",
   "description": "The client's API SDK retries failed calls. This change replaces the fixed retry delay with exponential backoff capped at a maximum.",
   "acceptance_criteria": [

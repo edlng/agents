@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	taskDir := flag.String("task", "delegation/fixtures/endpoint-allowlist", "task directory")
+	taskDir := flag.String("task", "delegation/fixtures/task-2", "task directory")
 	runs := flag.String("runs", "delegation/runs", "run directory root")
 	workflows := flag.String("workflows", "delegation/workflows", "workflow catalog directory")
 	budget := flag.Float64("budget", 2.00, "run budget in USD")

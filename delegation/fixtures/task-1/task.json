@@ -1,5 +1,5 @@
 {
-  "id": "archive-path-injection",
+  "id": "task-1",
   "title": "Reject archive entries that escape the extraction root",
   "description": "The client's export service extracts uploaded zip archives under a per-tenant root. This change makes archive.EntryPath refuse entry names that would place a file outside that root.",
   "acceptance_criteria": [

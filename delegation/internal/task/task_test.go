@@ -6,7 +6,7 @@ import (
 )
 
 func TestLoadFixture(t *testing.T) {
-	tk, err := Load("../../fixtures/endpoint-allowlist")
+	tk, err := Load("../../fixtures/task-2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,5 +18,9 @@ func TestLoadFixture(t *testing.T) {
 		if !strings.Contains(brief, want) {
 			t.Errorf("brief missing %q", want)
 		}
+	}
+	// A task ID can name the expected verdict, so agents never see it.
+	if strings.Contains(brief, tk.ID) {
+		t.Errorf("brief contains task ID %q", tk.ID)
 	}
 }

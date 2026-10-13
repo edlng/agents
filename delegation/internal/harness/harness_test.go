@@ -71,7 +71,7 @@ func run(t *testing.T, f *fake, workflows string) (Result, string) {
 	t.Helper()
 	root := t.TempDir()
 	res, err := Run(context.Background(), Config{
-		Provider: f, TaskDir: "../../fixtures/endpoint-allowlist", WorkflowsDir: workflows,
+		Provider: f, TaskDir: "../../fixtures/task-2", WorkflowsDir: workflows,
 		CoordinatorDir: "../../coordinator", RunsRoot: root,
 	})
 	if err != nil {
@@ -261,7 +261,7 @@ func TestRecordedRunReplays(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg := Config{TaskDir: "../../fixtures/endpoint-allowlist", WorkflowsDir: "../../workflows", CoordinatorDir: "../../coordinator"}
+	cfg := Config{TaskDir: "../../fixtures/task-2", WorkflowsDir: "../../workflows", CoordinatorDir: "../../coordinator"}
 	cfg.Provider, cfg.RunsRoot = rec, t.TempDir()
 	live, err := Run(context.Background(), cfg)
 	rec.Close()

@@ -156,7 +156,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 // the workflow catalog. The coordinator never sees code.
 func brief(tk *task.Task, cat *catalog.Catalog, s gate.Substance) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Review task %s: %s\n\n%s\n\nAcceptance criteria:\n", tk.ID, tk.Title, tk.Description)
+	fmt.Fprintf(&b, "# Review task: %s\n\n%s\n\nAcceptance criteria:\n", tk.Title, tk.Description)
 	for _, c := range tk.AcceptanceCriteria {
 		fmt.Fprintf(&b, "- %s: %s\n", c.ID, c.Text)
 	}

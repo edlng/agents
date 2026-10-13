@@ -145,9 +145,11 @@ func Materialize(c Case, root string) (taskDir string, cleanup func(), err error
 	if err := os.WriteFile(filepath.Join(dir, "change.patch"), diff, 0o644); err != nil {
 		return "", cleanup, err
 	}
+	// The case ID and PR link stay out of the task: "merged" in an ID or a
+	// pull-request URL would hint at the human verdict.
 	task := map[string]any{
-		"id": c.ID, "title": c.Title,
-		"description":         c.Description + "\n\nSource: " + c.PR,
+		"id": "task", "title": c.Title,
+		"description":         c.Description,
 		"acceptance_criteria": c.AcceptanceCriteria,
 		"test_command":        c.TestCommand,
 		"repo":                "repo", "patch": "change.patch",

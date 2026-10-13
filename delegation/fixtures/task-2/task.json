@@ -1,5 +1,5 @@
 {
-  "id": "endpoint-allowlist",
+  "id": "task-2",
   "title": "Validate outbound webhook URLs against a host allowlist",
   "description": "The client's notification service sends webhooks to URLs that tenants configure. This change makes endpoint.Validate refuse any URL that could reach an internal or unapproved host before the service sends a request.",
   "acceptance_criteria": [

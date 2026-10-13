@@ -1,7 +1,7 @@
 // Command delegate is the Stage 5 runtime. It reaches models only through the
 // Anthropic API provider.
 //
-//	delegate run --task delegation/fixtures/endpoint-allowlist [--budget 3] [--workflows DIR]
+//	delegate run --task delegation/fixtures/task-2 [--budget 3] [--workflows DIR]
 //	delegate replay --task DIR --exchanges FILE   (no credentials needed)
 //	delegate status <correlation-id>
 //	delegate decide <correlation-id> --decision approve|reject|continue --reviewer NAME [--note TEXT]

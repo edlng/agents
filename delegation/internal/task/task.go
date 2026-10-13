@@ -76,7 +76,7 @@ func (t *Task) CriteriaIDs() []string {
 // Brief renders the task for a sub-agent's first message.
 func (t *Task) Brief() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Task %s: %s\n\n%s\n\n## Acceptance criteria\n", t.ID, t.Title, t.Description)
+	fmt.Fprintf(&b, "# Task: %s\n\n%s\n\n## Acceptance criteria\n", t.Title, t.Description)
 	for _, c := range t.AcceptanceCriteria {
 		fmt.Fprintf(&b, "- %s: %s\n", c.ID, c.Text)
 	}

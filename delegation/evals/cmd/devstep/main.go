@@ -2,7 +2,7 @@
 // can be tuned without the API key. It uses the same dispatch path as the
 // coordinator. Example:
 //
-//	go run ./delegation/evals/cmd/devstep --task delegation/fixtures/endpoint-allowlist \
+//	go run ./delegation/evals/cmd/devstep --task delegation/fixtures/task-2 \
 //	  --steps code-review/security,spec-validation/tests --review
 package main
 
@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	taskDir := flag.String("task", "delegation/fixtures/endpoint-allowlist", "task directory")
+	taskDir := flag.String("task", "delegation/fixtures/task-2", "task directory")
 	steps := flag.String("steps", "code-review/security", "comma-separated workflow/step list, run in order")
 	review := flag.Bool("review", false, "run the adversarial reviewer over the produced artifacts")
 	runs := flag.String("runs", "delegation/runs", "audit trail root")
