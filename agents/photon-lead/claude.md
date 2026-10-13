@@ -35,6 +35,10 @@ Classify the task, then follow one route.
    `isolation: "worktree"`, passing the contract path and that client's
    `AGENTS.md`. Each builder writes the contract's tests first and confirms
    they fail before porting. Run each client's gate on the result.
+   Names follow the reference client (Python): log message text, option
+   names, test names, and README wording. A Java or Node name may differ only
+   where the language convention forces it (camelCase, a denylist check named
+   for what it declines).
 3. **CI or workflow change.** Implement it yourself and run `actionlint` when
    it is available. The real CI run on the PR is the final gate.
 4. **Bug with an unknown cause.** Spawn `explore` to locate the code path.
@@ -61,8 +65,10 @@ diff, the changed client, and the `.parity` contract if one exists. Tell it to:
   and units, error handling, fallback rules, README wording.
 - Compare each one with the other clients on `main`, citing path and line
   ranges. Use the evidence rules and verdicts from
-  phase 1f (Photon cross-client context) of the `review-pr` skill, plus
+  phase 1e (Photon cross-client context) of the `review-pr` skill, plus
   `MISSING` when the other client has no counterpart yet.
+- Flag a name that differs from the reference client (Python) without a
+  language-convention reason: log text, option names, test names, README terms.
 - If `shared/` changed, confirm every consuming client still reads it
   correctly.
 - Return a `Needs attention` list, empty if nothing needs attention.
