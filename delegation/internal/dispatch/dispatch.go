@@ -50,6 +50,7 @@ type Runner struct {
 	reviewedAt map[string]int                     // artifact version when last reviewed
 	versions   map[string]int
 	launches   map[string]int
+	rejected   map[string][]string // problems of each step's last rejected submission
 	total      int
 	spent      float64
 	final      *subagent.Result
@@ -60,7 +61,7 @@ func New(p provider.Provider, log *audit.Log, c *catalog.Catalog, t *task.Task, 
 	return &Runner{
 		Provider: p, Log: log, Catalog: c, Task: t, Limits: limits,
 		artifacts: map[string]subagent.Result{}, reviews: map[string]schema.ArtifactReview{}, history: map[string][]schema.ArtifactReview{},
-		reviewedAt: map[string]int{}, versions: map[string]int{}, launches: map[string]int{},
+		reviewedAt: map[string]int{}, versions: map[string]int{}, launches: map[string]int{}, rejected: map[string][]string{},
 	}
 }
 
@@ -101,6 +102,36 @@ func (r *Runner) record(res subagent.Result) {
 	}
 }
 
+// noteRejection remembers why a step's submission failed validation, so the
+// next launch of that step starts from the problems instead of repeating
+// them. A valid submission clears it.
+func (r *Runner) noteRejection(step string, res subagent.Result) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	switch {
+	case res.OK:
+		delete(r.rejected, step)
+	case res.Error != nil && res.Error.Code == "schema_violation":
+		r.rejected[step] = res.Error.Details
+	}
+}
+
+// writeRejection adds the last rejection's problems to a brief and returns
+// them for the dispatch event.
+func (r *Runner) writeRejection(b *strings.Builder, step string) []string {
+	r.mu.Lock()
+	problems := r.rejected[step]
+	r.mu.Unlock()
+	if len(problems) == 0 {
+		return nil
+	}
+	b.WriteString("\n## Your previous submission was rejected\nThe harness rejected the last submission for this step. Fix every problem below in this submission:\n")
+	for _, p := range problems {
+		fmt.Fprintf(b, "- %s\n", p)
+	}
+	return problems
+}
+
 // LaunchStep runs one step of a client workflow. contextIDs names other
 // artifacts the coordinator wants the agent to see; challenges carries prior
 // adversarial challenges against this step's artifact.
@@ -138,11 +169,12 @@ func (r *Runner) LaunchStep(ctx context.Context, workflowID, stepID string, cont
 	if len(challenges) > 0 && string(challenges) != "null" {
 		fmt.Fprintf(&b, "\n## Prior challenges against your artifact\n```json\n%s\n```\n", challenges)
 	}
+	rejection := r.writeRejection(&b, id)
 	if res := r.reserve(id); res != nil {
 		return *res
 	}
 	res := subagent.Run(ctx, r.Provider, r.Log, subagent.Launch{
-		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent,
+		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent, PriorRejection: rejection,
 		Env: tools.Env{
 			Repo: r.Task.RepoDir, TestCommand: r.Task.TestCommand,
 			DocsOut: filepath.Join(r.Log.Dir(), "artifacts", workflowID, stepID+"-out"),
@@ -151,6 +183,7 @@ func (r *Runner) LaunchStep(ctx context.Context, workflowID, stepID string, cont
 		Validation: schema.Context{CriteriaIDs: r.Task.CriteriaIDs()},
 	})
 	r.record(res)
+	r.noteRejection(id, res)
 	return res
 }
 
@@ -182,16 +215,18 @@ func (r *Runner) LaunchReview(ctx context.Context, artifactIDs []string, parent 
 			extra[path] = content
 		}
 	}
+	rejection := r.writeRejection(&b, ReviewerID)
 	if res := r.reserve(ReviewerID); res != nil {
 		res.ArtifactID = id
 		return *res
 	}
 	res := subagent.Run(ctx, r.Provider, r.Log, subagent.Launch{
-		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent,
+		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent, PriorRejection: rejection,
 		Env:        tools.Env{Repo: r.Task.RepoDir},
 		Validation: schema.Context{Reviewed: artifactIDs, ExtraFiles: extra},
 	})
 	r.record(res)
+	r.noteRejection(ReviewerID, res)
 	if res.OK {
 		var c schema.Challenge
 		json.Unmarshal(res.Artifact, &c)
@@ -256,7 +291,7 @@ func (r *Runner) LaunchFinal(ctx context.Context, dispositions []Disposition, pa
 		return refused(id, "config_error", err.Error())
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Task %s: %s\n\n%s\n", r.Task.ID, r.Task.Title, r.Task.Description)
+	fmt.Fprintf(&b, "# Task: %s\n\n%s\n", r.Task.Title, r.Task.Description)
 	known := map[string][]string{}
 	for _, aid := range ids {
 		a, _ := r.Artifact(aid)
@@ -270,16 +305,18 @@ func (r *Runner) LaunchFinal(ctx context.Context, dispositions []Disposition, pa
 			known[aid] = append(known[aid], challengeIDs(rv)...)
 		}
 	}
+	rejection := r.writeRejection(&b, WriterID)
 	if res := r.reserve(WriterID); res != nil {
 		res.ArtifactID = id
 		return *res
 	}
 	res := subagent.Run(ctx, r.Provider, r.Log, subagent.Launch{
-		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent,
+		Spec: spec, ArtifactID: id, Input: b.String(), ParentSpan: parent, PriorRejection: rejection,
 		Env:        tools.Env{Repo: r.Task.RepoDir},
 		Validation: schema.Context{Reviewed: ids, KnownIDs: known},
 	})
 	r.record(res)
+	r.noteRejection(WriterID, res)
 	if res.OK {
 		r.mu.Lock()
 		r.final = &res

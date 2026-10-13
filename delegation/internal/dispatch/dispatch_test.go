@@ -3,6 +3,8 @@ package dispatch
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -72,6 +74,57 @@ func TestStepInputsAndRefusals(t *testing.T) {
 	}
 	if res := r.LaunchStep(ctx, "code-review", "security", []string{"nope/x"}, nil, ""); res.Error == nil || res.Error.Code != "missing_input" {
 		t.Fatalf("unknown context artifact = %+v", res)
+	}
+}
+
+func TestRelaunchSeesPriorRejection(t *testing.T) {
+	p := &submitter{payloads: map[string]string{
+		"submit_review":     approve,
+		"submit_challenges": `{"reviews":[{"artifact_id":"code-review/security","verdict":"UPHELD","challenges":[]}]}`,
+	}}
+	r := runner(t, p, DefaultLimits)
+	ctx := context.Background()
+	both := []string{"code-review/security", "code-review/correctness"}
+	r.LaunchStep(ctx, "code-review", "security", nil, nil, "")
+	r.LaunchStep(ctx, "code-review", "correctness", nil, nil, "")
+
+	if res := r.LaunchReview(ctx, both, ""); res.Error == nil || res.Error.Code != "schema_violation" {
+		t.Fatalf("review missing an artifact = %+v", res)
+	}
+	r.LaunchReview(ctx, both, "")
+	if in := p.inputs[len(p.inputs)-1]; !strings.Contains(in, "Your previous submission was rejected") ||
+		!strings.Contains(in, "artifact code-review/correctness has no review") {
+		t.Fatalf("relaunch brief does not carry the rejection:\n%s", in)
+	}
+	trail, err := os.ReadFile(filepath.Join(r.Log.Dir(), "audit.jsonl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var recorded []string
+	for _, line := range strings.Split(strings.TrimSpace(string(trail)), "\n") {
+		var e audit.Event
+		json.Unmarshal([]byte(line), &e)
+		if e.Kind == audit.KindDispatch && e.Agent == "adversarial-reviewer" {
+			var d struct {
+				PriorRejection []string `json:"prior_rejection"`
+			}
+			json.Unmarshal(e.Detail, &d)
+			recorded = append(recorded, strings.Join(d.PriorRejection, ";"))
+		}
+	}
+	if len(recorded) != 2 || recorded[0] != "" || !strings.Contains(recorded[1], "has no review") {
+		t.Fatalf("dispatch events prior_rejection = %q", recorded)
+	}
+
+	// A valid submission clears the rejection for the next round.
+	p.payloads["submit_challenges"] = `{"reviews":[{"artifact_id":"code-review/security","verdict":"UPHELD","challenges":[]},{"artifact_id":"code-review/correctness","verdict":"UPHELD","challenges":[]}]}`
+	r.Limits.PerArtifact = 4
+	if res := r.LaunchReview(ctx, both, ""); !res.OK {
+		t.Fatalf("fixed review: %+v", res.Error)
+	}
+	r.LaunchReview(ctx, both, "")
+	if strings.Contains(p.inputs[len(p.inputs)-1], "Your previous submission was rejected") {
+		t.Fatal("rejection carried past a valid submission")
 	}
 }
 

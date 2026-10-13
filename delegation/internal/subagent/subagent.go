@@ -39,6 +39,10 @@ type Launch struct {
 	Env        tools.Env
 	Validation schema.Context // the runner fills Repo, TestRuns, DocsWritten, and DocsOut
 	ParentSpan string
+	// PriorRejection lists the validation problems of this step's last
+	// rejected submission, already rendered into Input. The dispatch event
+	// records it.
+	PriorRejection []string
 }
 
 type Error struct {
@@ -85,15 +89,19 @@ func Run(ctx context.Context, p provider.Provider, log *audit.Log, l Launch) Res
 	defs := append(set.Defs(), kind.Tool)
 
 	messages := []provider.Message{provider.UserText(l.Input)}
+	detail := map[string]any{
+		"artifact_id":      l.ArtifactID,
+		"isolated_context": true,
+		"initial_messages": len(messages),
+		"tools":            toolNames(defs),
+	}
+	if len(l.PriorRejection) > 0 {
+		detail["prior_rejection"] = l.PriorRejection
+	}
 	span, err = log.Append(audit.Event{
 		Kind: audit.KindDispatch, ParentSpanID: l.ParentSpan,
 		Agent: l.Spec.Agent, Workflow: l.Spec.Workflow, Step: l.Spec.Step,
-		Detail: mustJSON(map[string]any{
-			"artifact_id":      l.ArtifactID,
-			"isolated_context": true,
-			"initial_messages": len(messages),
-			"tools":            toolNames(defs),
-		}),
+		Detail: mustJSON(detail),
 	})
 	if err != nil {
 		return fail("config_error", "audit: "+err.Error())
