@@ -19,7 +19,7 @@ coordinator (launch_* and invoke_* tools only)
 
 ```sh
 export ANTHROPIC_API_KEY=...            # the Improving key
-go run ./delegation/cmd/delegate run --task delegation/fixtures/endpoint-allowlist --budget 3 \
+go run ./delegation/cmd/delegate run --task delegation/fixtures/task-2 --budget 3 \
   --record delegation/runs/endpoint.exchanges.jsonl
 go run ./delegation/cmd/delegate status <correlation-id>
 go run ./delegation/cmd/delegate decide <correlation-id> --decision approve --reviewer <name>
@@ -28,10 +28,10 @@ go run ./delegation/cmd/delegate verify <correlation-id>
 # Substance gate demo: a catalog copy with documentation scored toy ends ELEVATED
 cp -R delegation/workflows delegation/runs/toy-catalog
 sed -i '' 's/"substance": "peripheral"/"substance": "toy"/' delegation/runs/toy-catalog/documentation/manifest.json
-go run ./delegation/cmd/delegate run --task delegation/fixtures/endpoint-allowlist --workflows delegation/runs/toy-catalog
+go run ./delegation/cmd/delegate run --task delegation/fixtures/task-2 --workflows delegation/runs/toy-catalog
 
 # No credentials: re-run the harness from a recorded run
-go run ./delegation/cmd/delegate replay --task delegation/fixtures/endpoint-allowlist \
+go run ./delegation/cmd/delegate replay --task delegation/fixtures/task-2 \
   --exchanges delegation/runs/endpoint.exchanges.jsonl
 
 go test ./delegation/...                 # deterministic, no model calls
@@ -50,10 +50,10 @@ agent), `artifacts/` (every submission: rejected ones as `*.rejected-N.json`, an
 | Dispatch-only coordinator | The coordinator package defines six tools, all `launch_` or `invoke_`, and reaches sub-agents only through its own `Dispatcher` interface. It cannot import tools, sub-agent, dispatch, the SDK client, `os/exec`, or `net/http`. | `coordinator/manifest.json`, `internal/coordinator/imports_test.go` |
 | Sub-agents scoped to one workflow | Each workflow manifest declares its tools; a step may narrow them and cannot widen them. Tools are rooted at the repo, refuse path escapes, and never write to it: `run_tests` runs a fixed command on a copy, `write_doc` writes only `docs/*.md` to the run output. | `workflows/*/manifest.json`, `internal/catalog`, `internal/tools/tools_test.go` |
 | Stage 3 guarantees per workflow | Every workflow (and the coordinator) has a prompt, at least 3 named criteria, and a committed `results.json` with per-trial outcomes. | `evals/*/results.json`, `evals/cmd/evalrun` |
-| Real-world measurement | Code review is also scored against 17 human-reviewed rounds of `aws/developer-toolkit-elasticache`, stored as links with pinned commits and diff hashes, with each labeled defect linked to its review comment. 10 rounds were used for tuning and 7 held out. Through the API (runtime path), held out: verdict 12/14, recall of human-flagged defects 11/16; tuning: 11/16 and 9/24. | `corpus/`, `evals/code-review/results.json` (`splits`), `ITERATION-LOG.md` |
+| Real-world measurement | Code review is also scored against 17 human-reviewed rounds of `aws/developer-toolkit-elasticache`, stored as links with pinned commits and diff hashes, with each labeled defect linked to its review comment. 10 rounds were used for tuning and 7 held out. Through the API (runtime path), held out: verdict 11/14, recall of human-flagged defects 13/16; tuning: 13/16 and 13/24. Agents never see a case's ID or PR link. | `corpus/`, `evals/code-review/results.json` (`splits`), `ITERATION-LOG.md` |
 | Adversarial review in its own context | Every review round is a new message list (`initial_messages: 1` in the audit), with `read_file` to check claims. Manifests declare `isolated_context: true`. One reviewer covers all workflows by assignment. It challenges with counter-evidence, catches missed and false findings, detects unsupported PASS verdicts, and the harness refuses the final review until a reworked artifact is reviewed again. | `internal/subagent`, `workflows/adversarial-review/` |
 | Final review writer | Gets every artifact, every review round, and the coordinator's dispositions. A validator rejects prose that contains a heading or cites a finding or challenge ID no agent raised. Headings and verdict labels come from artifacts in `internal/report`; an open critical challenge prints `UNRESOLVED`. | `internal/schema` (`final-review.v1`), `internal/report` |
-| Deterministic guardrails between steps | A sub-agent submits through its `submit_*` tool. The harness checks the schema and the evidence (cited file and line exist, reported test exit code matches the recorded run, criteria IDs match the task, docs have the required sections) before the coordinator sees anything. A failure returns `{"ok":false,"error":{"code":"schema_violation",...}}`. | `internal/schema`, `internal/subagent` |
+| Deterministic guardrails between steps | A sub-agent submits through its `submit_*` tool. The harness checks the schema and the evidence (cited file and line exist, reported test exit code matches the recorded run, criteria IDs match the task, docs have the required sections) before the coordinator sees anything. A failure returns `{"ok":false,"error":{"code":"schema_violation",...}}`. If the coordinator relaunches that step, the harness gives the new agent the problems from the rejected submission (`prior_rejection` in the dispatch event). | `internal/schema`, `internal/subagent` |
 | Custom harness | The runtime calls the Messages API through the Go SDK. The Claude CLI is used only under `evals/` (eval runner and dev tools), and a test fails if `cmd/delegate` can reach it. | `internal/provider/anthropic`, `cmd/delegate/imports_test.go` |
 | Punch-outs honored | Runs end `PENDING_HUMAN` (or `ELEVATED`). Only `delegate decide` changes that. Each decision names the reviewer, binds the report's SHA-256, and is GPG-signed with the reviewer's key (the key git signs commits with); unsigned decisions are refused and `delegate verify` checks every signature. The coordinator has no tool that writes a decision. | `internal/gate`, `internal/harness/harness_test.go` |
 | Substance gate | Any `toy` workflow or two or more `peripheral` ones elevate the run; `continue` then `approve` are both required. Every workflow is scored, the reviewer and writer included: code-review, spec-validation, adversarial-review, and final-review are core, documentation is peripheral, so this catalog does not elevate. A test marks documentation `toy` and checks the gate. | `internal/gate`, `TestSubstanceGateElevates` |

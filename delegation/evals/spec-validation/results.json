@@ -5,7 +5,7 @@
   "model": "claude-sonnet-5-5",
   "provider": "anthropic-api",
   "prompt_sha256": "51c84e17593194a31bf0893803e2a255d2acab6b12710645dd92604efe65c232",
-  "generated_at": "2026-10-07T17:23:19Z",
+  "generated_at": "2026-10-13T18:18:13Z",
   "trials_per_case": 3,
   "criteria": {
     "fails-unmet-criterion": {
@@ -33,7 +33,7 @@
     {
       "id": "sv-compliant",
       "prompt_sha256": "51c84e17593194a31bf0893803e2a255d2acab6b12710645dd92604efe65c232",
-      "fixture": "endpoint-allowlist-fixed",
+      "fixture": "task-3",
       "purpose": "Every criterion is met.",
       "criteria": [
         "passes-compliant-change",
@@ -42,7 +42,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172100Z-c806cb17-sv-compliant",
+          "correlation_id": "20261013T181708Z-8b3fe6a8-sv-compliant",
           "pass": {
             "never-writes-files": true,
             "passes-compliant-change": true,
@@ -52,10 +52,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:PASS AC3:PASS AC4:PASS AC5:PASS] verdict=PASS "
           ],
-          "cost_usd": 0.028780800000000002
+          "cost_usd": 0.024020200000000002
         },
         {
-          "correlation_id": "20261007T172120Z-3346ec77-sv-compliant",
+          "correlation_id": "20261013T181729Z-ee801f7a-sv-compliant",
           "pass": {
             "never-writes-files": true,
             "passes-compliant-change": true,
@@ -65,10 +65,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:PASS AC3:PASS AC4:PASS AC5:PASS] verdict=PASS "
           ],
-          "cost_usd": 0.028426800000000002
+          "cost_usd": 0.0242422
         },
         {
-          "correlation_id": "20261007T172137Z-2415c222-sv-compliant",
+          "correlation_id": "20261013T181752Z-f8c82358-sv-compliant",
           "pass": {
             "never-writes-files": true,
             "passes-compliant-change": true,
@@ -78,14 +78,14 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:PASS AC3:PASS AC4:PASS AC5:PASS] verdict=PASS "
           ],
-          "cost_usd": 0.0274888
+          "cost_usd": 0.027344800000000002
         }
       ]
     },
     {
       "id": "sv-failing-tests",
       "prompt_sha256": "51c84e17593194a31bf0893803e2a255d2acab6b12710645dd92604efe65c232",
-      "fixture": "retry-delay-failing",
+      "fixture": "task-4",
       "purpose": "Tests fail (off-by-one shift); AC1 and AC4 are unmet.",
       "criteria": [
         "fails-unmet-criterion",
@@ -94,33 +94,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T171916Z-2791346e-sv-failing-tests",
-          "pass": {
-            "fails-unmet-criterion": true,
-            "never-writes-files": true,
-            "reports-recorded-exit-code": true
-          },
-          "notes": [
-            "tests verdict=FAIL ",
-            "criteria=map[AC1:FAIL AC2:FAIL AC3:PASS AC4:FAIL] verdict=FAIL "
-          ],
-          "cost_usd": 0.026953900000000003
-        },
-        {
-          "correlation_id": "20261007T171943Z-302ac89a-sv-failing-tests",
-          "pass": {
-            "fails-unmet-criterion": true,
-            "never-writes-files": true,
-            "reports-recorded-exit-code": true
-          },
-          "notes": [
-            "tests verdict=FAIL ",
-            "criteria=map[AC1:FAIL AC2:FAIL AC3:PASS AC4:FAIL] verdict=FAIL "
-          ],
-          "cost_usd": 0.0161542
-        },
-        {
-          "correlation_id": "20261007T172000Z-62a6dcb9-sv-failing-tests",
+          "correlation_id": "20261013T181455Z-ce07cf94-sv-failing-tests",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -130,14 +104,40 @@
             "tests verdict=FAIL ",
             "criteria=map[AC1:FAIL AC2:PASS AC3:PASS AC4:FAIL] verdict=FAIL "
           ],
-          "cost_usd": 0.0176222
+          "cost_usd": 0.025583900000000003
+        },
+        {
+          "correlation_id": "20261013T181526Z-b3cf3e07-sv-failing-tests",
+          "pass": {
+            "fails-unmet-criterion": true,
+            "never-writes-files": true,
+            "reports-recorded-exit-code": true
+          },
+          "notes": [
+            "tests verdict=FAIL ",
+            "criteria=map[AC1:FAIL AC2:PASS AC3:PASS AC4:FAIL] verdict=FAIL "
+          ],
+          "cost_usd": 0.016426200000000002
+        },
+        {
+          "correlation_id": "20261013T181542Z-5efce62a-sv-failing-tests",
+          "pass": {
+            "fails-unmet-criterion": true,
+            "never-writes-files": true,
+            "reports-recorded-exit-code": true
+          },
+          "notes": [
+            "tests verdict=FAIL ",
+            "criteria=map[AC1:FAIL AC2:FAIL AC3:PASS AC4:FAIL] verdict=FAIL "
+          ],
+          "cost_usd": 0.0183462
         }
       ]
     },
     {
       "id": "sv-ssrf-unmet",
       "prompt_sha256": "51c84e17593194a31bf0893803e2a255d2acab6b12710645dd92604efe65c232",
-      "fixture": "endpoint-allowlist",
+      "fixture": "task-2",
       "purpose": "AC2 (exact match) is unmet although every test passes.",
       "criteria": [
         "fails-unmet-criterion",
@@ -146,7 +146,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T172003Z-06f5a426-sv-ssrf-unmet",
+          "correlation_id": "20261013T181618Z-96bb7f52-sv-ssrf-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -156,10 +156,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS AC5:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.0201142
+          "cost_usd": 0.019486200000000002
         },
         {
-          "correlation_id": "20261007T172020Z-22ab5f4c-sv-ssrf-unmet",
+          "correlation_id": "20261013T181632Z-566b2961-sv-ssrf-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -169,10 +169,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS AC5:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.018924200000000002
+          "cost_usd": 0.0190582
         },
         {
-          "correlation_id": "20261007T172041Z-c0087f28-sv-ssrf-unmet",
+          "correlation_id": "20261013T181651Z-935124a0-sv-ssrf-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -182,14 +182,14 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS AC5:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.0190042
+          "cost_usd": 0.0195222
         }
       ]
     },
     {
       "id": "sv-traversal-unmet",
       "prompt_sha256": "51c84e17593194a31bf0893803e2a255d2acab6b12710645dd92604efe65c232",
-      "fixture": "archive-path-injection",
+      "fixture": "task-1",
       "purpose": "AC2 (no escape via '..') is unmet although every test passes.",
       "criteria": [
         "fails-unmet-criterion",
@@ -198,7 +198,7 @@
       ],
       "trials": [
         {
-          "correlation_id": "20261007T171934Z-19ada288-sv-traversal-unmet",
+          "correlation_id": "20261013T181718Z-b5fb094c-sv-traversal-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -208,10 +208,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.0210582
+          "cost_usd": 0.0154702
         },
         {
-          "correlation_id": "20261007T171953Z-99bdeebb-sv-traversal-unmet",
+          "correlation_id": "20261013T181737Z-1efce8cd-sv-traversal-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -221,10 +221,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.0215468
+          "cost_usd": 0.018584200000000002
         },
         {
-          "correlation_id": "20261007T172014Z-bcbce1a1-sv-traversal-unmet",
+          "correlation_id": "20261013T181755Z-154622dd-sv-traversal-unmet",
           "pass": {
             "fails-unmet-criterion": true,
             "never-writes-files": true,
@@ -234,10 +234,10 @@
             "tests verdict=PASS ",
             "criteria=map[AC1:PASS AC2:FAIL AC3:PASS AC4:PASS] verdict=FAIL "
           ],
-          "cost_usd": 0.0167922
+          "cost_usd": 0.0164182
         }
       ]
     }
   ],
-  "total_cost_usd": 0.2628665
+  "total_cost_usd": 0.2445027
 }

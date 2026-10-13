@@ -31,6 +31,9 @@ path the runtime uses.
 | 10-08 | Report verification of the fault-injected run: `security.json` held only the re-run BLOCK. The relaunch had overwritten the planted APPROVE, so the challenged artifact was gone, despite the README's "every submission". | A relaunch moves the earlier valid artifact to `<step>.v<n>.json` and records the move in the audit event; repeated rejections get distinct names. | `TestRelaunchKeepsEarlierSubmissions`; fault run repeated. |
 | 10-08 | A fault run ended `FAILED_AUTOMATED`: the reviewer twice sent `reviews` as a JSON string with tool-call markup, the schema check rejected both, and the harness refused the final review. The refusal was visible only in the coordinator's text. | The harness logs a `tool_result` event (ok, artifact ID, error code) for every coordinator tool call. The schema check stays strict. | Kept as a sample of the guardrail stopping a run; the fault run was repeated and reworked. |
 | 10-09 | Sample run on `archive-path-injection` ended `FAILED_AUTOMATED`. Round 1: the reviewer marked two artifacts UPHELD with minor challenges attached, which the schema allows only under CHALLENGED. Round 2: it left out the two artifacts it upheld. The prompt stated neither rule. | The reviewer prompt says any challenge, minor included, makes a review CHALLENGED, and that upheld artifacts still get a review. The schema check is unchanged. | adversarial-review rerun through the API: 6/6 on every criterion, $0.12. Every sample run was redone on the new prompt. |
+| 10-13 | Sample run on `retry-delay-failing`: the reviewer's round-1 submission again covered only 2 of 5 artifacts, despite the 10-09 prompt rule. | No change. The schema check rejected it, the coordinator relaunched the review, and round 2 covered all five. | The run ended `PENDING_HUMAN` with a correct report. In 6 sample runs on the 10-09 prompt, 1 first review omitted artifacts and was recovered. |
+| 10-13 | Pre-submission audit: every agent brief began with the task ID, and some IDs named the expected answer (`endpoint-allowlist-fixed`, `retry-delay-failing`, corpus `etk-12-merged`). Corpus descriptions also carried the PR link. No result was forced, but the IDs could have biased verdicts. | Briefs carry only the title, description, and criteria (`TestLoadFixture` fails if the ID appears). Fixtures are renamed `task-1` (was archive-path-injection), `task-2` (endpoint-allowlist), `task-3` (endpoint-allowlist-fixed), and `task-4` (retry-delay-failing). Corpus tasks get the ID `task` and no PR link. | Every eval and sample run was redone through the API; the numbers in `evals/*/results.json` and the README are from that pass. Held out: verdict 11/14 (was 12/14), recall 13/16 (was 11/16). Tuning: verdict 13/16 (was 11/16), recall 13/24 (was 9/24). adversarial-review `upholds-accurate-artifact` 5/6 (one `reviews` sent as a JSON string). final-review `tone-polite-direct` 5/6 on the first pass and 6/6 when the evidence script re-ran it; `results.json` holds the second. |
+| 10-13 | That pass's task-4 sample run ended `FAILED_AUTOMATED`: both review rounds left out the two artifacts the reviewer upheld, the third task-4 run in a row to do so. A relaunched reviewer starts fresh and never learned why its last submission failed. | When the coordinator relaunches a step whose last submission failed validation, the harness puts those problems in the new brief and records them as `prior_rejection` in the dispatch event. The coordinator still decides whether to retry. Evals are unaffected: coordinator evals use scripted sub-agents, and the workflow evals launch each step once. | `TestRelaunchSeesPriorRejection`. All six sample runs redone on this harness. |
 
 ## Code review on real pull requests
 
@@ -45,20 +48,21 @@ flagged, each linked to its review comment.
 | 10-06 | Read changed files in full; correctness lens works through check-then-act, completion, freshness, scheduling, callback, and consistency questions; security lens traces secrets into exception causes, logs, and callbacks | 8/10 | 5/12 | One trial. The reviewers also reported races on the human-approved heads of PR 13 and PR 17. The human reviewer could not confirm or reject them; both are recorded as disputed and excluded from verdict scoring. |
 | 10-06 | Same prompts, effort `high` instead of `medium` | 6/8 | 5/12 | Excluding the two disputed cases (the previous row is also 6/8 on that basis). Found different defects, not more, at 47% higher cost. Reverted. |
 | 10-06 | Prompts frozen, effort `medium`, 2 trials per case | 11/16 | 11/24 | Final CLI measurement, $8.92. |
-| 10-07 | Same frozen prompts, through the API | 11/16 | 9/24 | Final measurement, the numbers in `evals/code-review/results.json`. Two fewer defects recalled than the CLI run; see below. |
+| 10-07 | Same frozen prompts, through the API | 11/16 | 9/24 | Two fewer defects recalled than the CLI run. Briefs still carried the case ID. |
+| 10-13 | Same frozen prompts, through the API, with no case ID or PR link in any brief | 13/16 | 13/24 | Final measurement, the numbers in `evals/code-review/results.json`. |
 
 Final measurement on the held-out split, which no prompt change saw, through
-the API: verdict 12/14 (86%) and recall 11/16 (69%). The CLI run of the same
-prompts recalled 13/16 held out and 11/24 in tuning. Both splits have only
-two trials per case, so this log reports the API numbers without claiming
-the provider changed recall. The
-held-out rounds are easier than the tuning rounds (CI workflow defects,
-smaller diffs), so the tuning numbers are the better guide to hard
-concurrency reviews. Both held-out verdict misses are the human-approved PR 16
-head, where both trials reported that `--require-npm=11.5.1` and
-`--require-npm ""` still skip the npm version check; that extends the human
-reviewer's own round-1 comment and is a candidate for adjudication. It is
-scored as measured.
+the API with unlabeled briefs: verdict 11/14 (79%) and recall 13/16 (81%).
+With the case ID in the brief (10-07) it was 12/14 and 11/16, so the ID was
+not propping up the scores. Both splits have only two trials per case, so
+this log does not claim either change moved recall. The held-out rounds are
+easier than the tuning rounds (CI workflow defects, smaller diffs), so the
+tuning numbers are the better guide to hard concurrency reviews. Two of the
+three held-out verdict misses are the human-approved PR 16 head, where both
+trials reported that `--require-npm=11.5.1` and `--require-npm ""` still skip
+the npm version check; that extends the human reviewer's own round-1 comment
+and is a candidate for adjudication. The third is one of two trials on the
+human-approved PR 12 head. All are scored as measured.
 
 A tuning run that overlapped a manifest-hashing run was discarded: both used
 the same cache paths, and the hashing run deleted checkouts mid-review. Each
