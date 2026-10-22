@@ -66,6 +66,22 @@ Rule numbers are stable ids that other skills cite. A removed rule leaves a gap.
 32. **Mannered prose.** Metaphor or flourish where a literal phrase exists: aphorisms ("wire it or delete it"), rhetorical fragments for effect, personified code ("the plan holds it"), figurative verbs ("rides along", "stands on"), stock framing phrases. "A dial worth turning" becomes "a parameter worth varying". Say what you mean. Rule 26 covers the metaphor nouns.
 33. **Over-compression.** Dropped articles, verbless fragments, symbol-speak, and abbreviations that make the reader decode instead of read. "Parser rejects bad date → exit 2, no write" becomes "The parser rejects a bad date, exits with code 2, and writes nothing." Write whole sentences with their articles and verbs, and spell out arrows and abbreviations.
 
+### Sentence order and reading
+
+These come from the `technical-writing` skill. Load that skill for docs, READMEs, PR descriptions, and commit messages.
+
+34. **Real names.** Write the real symbol, file, flag, or command name, not a description of it. "the config loader" becomes "`load_config()`".
+35. **Condition first.** Put the condition or warning before the instruction it guards. "Click Delete to remove the document" becomes "To remove the document, click Delete."
+36. **Common case first.** State the usual path, then the exceptions.
+37. **Placed modifiers.** Keep "only" and "not" next to the word they change. "only fails on growth" and "fails only on growth" say different things.
+38. **Clear pointers.** Make every "it", "they", and "this" point at one obvious noun. Repeat the noun when in doubt. Never use "this" or "which" to point at a whole clause.
+39. **Noun strings.** Break up stacked nouns. "the proto import budget check script" becomes "the script that checks the proto-import budget".
+40. **Slashes, semicolons, and "(s)".** Write "a, b, or both", not "a/b" or "and/or". Use a period instead of a semicolon. Write the plural, not "file(s)".
+41. **"Simply", "easy", "just".** Delete them from instructions. If the step were easy, the reader would not need it.
+42. **Lists.** Number steps that run in order. Use bullets for everything else. Introduce a list with a full sentence and keep its items parallel.
+43. **Link text.** Name where the link goes, such as the page title. Never write "click here".
+44. **Rhythm.** Mix sentence lengths. Split a sentence that carries two thoughts, and keep a long sentence that carries one thought with its condition or consequence. If every sentence is clipped short, the text reads machine-written.
+
 ## Code implementation and code reviews
 
 The golden rule is to keep the work simple, proportional, and aligned with the user's reference point.

@@ -191,7 +191,14 @@
         "Grep",
         "Agent",
         "Skill",
-        "AskUserQuestion"
+        "AskUserQuestion",
+        "mcp__pippin-mcp",
+        "mcp__creds-agent",
+        "mcp__codegraph"
+      ],
+      "mcpServers": [
+        "pippin-mcp",
+        "codegraph"
       ],
       "trustedAgents": [
         "explore",
@@ -401,7 +408,7 @@
         "universal": "skills/universal/benchmark-checklist/SKILL.md"
       },
       "sourcePath": "skills/universal/benchmark-checklist/SKILL.md",
-      "excerpt": "Benchmark checklist Use this when you produce a performance number: a PR's before and after, a regression claim, a hillclimb harness, or a library or config choice. The `principle-explain-the-number` skill says why. Answer each question below with evidence from a run, not from a guess about the code"
+      "excerpt": "Benchmark checklist Use this when you produce a performance number: a PR's before and after, a regression claim, a hillclimb harness, or a library or config choice. Answer each question with evidence from a run, not a guess about the code. For a quick ballpark the user asked for, one run is enough. "
     },
     {
       "id": "skill:blast-radius",
@@ -458,7 +465,7 @@
       "id": "skill:daily-log",
       "type": "skill",
       "name": "daily-log",
-      "description": "Reads today's AI journal entry from Obsidian, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.",
+      "description": "Reads today's AI journal entry from Obsidian and the user's GitHub PRs opened or merged today, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.",
       "category": "Other",
       "platforms": [
         "claude",
@@ -469,7 +476,7 @@
         "universal": "skills/universal/daily-log/SKILL.md"
       },
       "sourcePath": "skills/universal/daily-log/SKILL.md",
-      "excerpt": "Daily Log Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date from system context. Extract: - **D"
+      "excerpt": "Daily Log Read today's journal entry and today's GitHub PR activity, then create a concise daily log entry in the current month's Notes file, following the format established in prior months. Follow each phase in order. Do not skip phases. --- Phase 1: Determine Date Context Identify today's date fr"
     },
     {
       "id": "skill:how",
@@ -506,6 +513,23 @@
       "excerpt": "Implement Task Implement `$ARGUMENTS` end-to-end. Follow each phase in order. If `$ARGUMENTS` is a Jira issue key (e.g. `FOO-123`), Phase 0 turns it into the task requirements. Otherwise the plain-text description is the task requirements and Phase 0 is skipped. Every later phase that says `{$ARGUME"
     },
     {
+      "id": "skill:in-your-own-words",
+      "type": "skill",
+      "name": "in-your-own-words",
+      "description": "Restate in your own words what you think the user's goals are and what problem they're trying to solve. Use for /in-your-own-words.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/in-your-own-words/SKILL.md"
+      },
+      "sourcePath": "skills/universal/in-your-own-words/SKILL.md",
+      "excerpt": "Restate in your own words what you think the user's goals are and what problem they're trying to solve."
+    },
+    {
       "id": "skill:pr-comment-humanizer",
       "type": "skill",
       "name": "pr-comment-humanizer",
@@ -523,6 +547,40 @@
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
     },
     {
+      "id": "skill:principle-boundary-discipline",
+      "type": "skill",
+      "name": "principle-boundary-discipline",
+      "description": "Apply when wiring validation, error handling, or framework adapters. Concentrate guards at system boundaries (CLI, config, network, external APIs); trust internal types and keep business logic in pure functions.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-boundary-discipline/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-boundary-discipline/SKILL.md",
+      "excerpt": "Boundary Discipline Place validation, type narrowing, and error handling at system boundaries. Trust internal code unconditionally. Business logic lives in pure functions. The shell is thin and mechanical. **Why:** Scattered validation is noisy, redundant, and gives a false sense of safety. Keep log"
+    },
+    {
+      "id": "skill:principle-encode-lessons-in-structure",
+      "type": "skill",
+      "name": "principle-encode-lessons-in-structure",
+      "description": "Apply when you catch yourself writing the same instruction a second time, or notice a recurring correction. Encode the rule as a lint, metadata flag, runtime check, or script instead of more text.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-encode-lessons-in-structure/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-encode-lessons-in-structure/SKILL.md",
+      "excerpt": "Encode Lessons in Structure If the lesson needs judgment and cannot be encoded, make the instruction more prominent and add an example of the failure mode. **Corollary:** If the fix is structural, only use the structural fix. The instruction is the symptom."
+    },
+    {
       "id": "skill:principle-explain-the-number",
       "type": "skill",
       "name": "principle-explain-the-number",
@@ -537,7 +595,41 @@
         "universal": "skills/universal/principle-explain-the-number/SKILL.md"
       },
       "sourcePath": "skills/universal/principle-explain-the-number/SKILL.md",
-      "excerpt": "Explain the Number A measured number is a claim about a system. Before you trust it, report it, or act on it, find what limits it and rule out that it measured something else. **Why:** A run that went wrong still prints a plausible number. Requests that failed, a cache that skipped the work, code th"
+      "excerpt": "Explain the Number - **Ask \"why not double?\"** Name the resource or code path that bounds the result, such as a core, a lock, the disk, the network, or the load generator itself. Get it from a profile or from system counters taken during a run, then map it to source. A guess from reading the code is"
+    },
+    {
+      "id": "skill:principle-fix-root-causes",
+      "type": "skill",
+      "name": "principle-fix-root-causes",
+      "description": "Apply when debugging. Trace each symptom back to the first place the system went wrong and fix it there. A guard is a fix only when the state it handles is legitimate.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-fix-root-causes/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-fix-root-causes/SKILL.md",
+      "excerpt": "Fix Root Causes When debugging, fix the fault, not the place where it surfaced. The symptom is where a wrong state became visible. The root cause is the first place the system did something it should not do, or failed to handle a state it should handle. **Why:** A symptom fix hides the evidence and "
+    },
+    {
+      "id": "skill:principle-guard-the-context-window",
+      "type": "skill",
+      "name": "principle-guard-the-context-window",
+      "description": "Apply when context is filling up: large outputs, long files, repeated reads, fan-out planning. Route bulk to subagents; keep summaries in the main thread, not raw payloads.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-guard-the-context-window/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-guard-the-context-window/SKILL.md",
+      "excerpt": "Guard the Context Window **Why:** Context overflow degrades reasoning quality, creates compression artifacts, and halts progress. **Pattern:** - **Size phases and cap scope.** Limit files per phase, set turn budgets, account for mechanism costs."
     },
     {
       "id": "skill:principle-make-operations-idempotent",
@@ -554,7 +646,41 @@
         "universal": "skills/universal/principle-make-operations-idempotent/SKILL.md"
       },
       "sourcePath": "skills/universal/principle-make-operations-idempotent/SKILL.md",
-      "excerpt": "Make Operations Idempotent Design operations so they converge to the correct state regardless of how many times they run or where they start from. Every state-mutating operation should answer: \"What happens if this runs twice? What happens if the previous run crashed halfway?\" **Why:** Commands, lif"
+      "excerpt": "Make Operations Idempotent Design operations so they converge to the correct state regardless of how many times they run or where the previous run stopped. Every state-mutating operation should answer: \"What happens if this runs twice? What happens if the previous run crashed halfway?\" **Why:** Comm"
+    },
+    {
+      "id": "skill:principle-minimize-reader-load",
+      "type": "skill",
+      "name": "principle-minimize-reader-load",
+      "description": "Apply when reviewing or shaping code that's hard to trace. Count layers between question and answer, and hidden state in the reader's head; collapse one-caller wrappers and shrink mutable scope.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-minimize-reader-load/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-minimize-reader-load/SKILL.md",
+      "excerpt": "Minimize Reader Load Maintainability is the work a reader must do to understand code. Track two axes: **layers to trace** (indirections between the question and the answer) and **state to hold** (hidden or mutable context the reader must keep in their head). LOC, cyclomatic complexity, and \"clean ar"
+    },
+    {
+      "id": "skill:principle-prove-it-works",
+      "type": "skill",
+      "name": "principle-prove-it-works",
+      "description": "Apply after completing a task, before declaring done. Verify against the real artifact (run the feature, read the actual value, inspect the diff), not a proxy, self-report, or 'it compiles.'",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-prove-it-works/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-prove-it-works/SKILL.md",
+      "excerpt": "Prove It Works Verify every task output by checking the real thing directly. Do not infer from proxies, self-reports, or \"it compiles.\" **Why:** Unverified work has unknown correctness. Indirect verification (file mtimes, output freshness, agent self-reports, cached screenshots) feels cheaper than d"
     },
     {
       "id": "skill:principle-separate-before-serializing-shared-state",
@@ -574,10 +700,27 @@
       "excerpt": "Separate Before Serializing Shared State When concurrent actors might share mutable state, first ask whether they need the same mutable object. If not, eliminate the sharing. When sharing is real, enforce serialization structurally: lockfiles, sequential phases, exclusive ownership. Instructions and"
     },
     {
+      "id": "skill:principle-subtract-before-you-add",
+      "type": "skill",
+      "name": "principle-subtract-before-you-add",
+      "description": "Apply when sequencing an addition, refactor, or rewrite. Remove dead code, redundant validators, and stub references first, then build on the simpler base.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-subtract-before-you-add/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-subtract-before-you-add/SKILL.md",
+      "excerpt": "Subtract Before You Add When evolving a system, remove complexity first, then build. Default to subtraction. Make simplification a continual investment. Leave the design slightly simpler and more capable behind the same or smaller surface than you found it. - Sequence removal before construction - C"
+    },
+    {
       "id": "skill:principle-test-behavior-not-implementation",
       "type": "skill",
       "name": "principle-test-behavior-not-implementation",
-      "description": "Apply when you write, change, or keep a test. Call the code the way its users do and assert the result they observe against a literal expected value. If the test would still pass when every imported function returns undefined, rewrite the assertion or delete the test.",
+      "description": "Apply when you write, change, or keep a test. Assert what the code's users can observe, so that the test fails when that behavior breaks and keeps passing when only the internals change.",
       "category": "Other",
       "platforms": [
         "claude",
@@ -588,7 +731,7 @@
         "universal": "skills/universal/principle-test-behavior-not-implementation/SKILL.md"
       },
       "sourcePath": "skills/universal/principle-test-behavior-not-implementation/SKILL.md",
-      "excerpt": "Test Behavior, Not Implementation A test calls the code the way its users do and asserts the result they observe against a literal expected value. A test that asserts which calls the code made, or restates a constant the code contains, does neither. The check: before you keep a test, ask whether it "
+      "excerpt": "Test Behavior, Not Implementation A test is a claim about what the code does for its users: a caller, an end user, or another service. Behavior is what those users can observe through the interface they use. That includes return values, errors, state they can read back, and effects on systems outsid"
     },
     {
       "id": "skill:review-addressed-comments",
@@ -642,6 +785,40 @@
       "excerpt": "Review PR (senior-dev grade) Review a pull request against its description and the existing codebase. The review favors signal over volume. A skeptic pass validates every finding that reaches the final report, so false positives are rare. `$ARGUMENTS` is a PR URL or `owner/repo#number`. If empty, ru"
     },
     {
+      "id": "skill:sharpen",
+      "type": "skill",
+      "name": "sharpen",
+      "description": "Make a task deeper, not bigger, then rewrite the prompt. Use for /sharpen.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/sharpen/SKILL.md"
+      },
+      "sourcePath": "skills/universal/sharpen/SKILL.md",
+      "excerpt": "I want a deeper version of this task, not a bigger one. Before rewriting it, do four things: 1. Say what a top professional in this field would do here that I'm not asking for. 2. Name the rawest material they would start from instead of what has already been digested for me. 3. Name the specific me"
+    },
+    {
+      "id": "skill:show-me-your-work",
+      "type": "skill",
+      "name": "show-me-your-work",
+      "description": "Keep a reviewable decision trail for long-running or unattended work: a TSV log with one row per decision (what, why, evidence, result). Local by default; commit it when a reviewer needs the trail to trust the result. Use for /show-me-your-work, autonomous or multi-phase runs, or work a human reviews after stepping away.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/show-me-your-work/SKILL.md"
+      },
+      "sourcePath": "skills/universal/show-me-your-work/SKILL.md",
+      "excerpt": "Show me your work Keep one canonical log. The format A single TSV file, one row per decision. Cells stay single-line. Evidence is a pointer, not prose. Copy `references/decision-log-template.tsv` (the header row) to start a clean log. Columns: - **ts.** ISO8601 timestamp. - **phase.** The phase or w"
+    },
+    {
       "id": "skill:tdd",
       "type": "skill",
       "name": "tdd",
@@ -657,6 +834,23 @@
       },
       "sourcePath": "skills/universal/tdd/SKILL.md",
       "excerpt": "TDD Bug Fix When fixing a bug with a clear, cheap test path, make the broken behavior executable before changing production code. The goal is a focused regression test that fails before the fix and passes after it. Do not force a test when it would be impractical. If the available test would require"
+    },
+    {
+      "id": "skill:technical-writing",
+      "type": "skill",
+      "name": "technical-writing",
+      "description": "Layered technical-writing standard: Diátaxis structure, Google developer style sentences, STE instruction rules, and Global English syntax. Use when writing, editing, or reviewing docs, READMEs, AGENTS.md or CLAUDE.md files, skill or agent prompts, RFCs, design docs, runbooks, code comments, PR descriptions, or commit messages.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/technical-writing/SKILL.md"
+      },
+      "sourcePath": "skills/universal/technical-writing/SKILL.md",
+      "excerpt": "Technical writing Write so a tired engineer understands on the first read. Apply all four layers. Three rules sit above the layers: - **Cut every word that does no work.** If the sentence survives without a word, the word goes. \"In order to\" is \"to\". \"It is important to note that\" is nothing. - **Us"
     },
     {
       "id": "skill:unslop",
@@ -802,6 +996,18 @@
       "description": "MCP server: github"
     },
     {
+      "id": "mcp:pippin-mcp",
+      "type": "mcp-server",
+      "name": "pippin-mcp",
+      "description": "MCP server: pippin-mcp"
+    },
+    {
+      "id": "mcp:codegraph",
+      "type": "mcp-server",
+      "name": "codegraph",
+      "description": "MCP server: codegraph"
+    },
+    {
       "id": "mcp:obsidian",
       "type": "mcp-server",
       "name": "obsidian",
@@ -892,6 +1098,18 @@
       "source": "agent:photon-lead",
       "target": "agent:research-validator",
       "type": "delegates-to"
+    },
+    {
+      "id": "edge:photon-lead->mcp->pippin-mcp",
+      "source": "agent:photon-lead",
+      "target": "mcp:pippin-mcp",
+      "type": "uses-mcp"
+    },
+    {
+      "id": "edge:photon-lead->mcp->codegraph",
+      "source": "agent:photon-lead",
+      "target": "mcp:codegraph",
+      "type": "uses-mcp"
     },
     {
       "id": "edge:research-validator->mcp->obsidian",
@@ -1568,9 +1786,9 @@
   "stats": {
     "counts": {
       "agents": 8,
-      "skills": 22,
+      "skills": 33,
       "sharedRefs": 5,
-      "mcpServers": 3,
+      "mcpServers": 5,
       "workflows": 6
     },
     "profileDistribution": {
@@ -1601,7 +1819,7 @@
       "orchestration": 1
     },
     "skillCategories": {
-      "Other": 13,
+      "Other": 24,
       "Code Review": 4,
       "Development Workflows": 1,
       "Writing & Documentation": 3,

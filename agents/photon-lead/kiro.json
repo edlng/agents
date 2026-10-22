@@ -7,12 +7,16 @@
     "write",
     "shell",
     "subagent",
-    "todo"
+    "todo",
+    "@pippin-mcp",
+    "@creds-agent",
+    "@codegraph"
   ],
   "allowedTools": [
     "read",
     "subagent",
-    "todo"
+    "todo",
+    "@codegraph"
   ],
   "toolsSettings": {
     "subagent": {
@@ -29,6 +33,19 @@
     "shell": {
       "timeout": 300000,
       "autoAllowReadonly": true
+    }
+  },
+  "mcpServers": {
+    "pippin-mcp": {
+      "command": "pippin-mcp-server",
+      "args": []
+    },
+    "codegraph": {
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ]
     }
   },
   "model": "claude-opus-4.8",

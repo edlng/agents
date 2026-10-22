@@ -1,12 +1,12 @@
 ---
 name: daily-log
-description: Reads today's AI journal entry from Obsidian, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.
+description: Reads today's AI journal entry from Obsidian and the user's GitHub PRs opened or merged today, appends a concise daily log entry to the current month's Notes file, and updates evidence and statuses in goals/roles. Use when asked to log today, write a daily log, update the monthly notes, or record career-goal evidence.
 disable-model-invocation: true
 ---
 
 # Daily Log
 
-Read today's journal entry and create a concise daily log entry in the current month's Notes file, following the format established in prior months.
+Read today's journal entry and today's GitHub PR activity, then create a concise daily log entry in the current month's Notes file, following the format established in prior months.
 
 Follow each phase in order. Do not skip phases.
 
@@ -49,9 +49,35 @@ Standup is always included under Technical as the first item. Co-op check-ins, 1
 
 ---
 
+## Phase 3b: Retrieve Today's GitHub PR Activity
+
+Find the pull requests the user authored that were opened or merged today, using the `gh` CLI. This phase is read-only: do not comment, review, edit, or merge anything on GitHub.
+
+Build a range covering today in the local timezone, with the local UTC offset, so PRs near midnight are attributed to the right day:
+
+```text
+RANGE="YYYY-MM-DDT00:00:00±HH:MM..YYYY-MM-DDT23:59:59±HH:MM"
+gh search prs --author=@me --created="$RANGE" --json repository,number,title,url,state,isDraft --limit 100
+gh search prs --author=@me --merged-at="$RANGE" --json repository,number,title,url --limit 100
+```
+
+Use `--merged-at` for the date filter. `--merged` is a boolean flag and rejects a date.
+
+Combine the two result sets into one list keyed by `nameWithOwner#number`:
+
+- **Opened**: created today (note drafts)
+- **Merged**: merged today
+- **Opened and merged**: in both results
+
+If `gh` is missing, unauthenticated, or the search fails, tell the user, continue with the journal entry alone, and say in the final report that GitHub activity was not included. Never invent PRs. An empty result is valid: report "no PRs opened or merged today" and continue.
+
+---
+
 ## Phase 4: Synthesize the Log Entry
 
-Condense the journal entries into concise bullet points following these rules:
+Condense the journal entries and today's GitHub PR activity into concise bullet points. The PR list is a source alongside the journal: add a Technical bullet for each PR not already covered by a journal item, and fold PR references into the matching journal bullet when it already describes the same work. Reference each PR as `repo#number` with the repository name in backticks, for example "Opened \`photon\`#147 to align install() options with the Python client" or "Merged \`photon\`#134 (cross-client protocol vectors)". Combine several PRs on the same theme into one bullet.
+
+Follow these rules:
 
 1. Each bullet should be one line, capturing the essence of what was accomplished
 2. Combine related entries into a single bullet (e.g. multiple debugging entries about the same issue become one item)
@@ -100,6 +126,7 @@ Review every Markdown file in `goals/roles/`, including the overview file. Befor
 
 - The exact contents of every role file, including existing evidence
 - Today's journal date, path, and full entry
+- Today's GitHub PR list from Phase 3b (repository, number, title, URL, opened/merged)
 - The exact daily entry written in Phase 6 and its Notes path
 - The evidence and status rules below
 
@@ -111,8 +138,8 @@ Subagents edit only the role files and exact criteria assigned to them. They do 
 
 For each role criterion bullet that has a status in brackets:
 
-1. Compare the criterion with the substantive work in today's journal entry and the daily entry just added to the current month's Notes file.
-2. When today's work directly supports the criterion, add a concise evidence bullet immediately beneath that criterion. Use the exact journal date (`YYYY-MM-DD`) for journal evidence and a month-level date for Notes evidence. Link to the source note, for example `[[journals/entries/2026/07/2026-07-15]]` or `[[Notes/July 2026]]`.
+1. Compare the criterion with the substantive work in today's journal entry, today's GitHub PR list, and the daily entry just added to the current month's Notes file.
+2. When today's work directly supports the criterion, add a concise evidence bullet immediately beneath that criterion. Use the exact journal date (`YYYY-MM-DD`) for journal evidence and a month-level date for Notes evidence. Link to the source note, for example `[[journals/entries/2026/07/2026-07-15]]` or `[[Notes/July 2026]]`. For PR evidence, use today's date and link the PR as a Markdown link, for example `[photon#147](https://github.com/awslabs/photon/pull/147)`.
 3. Preserve existing evidence. Extend an existing dated evidence bullet only when today's work is materially part of the same evidence period; otherwise add a new dated bullet. Do not add duplicate claims or links.
 4. Update the criterion status only when the evidence warrants it:
    - `[demonstrated]`: direct evidence substantially satisfies the full criterion
@@ -141,4 +168,4 @@ Report changed role files, status changes, skipped proposals, and unresolved con
 
 ## Phase 8: Confirm
 
-End with a one-line confirmation: "Added {DayName}'s entry to Notes/{Month Year}.md"
+End with a one-line confirmation: "Added {DayName}'s entry to Notes/{Month Year}.md", followed by the count of PRs opened and merged today (or a note that GitHub activity could not be retrieved).

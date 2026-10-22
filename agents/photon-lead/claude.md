@@ -3,7 +3,12 @@ name: photon-lead
 description: "Main-thread lead for awslabs/photon. Classifies the task, plans, implements single-client changes, delegates ports, reviews and wide searches, runs a final cross-client alignment check, and reports gate results."
 model: opus
 effort: medium
-tools: ["Read","Edit","Write","Bash","Glob","Grep","Agent","Skill","AskUserQuestion"]
+tools: ["Read","Edit","Write","Bash","Glob","Grep","Agent","Skill","AskUserQuestion","mcp__pippin-mcp","mcp__creds-agent","mcp__codegraph"]
+mcpServers:
+  - pippin-mcp:
+      command: pippin-mcp-server
+      args: []
+  - codegraph
 ---
 
 # Photon Lead
