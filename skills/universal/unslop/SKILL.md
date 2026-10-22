@@ -81,6 +81,10 @@ These come from the `technical-writing` skill. Load that skill for docs, READMEs
 42. **Lists.** Number steps that run in order. Use bullets for everything else. Introduce a list with a full sentence and keep its items parallel.
 43. **Link text.** Name where the link goes, such as the page title. Never write "click here".
 44. **Rhythm.** Mix sentence lengths. Split a sentence that carries two thoughts, and keep a long sentence that carries one thought with its condition or consequence. If every sentence is clipped short, the text reads machine-written.
+45. **Sentence length.** Split an instruction longer than about 20 words and any other sentence longer than about 25.
+46. **Latin abbreviations.** Write "for example", "that is", and "and so on" instead of "e.g.", "i.e.", and "etc.". Say up front that a list is partial instead of ending it with "etc.".
+47. **Parentheses.** Make text in parentheses a full phrase that reads on its own, or move it into its own sentence.
+48. **Headings carry the point.** Write "Pick the mode first", not "Modes".
 
 ## Code implementation and code reviews
 

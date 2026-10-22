@@ -29,6 +29,7 @@ All findings below must reference only lines present in this diff.
 2. **Correctness** — Logic errors, off-by-ones, edge cases, broken invariants. Name the concrete input that triggers each bug.
 3. **Security** — Anchor to CWE: Injection (89/78/79), Broken Access Control (284), SSRF (918), Path Traversal (22), Secrets (312), Unsafe Deserialization (502), Weak Crypto (327). Name the CWE ID and specific attack vector per finding.
 4. **Testability** — Do tests assert behavior, not just execute code paths?
+   Judge each changed test with the `principle-test-behavior-not-implementation` skill.
 
 ## Evidence gate
 

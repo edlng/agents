@@ -42,7 +42,9 @@
         "Skill"
       ],
       "resources": [
-        "file://skills/_shared/security-constraints.md"
+        "file://skills/_shared/security-constraints.md",
+        "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md",
+        "skill://~/.kiro/skills/tdd/SKILL.md"
       ],
       "sourcePath": "agents/builder/manifest.json"
     },
@@ -89,7 +91,8 @@
         "github"
       ],
       "resources": [
-        "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
+        "skill://~/.kiro/skills/code-review-excellence/SKILL.md",
+        "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md"
       ],
       "sourcePath": "agents/code-reviewer/manifest.json"
     },
@@ -208,6 +211,23 @@
         "code-reviewer",
         "researcher",
         "research-validator"
+      ],
+      "resources": [
+        "skill://~/.kiro/skills/benchmark-checklist/SKILL.md",
+        "skill://~/.kiro/skills/blast-radius/SKILL.md",
+        "skill://~/.kiro/skills/how/SKILL.md",
+        "skill://~/.kiro/skills/principle-boundary-discipline/SKILL.md",
+        "skill://~/.kiro/skills/principle-fix-root-causes/SKILL.md",
+        "skill://~/.kiro/skills/principle-make-operations-idempotent/SKILL.md",
+        "skill://~/.kiro/skills/principle-prove-it-works/SKILL.md",
+        "skill://~/.kiro/skills/principle-separate-before-serializing-shared-state/SKILL.md",
+        "skill://~/.kiro/skills/principle-subtract-before-you-add/SKILL.md",
+        "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md",
+        "skill://~/.kiro/skills/review-pr/SKILL.md",
+        "skill://~/.kiro/skills/tdd/SKILL.md",
+        "skill://~/.kiro/skills/technical-writing/SKILL.md",
+        "skill://~/.kiro/skills/unslop/SKILL.md",
+        "skill://~/.kiro/skills/why/SKILL.md"
       ],
       "sourcePath": "agents/photon-lead/manifest.json"
     },
@@ -350,6 +370,9 @@
         "Grep",
         "Skill"
       ],
+      "resources": [
+        "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md"
+      ],
       "sourcePath": "agents/tester/manifest.json"
     },
     {
@@ -390,6 +413,9 @@
         "Glob",
         "Grep",
         "Skill"
+      ],
+      "resources": [
+        "skill://~/.kiro/skills/principle-prove-it-works/SKILL.md"
       ],
       "sourcePath": "agents/validator/manifest.json"
     },
@@ -1034,6 +1060,18 @@
       "type": "uses-shared-ref"
     },
     {
+      "id": "edge:builder->skill->principle-test-behavior-not-implementation",
+      "source": "agent:builder",
+      "target": "skill:principle-test-behavior-not-implementation",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:builder->skill->tdd",
+      "source": "agent:builder",
+      "target": "skill:tdd",
+      "type": "uses-skill"
+    },
+    {
       "id": "edge:code-reviewer->mcp->github",
       "source": "agent:code-reviewer",
       "target": "mcp:github",
@@ -1043,6 +1081,12 @@
       "id": "edge:code-reviewer->skill->code-review-excellence",
       "source": "agent:code-reviewer",
       "target": "skill:code-review-excellence",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:code-reviewer->skill->principle-test-behavior-not-implementation",
+      "source": "agent:code-reviewer",
+      "target": "skill:principle-test-behavior-not-implementation",
       "type": "uses-skill"
     },
     {
@@ -1112,6 +1156,96 @@
       "type": "uses-mcp"
     },
     {
+      "id": "edge:photon-lead->skill->benchmark-checklist",
+      "source": "agent:photon-lead",
+      "target": "skill:benchmark-checklist",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->blast-radius",
+      "source": "agent:photon-lead",
+      "target": "skill:blast-radius",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->how",
+      "source": "agent:photon-lead",
+      "target": "skill:how",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-boundary-discipline",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-boundary-discipline",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-fix-root-causes",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-fix-root-causes",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-make-operations-idempotent",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-make-operations-idempotent",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-prove-it-works",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-prove-it-works",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-separate-before-serializing-shared-state",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-separate-before-serializing-shared-state",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-subtract-before-you-add",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-subtract-before-you-add",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->principle-test-behavior-not-implementation",
+      "source": "agent:photon-lead",
+      "target": "skill:principle-test-behavior-not-implementation",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->review-pr",
+      "source": "agent:photon-lead",
+      "target": "skill:review-pr",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->tdd",
+      "source": "agent:photon-lead",
+      "target": "skill:tdd",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->technical-writing",
+      "source": "agent:photon-lead",
+      "target": "skill:technical-writing",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->unslop",
+      "source": "agent:photon-lead",
+      "target": "skill:unslop",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:photon-lead->skill->why",
+      "source": "agent:photon-lead",
+      "target": "skill:why",
+      "type": "uses-skill"
+    },
+    {
       "id": "edge:research-validator->mcp->obsidian",
       "source": "agent:research-validator",
       "target": "mcp:obsidian",
@@ -1158,6 +1292,18 @@
       "source": "agent:researcher",
       "target": "shared-ref:security-constraints",
       "type": "uses-shared-ref"
+    },
+    {
+      "id": "edge:tester->skill->principle-test-behavior-not-implementation",
+      "source": "agent:tester",
+      "target": "skill:principle-test-behavior-not-implementation",
+      "type": "uses-skill"
+    },
+    {
+      "id": "edge:validator->skill->principle-prove-it-works",
+      "source": "agent:validator",
+      "target": "skill:principle-prove-it-works",
+      "type": "uses-skill"
     }
   ],
   "workflows": [

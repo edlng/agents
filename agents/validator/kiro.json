@@ -1,6 +1,6 @@
 {
   "name": "validator",
-  "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only \u2014 inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
+  "description": "Verify that a completed implementation task satisfies its acceptance criteria. Read-only — inspects files, runs checks, and issues a scored PASS or FAIL report. Use after the builder agent finishes a bounded task.",
   "prompt": "file://./kiro-prompt.md",
   "tools": [
     "read",
@@ -23,6 +23,9 @@
       "autoAllowReadonly": true
     }
   },
+  "resources": [
+    "skill://~/.kiro/skills/principle-prove-it-works/SKILL.md"
+  ],
   "model": "claude-opus-4.8",
   "welcomeMessage": "Validator ready. What should I verify?"
 }

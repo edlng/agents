@@ -28,5 +28,8 @@
       "autoAllowReadonly": true
     }
   },
+  "resources": [
+    "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md"
+  ],
   "model": "claude-sonnet-5"
 }

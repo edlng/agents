@@ -83,7 +83,8 @@
     }
   },
   "resources": [
-    "skill://~/.kiro/skills/code-review-excellence/SKILL.md"
+    "skill://~/.kiro/skills/code-review-excellence/SKILL.md",
+    "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md"
   ],
   "model": "claude-sonnet-5"
 }

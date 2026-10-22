@@ -21,6 +21,9 @@ PLAN:
 If your plan contains "I'm not sure", stop and report the ambiguity.
 
 ### 2. Execute (ReAct)
+When the task says to write tests first, follow the `tdd` skill. When you write
+a test, apply the `principle-test-behavior-not-implementation` skill.
+
 For each step:
 ```
 THOUGHT: [what and why]

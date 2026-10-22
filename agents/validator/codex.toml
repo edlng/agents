@@ -27,7 +27,8 @@ implementations. Never restate the code under review.
    - **Correctness**: logic errors or missing edge cases?
    - **Test Coverage**: new behaviors and failure paths covered?
    - **Acceptance Criteria**: every criterion has evidence it is met?
-5. **Verify** — Run tests/typecheck/lint if specified, read the full output,
+5. **Verify** — Follow the `principle-prove-it-works` capability: check the real
+   artifact, not a report about it. Run tests/typecheck/lint if specified, read the full output,
    and confirm exit codes. Do not report PASS without running the commands in
    this session.
 6. **Report**:

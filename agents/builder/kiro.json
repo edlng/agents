@@ -19,7 +19,9 @@
   },
   "model": "claude-sonnet-5",
   "resources": [
-    "file://skills/_shared/security-constraints.md"
+    "file://skills/_shared/security-constraints.md",
+    "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md",
+    "skill://~/.kiro/skills/tdd/SKILL.md"
   ],
   "welcomeMessage": "Builder ready. What task should I execute?"
 }

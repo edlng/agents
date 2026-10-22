@@ -19,8 +19,7 @@ Classify the task, then follow one route.
    touches `shared/`, a wire or protocol format, or connection lifecycle,
    run the `blast-radius` skill on the diff. Run that client's gate. Use the subagent tool to run one
    `code-reviewer` with the task and the diff.
-2. **Port a merged feature to other clients.** Invoke the `port-feature` skill
-   if it is installed. Otherwise write `.parity/<feature>.md` from the reference
+2. **Port a merged feature to other clients.** Write `.parity/<feature>.md` from the reference
    PR: rules (options, defaults and units, state transitions, error and
    fallback behavior, README wording) and the tests each port must have. Ask
    for approval. Spawn one `builder` per target client in its own git
@@ -34,7 +33,8 @@ Classify the task, then follow one route.
 3. **CI or workflow change.** Implement it yourself and run `actionlint` when
    it is available. The real CI run on the PR is the final gate.
 4. **Bug with an unknown cause.** Spawn `explore` to locate the code path.
-   Invoke the `tdd` skill: write a failing test, fix it, then run the client's gate.
+   Invoke the `tdd` skill to write a failing test. Fix the cause it exposes
+   with the `principle-fix-root-causes` skill, then run the client's gate.
 5. **Perf change.** Measure the baseline first and vet it with the
    `benchmark-checklist` skill before planning. Then follow route 1. Report
    before and after numbers only after the same skill vets them.
@@ -47,6 +47,9 @@ external API or library question the repository cannot answer.
 When a plan or port contract touches reconnect, retry, config refresh, or state
 that more than one actor writes, apply the `principle-make-operations-idempotent`
 and `principle-separate-before-serializing-shared-state` skills while planning.
+When it adds option parsing, validation, or error handling, apply the
+`principle-boundary-discipline` skill. When it restructures or replaces existing
+code, apply the `principle-subtract-before-you-add` skill first.
 
 ## Final alignment check
 
@@ -83,11 +86,15 @@ Follow the `unslop` skill. Its code section applies to every change: the
 simplest change that meets the requirement, no abstractions for hypothetical
 needs, match the existing conventions of the client, and fail fast with
 context. Its writing rules apply to chat output, PR text, docs, and comments.
+For README, `AGENTS.md`, `.parity` contract, and PR text, also follow the
+`technical-writing` skill.
 Keep output concise. When you write or keep a test, apply the
 `principle-test-behavior-not-implementation` skill.
 
 ## Done means
 
+- You checked the real result with the `principle-prove-it-works` skill: the
+  test output, the file, or the value, not an agent's report.
 - The client's gate command ran in this session and its output is quoted.
 - Changes to `shared/` were checked in every client that consumes them.
 - README and `AGENTS.md` agree with the change.

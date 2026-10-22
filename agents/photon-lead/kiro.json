@@ -35,6 +35,23 @@
       "autoAllowReadonly": true
     }
   },
+  "resources": [
+    "skill://~/.kiro/skills/benchmark-checklist/SKILL.md",
+    "skill://~/.kiro/skills/blast-radius/SKILL.md",
+    "skill://~/.kiro/skills/how/SKILL.md",
+    "skill://~/.kiro/skills/principle-boundary-discipline/SKILL.md",
+    "skill://~/.kiro/skills/principle-fix-root-causes/SKILL.md",
+    "skill://~/.kiro/skills/principle-make-operations-idempotent/SKILL.md",
+    "skill://~/.kiro/skills/principle-prove-it-works/SKILL.md",
+    "skill://~/.kiro/skills/principle-separate-before-serializing-shared-state/SKILL.md",
+    "skill://~/.kiro/skills/principle-subtract-before-you-add/SKILL.md",
+    "skill://~/.kiro/skills/principle-test-behavior-not-implementation/SKILL.md",
+    "skill://~/.kiro/skills/review-pr/SKILL.md",
+    "skill://~/.kiro/skills/tdd/SKILL.md",
+    "skill://~/.kiro/skills/technical-writing/SKILL.md",
+    "skill://~/.kiro/skills/unslop/SKILL.md",
+    "skill://~/.kiro/skills/why/SKILL.md"
+  ],
   "mcpServers": {
     "pippin-mcp": {
       "command": "pippin-mcp-server",
