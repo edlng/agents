@@ -96,6 +96,8 @@ Evidence: [evidence]
 
 Suggested fix: [suggested_fix]
 
+[If the fix is a literal edit (Phase 6, Step 4), show the draft suggestion block here]
+
 ========================================
 Post this comment? (yes / skip / edit / stop)  [default: skip for pre-existing, yes otherwise]
 ```
@@ -183,6 +185,22 @@ This prints a map of `path -> [commentable line numbers]` (new-side / RIGHT).
 - Both endpoints must be in the commentable set and within the same diff hunk. If either fails, do not draw the range. Fall back to a single-line anchor on the verified start line.
 - Do not build a range from the `start-end` numbers in `line_range` alone (e.g. `191-210`). An unverified range highlights the wrong block. Treat `line_range` as a hint for where to look, not as the anchor.
 
+**Step 4. Add a suggested-change block when the fix is a literal edit.**
+GitHub renders a fenced `suggestion` block as a suggested change that the author can commit from the PR page. Add one when `suggested_fix` names exact replacement text for the anchored lines. This covers code and prose alike, such as a renamed call, a changed default, or a reworded sentence in a doc. Do not add one when the fix is a description ("add a test", "handle the error"), touches lines outside the anchor, or spans several hunks or files.
+
+To build the block:
+1. Take the anchored lines (`line`, or `start_line` to `line`) verbatim from the Step 1 numbered content.
+2. Apply the fix to those lines only. Keep the original indentation and every unchanged character.
+3. Append the result to the humanized body from Phase 5, after a blank line:
+
+   ````markdown
+   ```suggestion
+   <full replacement text for every anchored line>
+   ```
+   ````
+
+The block replaces every anchored line, so it must contain the whole new text of each one, not just the changed fragment. An empty block deletes the anchored lines. If the replacement text contains a triple-backtick fence, open and close the block with four backticks instead. When a fix needs a short edit to one long line, such as a paragraph in Markdown, anchor on that single line and put the whole edited line in the block.
+
 Notes:
 - For a single-line comment, omit `start_line` and `start_side`.
 - Removed lines are only commentable on `side: "LEFT"`. This skill posts on new code, so always use `RIGHT`.
@@ -236,7 +254,8 @@ After posting, print a confirmation with the review URL, the count of comments p
 - Use the `gh` CLI for all GitHub reads and for posting the review. This is the inverse of `review-pr`, which never writes to GitHub.
 - Read findings only from the `/tmp/pr-review-<repo>-<number>-*.json` file. Do not modify it.
 - Anchor inline comments with `"line"` + `"side": "RIGHT"` (file-relative), not the deprecated `"position"`. Verify the line against actual file content using the finding's evidence quote (Phase 6, Step 1), because `line_range` is model-generated and often off. Then confirm the line falls inside a diff hunk (Step 2), since an out-of-diff line returns HTTP 422.
-- Run approved comment bodies through `pr-comment-humanizer` before posting (Phase 5).
+- Run approved comment bodies through `pr-comment-humanizer` before posting (Phase 5). The humanizer never rewrites the text inside a `suggestion` block.
+- When a fix is a literal edit to the anchored lines, post it as a `suggestion` block (Phase 6, Step 4).
 - Skip findings already covered by an existing PR comment (Phase 3b).
 - To create a pending review, omit the `"event"` field from the POST body. The API rejects `"event": "PENDING"` with HTTP 422, and the review is pending by default. The user submits it in the GitHub UI.
 - If `gh auth status` fails, stop and tell the user to authenticate.

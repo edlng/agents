@@ -947,10 +947,27 @@
       "excerpt": "Why Investigate the motivation and intent behind code. Companion to the `how` skill. `how` answers what the code does and how it works. `why` answers what forces led to its shape. Investigators run as the read-only `explore` agent at its catalog model and effort. When the investigator prompt sets an"
     },
     {
+      "id": "skill:write-issue",
+      "type": "skill",
+      "name": "write-issue",
+      "description": "Draft a brief GitHub issue (bug, feature, or task) that a maintainer can read in under a minute. Searches for duplicates, checks claims against the code, runs the repro when one exists, drafts from the repository issue template (or a short default), cuts it to fit, verifies accuracy, then applies the technical-writing and unslop skills. Prints the title and body, then offers to post with `gh issue create`. Use when asked to write, draft, file, or open an issue or bug report.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/write-issue/SKILL.md"
+      },
+      "sourcePath": "skills/universal/write-issue/SKILL.md",
+      "excerpt": "Write issue Write an issue that a maintainer can read in under a minute and still know what is wrong or wanted, how to see it, and where in the code to look. Every sentence answers a question the maintainer would ask. Anything else goes. Input `$ARGUMENTS` is optional and may contain: 1. A **reposit"
+    },
+    {
       "id": "skill:write-pr",
       "type": "skill",
       "name": "write-pr",
-      "description": "Generate a concise, human-sounding PR description from current git changes in a reviewer-first format. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a structured default), verifies accuracy, then humanizes the output.",
+      "description": "Generate a brief PR description from current git changes that a reviewer can read in under a minute. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a short default), cuts it to fit, verifies accuracy, then applies the technical-writing and unslop skills. Use when asked to write, draft, or tighten a PR description.",
       "category": "Writing & Documentation",
       "platforms": [
         "claude",
@@ -961,7 +978,7 @@
         "universal": "skills/universal/write-pr/SKILL.md"
       },
       "sourcePath": "skills/universal/write-pr/SKILL.md",
-      "excerpt": "Write PR description Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follo"
+      "excerpt": "Write PR description Write a PR body that a reviewer can read in under a minute and still know what changed, why, what to look at closely, and how it was tested. Every sentence answers a question the reviewer would ask. Anything else goes. Input `$ARGUMENTS` is optional and may contain: 1. A **commi"
     },
     {
       "id": "skill:write-pr-comments",
@@ -1932,7 +1949,7 @@
   "stats": {
     "counts": {
       "agents": 8,
-      "skills": 33,
+      "skills": 34,
       "sharedRefs": 5,
       "mcpServers": 5,
       "workflows": 6
@@ -1965,7 +1982,7 @@
       "orchestration": 1
     },
     "skillCategories": {
-      "Other": 24,
+      "Other": 25,
       "Code Review": 4,
       "Development Workflows": 1,
       "Writing & Documentation": 3,

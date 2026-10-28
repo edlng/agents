@@ -1,107 +1,118 @@
 ---
 name: write-pr
-description: Generate a concise, human-sounding PR description from current git changes in a reviewer-first format. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a structured default), verifies accuracy, then humanizes the output.
+description: Generate a brief PR description from current git changes that a reviewer can read in under a minute. Optionally accepts a commit range (e.g. HEAD~3) and/or a PR template path. Reads the diff, drafts from the repository PR template (or a short default), cuts it to fit, verifies accuracy, then applies the technical-writing and unslop skills. Use when asked to write, draft, or tighten a PR description.
 ---
 
 # Write PR description
 
-Generate a concise, technically detailed PR description for the current changes. Use the format of a strong engineering handoff: explain the problem, map the implementation, call out non-obvious decisions, show testing evidence, and state what is deliberately out of scope. Follow each phase in order.
+Write a PR body that a reviewer can read in under a minute and still know what changed, why, what to look at closely, and how it was tested. Every sentence answers a question the reviewer would ask. Anything else goes.
 
 ## Input
 
 `$ARGUMENTS` is optional and may contain:
-1. A **commit range** (e.g. `HEAD~3`, `main..HEAD`). Default: the last commit plus any staged/unstaged changes.
-2. A **PR template path** (e.g. `.github/pull_request_template.md`). Default: auto-detect from `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/` in the repo. If none found, use the built-in default template below.
+1. A **commit range** (e.g. `HEAD~3`, `main..HEAD`). Default: the last commit plus any staged and unstaged changes.
+2. A **PR template path** (e.g. `.github/pull_request_template.md`). Default: auto-detect `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/`. If none exists, use the default template below.
 
-Parse `$ARGUMENTS` to separate these two inputs. A commit range looks like a git ref or range; a file path contains `/` or `.md`.
-
----
+A commit range looks like a git ref or range. A file path contains `/` or `.md`.
 
 ## Phase 1: Read changes
 
-Gather the full diff and commit messages for the target range:
-
 ```bash
-# If a commit range was given (e.g. HEAD~3):
+# With a range:
 git log --oneline <range>
 git diff <range>
 
-# If no range given, use last commit + working changes:
+# Without a range:
 git log -1 --oneline
 git diff HEAD
 git diff --cached
 ```
 
-Read through the diff carefully. Understand:
-- What files changed and why
-- The intent behind each logical change
-- Any new dependencies, config changes, or migrations
+Work out the intent behind each logical change, plus any new dependencies, config changes, migrations, or interface changes.
 
----
+## Phase 2: Draft
 
-## Phase 2: Draft the PR description
+### Template
 
-### Template selection
-1. If the user provided a template path, read that file.
-2. Otherwise, check for `.github/pull_request_template.md` or files in `.github/PULL_REQUEST_TEMPLATE/` in the repo root.
-3. If no template exists, use this default shape:
+1. Use the template path the user gave, if any.
+2. Otherwise use the repository template if one exists. Keep its required sections and drop optional sections that would be empty.
+3. Otherwise use this default:
 
 ```markdown
 ## Summary
-<!-- Explain the problem, its impact, and the approach in 1-2 short paragraphs. -->
+<!-- 1-3 sentences: the problem, then what this PR does about it. -->
 
-## What's in it
-<!-- Group related changes by module or area. Do not list every file separately. -->
+## Changes
+<!-- One row per logical change, grouped by area. One short clause or sentence per cell. -->
 | Area | Change |
 |---|---|
-| `path/to/module` | ... |
+| `path/or/area` | What changed and why |
 
-## Design decisions
-<!-- Include only decisions a reviewer may question. Omit when there are none. -->
+## Review notes
+<!-- Optional. Decisions a reviewer may question, risks, compatibility, rollout, and follow-ups left out of this PR. One or two sentences per item. -->
 
-## Tests
-<!-- State commands/results, coverage when available, and meaningful edge cases. -->
-
-## Not in this PR
-<!-- State explicit follow-ups or intentional limits. Omit when there are none. -->
+## Testing
+<!-- Commands run and their results. -->
 ```
 
-If the repository template has required sections, preserve them. Use the structure above within the template where it fits. Do not add an `Issue` section with `N/A` unless the template requires it.
+### Length budget
 
-### Drafting
+| Section | Budget |
+|---|---|
+| Summary | 1-3 sentences. No implementation detail the Changes list repeats. |
+| Changes | One row per area, with one short clause or sentence per cell. Split a crowded cell into more rows instead of packing it. Never list every file. |
+| Review notes | Only items a reviewer would flag or must know before merging. One or two sentences each. Omit the section when empty. |
+| Testing | The commands and results, one line each. Name the edge cases the tests cover, without explaining them. |
 
-Organize the body around the questions a reviewer will have:
+Aim for under 200 words of prose. A real protocol, migration, or compatibility contract can earn more.
 
-- **Summary:** Start with the behavior or problem that motivated the change. Explain the impact, then say what the implementation does. When behavior changes, add a small `Before`/`After` table. Keep it concrete.
-- **What's in it:** Group files into logical modules or areas and explain each role. Mention new files, changed interfaces, compatibility behavior, migrations, and paired changes where they matter. A short JSON, protocol, or API example is useful when it makes a contract unambiguous.
-- **Design decisions:** Include only non-obvious choices, tradeoffs, failure behavior, rollout constraints, or compatibility rules. Use short subsections when there are multiple decisions. Do not restate the implementation line by line.
-- **Testing:** Report the actual commands, results, counts, coverage, and important edge cases. Include failure-path or regression tests when they are part of the change. Do not invent a test result, coverage number, benchmark, or manual verification step.
-- **Not in this PR:** Name deferred work, known limitations, or required follow-ups when they affect how the change should be reviewed or shipped. Omit the section when there is nothing meaningful to say.
+### Show it when it reads faster
 
-Use concrete file names, functions, interfaces, and behaviors. Explain why a change exists, not just what moved. Prefer grouped tables and short paragraphs over a long file-by-file checklist. Include an issue, design document, rollout note, or external dependency only when it is present in the repository context or the supplied template. Keep the body as short as the scope allows; expand for a real protocol, migration, or compatibility contract rather than padding the summary.
+Prefer a visual form over prose when the reader can scan it faster:
 
-Do not generate a commit title or branch name unless the user explicitly asks for them. The normal output is the PR body only.
+- A table for the Changes list, for `Before`/`After` behavior, or for any comparison across the same few attributes.
+- A bulleted list for parallel items such as review notes or test commands.
+- A short code or JSON example when it pins down a contract that prose would leave ambiguous.
 
-## Phase 3: Humanize
+Keep each table narrow and each cell short. A table with paragraphs in its cells is harder to read than prose.
 
-Apply the `unslop` skill to the completed draft. The `unslop` skill owns the humanization and anti-AI rules; do not duplicate or override those rules here. Preserve the draft's technical facts, structure, and reviewer-oriented detail. If humanization changes a factual claim, resolve it against the diff and test output during Phase 4.
+### Rules
 
-## Phase 4: Verify accuracy
+- Lead with why. The diff already shows what moved.
+- Use real file, function, flag, and command names.
+- Do not narrate the diff ("updated X to call Y, then changed Z"). Say the effect.
+- Do not paste agent logs, SHA lists, full test output, or metric tables. Summarize the result and link the full output if the user has a link.
+- Do not invent a test result, coverage number, benchmark, or manual check. If nothing was tested, say so in one line.
+- Do not add an `Issue` section with `N/A`, a commit title, or a branch name unless the template or the user asks.
 
-Review the draft against the actual diff and test output. Check:
+## Phase 3: Cut
 
-- Every claim is supported by the diff, commit history, or observed command output
-- No significant logical change, compatibility constraint, or test result is omitted
-- File names, function names, interfaces, and behaviors are accurate
-- Before/after tables describe real behavior rather than intended behavior
-- The description does not overstate coverage, performance, rollout safety, or scope
-- Optional sections are removed when they contain no useful information
+Reread the draft as the reviewer and delete the following:
 
-Fix anything inaccurate, vague, repetitive, or missing before proceeding.
+- Sentences that restate the title, the Summary, or another section.
+- Background the reviewer already knows from the linked issue or the codebase.
+- Qualifiers and hedges that do not change what the reviewer does.
+- Review notes that describe an obvious choice.
 
-## Phase 5: Final output
+## Phase 4: Polish
 
-Print the final PR description inside a single fenced markdown code block so the user can copy and paste it directly:
+Apply the `technical-writing` skill's rules for PR descriptions, which include the `unslop` skill. Those skills own the sentence and anti-AI rules, so do not restate them here. Keep the facts and the section structure.
+
+## Phase 5: Verify
+
+Check the draft against the diff and the command output:
+
+- Every claim is supported by the diff, the commit history, or observed output.
+- No significant change, compatibility constraint, or test result is missing. Brevity never drops one of these.
+- Names of files, functions, and interfaces are correct.
+- `Before`/`After` rows describe real behavior, not intended behavior.
+- The draft does not overstate coverage, performance, rollout safety, or scope.
+
+Fix any problem before you continue.
+
+## Phase 6: Output
+
+Print the final PR description in one fenced markdown code block so the user can copy it:
 
 ~~~markdown
 ```markdown
@@ -109,4 +120,4 @@ Print the final PR description inside a single fenced markdown code block so the
 ```
 ~~~
 
-Do not print a preamble, commit metadata, or anything after the code block.
+Print nothing before or after the code block.
