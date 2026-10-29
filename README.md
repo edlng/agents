@@ -7,7 +7,7 @@ and skills. Kiro agent files are retained for compatibility. The catalog
 contains:
 
 - 8 agent roles with Claude, Codex, and Kiro definitions.
-- 34 universal skills shared by Claude, Codex, and Kiro. The installer writes
+- 39 universal skills shared by Claude, Codex, and Kiro. The installer writes
   `unslop` to `~/.claude/skills/unslop/SKILL.md`, which `CLAUDE.md` imports.
   Platform-specific skill variants are supported but none are needed today.
 - A validated installer, site catalog, and Litmus checks.
@@ -71,12 +71,13 @@ The orchestration and review conventions are informed by
 from AWS Labs.
 
 `blast-radius`, `tdd`, `how`, `why`, `benchmark-checklist`, `unslop`,
-`technical-writing`, `sharpen`, `in-your-own-words`, `show-me-your-work`, and
-eleven `principle-*` skills are adapted from [pstack](https://github.com/cursor/plugins/tree/main/pstack) by
-Lauren Tan, MIT License. `upstream.json` pins the upstream commit each port
-was taken from. Run `npm run check:upstream` (add `-- --diff` for patches) to
-list upstream changes since that commit. It exits with code 1 when a ported
-skill changed. Merge the changes by hand, keep the local edits (no multi-model
-panels, one reviewer instead of `arena`, `explore` as the worker agent,
-synthesis in the main session, and `why` limited to git and `gh`, Pippin, and
-the Amazon wiki), then update `ref` to the new SHA.
+`technical-writing`, `sharpen`, `in-your-own-words`, `show-me-your-work`,
+`correct`, `reflect`, `teach`, and thirteen `principle-*` skills are adapted
+from [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan,
+MIT License. `upstream.json` pins the upstream commit each port was taken from.
+Run `npm run check:upstream` (add `-- --diff` for patches) to list upstream
+changes since that commit. It exits with code 1 when a ported skill changed.
+Merge the changes by hand, keep the local edits (no multi-model panels, one
+reviewer instead of `arena`, `explore` as the worker agent, synthesis in the
+main session, one `explore` reviewer in `reflect`, and `why` limited to git and
+`gh`, Pippin, and the Amazon wiki), then update `ref` to the new SHA.

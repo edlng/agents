@@ -471,6 +471,23 @@
       "excerpt": "Code review excellence A frame for deciding what to report in a code review and how to grade it. It applies to any diff, PR, or uncommitted change. Scope Report only findings that affect correctness or stated requirements. Do not report style unless the change violates a pattern visible in the surro"
     },
     {
+      "id": "skill:correct",
+      "type": "skill",
+      "name": "correct",
+      "description": "Find the mistakes agents keep repeating in this repo and make each one impossible. Try architecture first, then types, then a lint whose error names the fix, then a test, and write docs last. Prove each check fails on a real past mistake. Repeat this each time the operator corrects you. Use for /correct.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/correct/SKILL.md"
+      },
+      "sourcePath": "skills/universal/correct/SKILL.md",
+      "excerpt": "Correct The operator keeps correcting agents in this repo for the same mistakes. Change the repo so the next agent can't make them. Assume every contributor is an agent that sees only the files it opened, copies the nearest example, and takes the shortest path that compiles. Design the repo so a cha"
+    },
+    {
       "id": "skill:crash-course",
       "type": "skill",
       "name": "crash-course",
@@ -571,6 +588,23 @@
       },
       "sourcePath": "skills/universal/pr-comment-humanizer/SKILL.md",
       "excerpt": "PR Comment Humanizer Rewrite PR review comment text to match this specific voice: terse, direct, imperative. No warmup, no hedging, no AI vocabulary. Voice Profile Derived from real PR comments at https://github.com/edlng/ChatDev/pull/1. **Core traits:** - **Brutally terse.** If one line does it, us"
+    },
+    {
+      "id": "skill:principle-attack-the-premise",
+      "type": "skill",
+      "name": "principle-attack-the-premise",
+      "description": "Apply when two or more fixes that share one premise have failed the same gate. Write the premise down and test it directly before you write another fix that assumes it.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-attack-the-premise/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-attack-the-premise/SKILL.md",
+      "excerpt": "Attack the Premise When two or more fixes that share one premise have failed the same gate, suspect the premise, not the fixes. **Why:** Each failed fix is evidence against the belief it assumed. A third fix on the same premise spends effort where the evidence already says the cause is not. **Patter"
     },
     {
       "id": "skill:principle-boundary-discipline",
@@ -726,6 +760,23 @@
       "excerpt": "Separate Before Serializing Shared State When concurrent actors might share mutable state, first ask whether they need the same mutable object. If not, eliminate the sharing. When sharing is real, enforce serialization structurally: lockfiles, sequential phases, exclusive ownership. Instructions and"
     },
     {
+      "id": "skill:principle-sequence-verifiable-units",
+      "type": "skill",
+      "name": "principle-sequence-verifiable-units",
+      "description": "Apply to multi-step work (sweeps, migrations, runs of similar edits) and to how you stack commits and PRs. Break work into small units that each end in a verifiable state, check each before the next, and order delivery so the sequence proves itself to a reviewer.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/principle-sequence-verifiable-units/SKILL.md"
+      },
+      "sourcePath": "skills/universal/principle-sequence-verifiable-units/SKILL.md",
+      "excerpt": "Sequence work into verifiable units Order work as a sequence of small units, each ending in a state you can check, and don't advance until the current one is green. **Why:** A break caught at the unit that caused it is cheap to localize. A break caught after a batch is buried, and you have already b"
+    },
+    {
       "id": "skill:principle-subtract-before-you-add",
       "type": "skill",
       "name": "principle-subtract-before-you-add",
@@ -758,6 +809,23 @@
       },
       "sourcePath": "skills/universal/principle-test-behavior-not-implementation/SKILL.md",
       "excerpt": "Test Behavior, Not Implementation A test is a claim about what the code does for its users: a caller, an end user, or another service. Behavior is what those users can observe through the interface they use. That includes return values, errors, state they can read back, and effects on systems outsid"
+    },
+    {
+      "id": "skill:reflect",
+      "type": "skill",
+      "name": "reflect",
+      "description": "Review the active session transcript for durable learnings and route each one to a concrete edit on an existing catalog skill, a description fix, or a backlog item. Use when the user says reflect or /reflect.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/reflect/SKILL.md"
+      },
+      "sourcePath": "skills/universal/reflect/SKILL.md",
+      "excerpt": "Reflect Mine the current conversation for durable learnings, then route them into skill edits. Invoke when the user says \"reflect\" or \"/reflect\". Skip when the conversation is trivial, off-topic, or already covered by an existing skill the session followed correctly. One-offs are not learnings. 1. L"
     },
     {
       "id": "skill:review-addressed-comments",
@@ -860,6 +928,23 @@
       },
       "sourcePath": "skills/universal/tdd/SKILL.md",
       "excerpt": "TDD Bug Fix When fixing a bug with a clear, cheap test path, make the broken behavior executable before changing production code. The goal is a focused regression test that fails before the fix and passes after it. Do not force a test when it would be impractical. If the available test would require"
+    },
+    {
+      "id": "skill:teach",
+      "type": "skill",
+      "name": "teach",
+      "description": "Explain a body of work plainly so a person actually understands it. Runs the `how` and `why` skills and weaves what they find into one clear explanation. Use for 'teach me this', 'help me really understand X', 'explain this change or subsystem to me'.",
+      "category": "Other",
+      "platforms": [
+        "claude",
+        "codex"
+      ],
+      "compatibility": "universal",
+      "sources": {
+        "universal": "skills/universal/teach/SKILL.md"
+      },
+      "sourcePath": "skills/universal/teach/SKILL.md",
+      "excerpt": "Teach **You explain what a thing is, how it works, and why it's built that way, in one plain account at the person's pace. The goal is that they understand it, not that you change anything.** Teach sits on top of `how` and `why`. Get your bearings on what the work is and what it touches, then run `h"
     },
     {
       "id": "skill:technical-writing",
@@ -1949,7 +2034,7 @@
   "stats": {
     "counts": {
       "agents": 8,
-      "skills": 34,
+      "skills": 39,
       "sharedRefs": 5,
       "mcpServers": 5,
       "workflows": 6
@@ -1982,7 +2067,7 @@
       "orchestration": 1
     },
     "skillCategories": {
-      "Other": 25,
+      "Other": 30,
       "Code Review": 4,
       "Development Workflows": 1,
       "Writing & Documentation": 3,

@@ -956,7 +956,7 @@ test('validation CLI prints the exact success output', async (t) => {
   assert.equal(stderr, '');
   assert.equal(
     stdout,
-    'Catalog valid: 8 agents, 22 skills (22 universal, 0 Claude, 0 Codex)\n',
+    'Catalog valid: 8 agents, 39 skills (39 universal, 0 Claude, 0 Codex)\n',
   );
 });
 

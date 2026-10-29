@@ -40,6 +40,16 @@ Platform-specific skills are rare. Write a universal skill unless the skill depe
 - If the skill references `_shared/` files, check whether the change belongs in the shared file instead. If so, update the shared file.
 - If the change affects the frontmatter `description`, verify it still reflects when the skill should be invoked.
 - If the skill has auxiliary files (for example `references/`, `agents/openai.yaml`, prompt templates), update those too.
+- If the skill exists but did not trigger when it should have, rewrite its `description` to lead with the trigger phrases. Do not add body text for a trigger problem.
+- Before adding a prose rule, check whether `scripts/catalog-lib.mjs` could enforce it instead. A validator error catches every future edit. Prose catches only the agents that read it.
+
+## Ported skills
+
+`upstream.json` lists the skills adapted from upstream sources and pins the commit each port came from.
+
+- To edit a ported skill, keep the local adaptations that `README.md` lists for that source. Do not reintroduce upstream behavior they remove (for example multi-model panels).
+- To port a new skill, fetch it at the pinned `ref` in `upstream.json`, so that every port of one source sits on the same commit. Add an entry to that source's `skills` map and add the skill name to the attribution paragraph in `README.md`.
+- Then run `npm run check:upstream`. It must report the source as up to date.
 
 ## Updating an agent
 
